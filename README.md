@@ -1,4 +1,4 @@
-Repository for collecting recipes for standard physics objects with for analysis of simulated events with the CMS phase 2 detector.
+Repository for collecting recipes for standard physics objects for analysis of simulated events with the CMS phase 2 detector.
 =========================
 
 
