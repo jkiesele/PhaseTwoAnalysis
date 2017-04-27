@@ -1,0 +1,4 @@
+NTupler/run
+
+directory for storing the CMSSW configuration file to be run with cmsRun for ntuple production
+(please keep clean)
