@@ -71,6 +71,7 @@ before running
 ```bash
 source /cvmfs/cms.cern.ch/crab3/crab.sh
 crab submit crabConfig.py
+```
 
 
 Plotting basic distributions from PAT collections
@@ -98,3 +99,4 @@ before running
 ```bash
 source /cvmfs/cms.cern.ch/crab3/crab.sh
 crab submit crabConfig.py
+```
