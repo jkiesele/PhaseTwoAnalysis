@@ -10,3 +10,35 @@ b) a collection of latest recipes and a CMSSW config to apply them to get collec
 
 c) an ntuple production configuration file that produces an ntuple that can be analysed in a similar manner als Delphes samples (with the DAnalysis framework)
 
+
+Installation
+--------------
+
+```bash
+cmsrel CMSSW_9_1_1_patch1
+cd CMSSW_9_1_1_patch1/src
+cmsenv
+git cms-addpkg RecoEgamma/EgammaIsolationAlgos
+cd RecoEgamma
+git clone git@github.com:nsmith-/Phase2InterimID.git
+cd ..
+git clone git@github.com:jkiesele/PhaseTwoAnalysis.git
+cp PhaseTwoAnalysis/RecoEgammaFix/* RecoEgamma/EgammaIsolationAlgos/plugins/
+scram b -j8
+```
+
+How to run PAT on RECO datasets
+----------------
+
+The `PatProducer` folder contains a configuration file to produce miniAOD files from RECO files. Interactively, after updating the list of input files, one can run
+```bash
+cmsRun miniAOD-prod_PAT.py
+```
+A skeleton of crab configuration file is also provided in this folder. The following fields need to be updated:
+   * `config.General.requestName` 
+   * `config.Data.inputDataset`
+   * `config.Data.outLFNDirBase`
+before running
+```bash
+crab submit crabConfig.py
+```
