@@ -5,6 +5,7 @@
 *.obj
 *.pyc
 *.d
+*init*.py
 
 # Precompiled Headers
 *.gch
