@@ -1,0 +1,30 @@
+<use name="FWCore/Framework"/>
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/ParameterSet"/>
+
+<use name="FWCore/MessageLogger"/>
+<use name="FWCore/ServiceRegistry"/>
+<use name="CommonTools/UtilAlgos"/>
+
+<use name="DataFormats/PatCandidates"/>
+<use name="DataFormats/HepMCCandidate"/>
+<use name="DataFormats/Candidate"/>
+<use name="DataFormats/TrackReco"/>
+<use name="DataFormats/MuonReco"/>
+<use name="DataFormats/JetReco"/>
+
+<use name="TrackingTools/TransientTrack"/>
+<use name="TrackingTools/Records"/>
+<use name="RecoVertex/VertexPrimitives"/>
+<use name="RecoVertex/KalmanVertexFit"/>
+<use name="SimTracker/Records"/>
+<use name="DataFormats/VertexReco"/>
+<use name="RecoVertex/KinematicFitPrimitives"/>
+<use name="RecoVertex/KinematicFit"/>
+<use name="PhysicsTools/CandUtils"/>
+<use name="PhysicsTools/SelectorUtils"/>
+<use name="RecoEgamma/EgammaTools"/>
+
+<use name="RecoEgamma/Phase2InterimID"/>
+
+<flags EDM_PLUGIN="1"/>
