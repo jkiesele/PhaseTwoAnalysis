@@ -218,7 +218,6 @@ MiniFromPat::genAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetup
     ev_.gj_phi[ev_.ngj]  = genJets->at(i).phi();
     ev_.gj_eta[ev_.ngj]  = genJets->at(i).eta();
     ev_.gj_mass[ev_.ngj] = genJets->at(i).mass();
-    ev_.gj_pid[ev_.ngj]  = genJets->at(i).pdgId();
     ev_.ngj++;
   }
 
@@ -282,10 +281,12 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
   // Vertices
   int prVtx = -1;
+  ev_.nvtx = 0;
   for (size_t i = 0; i < vertices->size(); i++) {
     if (vertices->at(i).isFake()) continue;
     if (vertices->at(i).ndof() <= 4) continue;
     if (prVtx < 0) prVtx = i;
+    ev_.nvtx++;
   }
   if (prVtx < 0) return;
 
@@ -304,6 +305,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.l_pt[ev_.nl]     = muons->at(i).pt();
     ev_.l_phi[ev_.nl]    = muons->at(i).phi();
     ev_.l_eta[ev_.nl]    = muons->at(i).eta();
+    ev_.l_mass[ev_.nl]   = muons->at(i).mass();
     ev_.l_relIso[ev_.nl] = (muons->at(i).puppiNoLeptonsChargedHadronIso() + muons->at(i).puppiNoLeptonsNeutralHadronIso() + muons->at(i).puppiNoLeptonsPhotonIso()) / muons->at(i).pt();
     ev_.l_g[ev_.nl] = -1;
     for (int ig = 0; ig < ev_.ngl; ig++) {
@@ -327,6 +329,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.l_pt[ev_.nl]     = elecs->at(i).pt();
     ev_.l_phi[ev_.nl]    = elecs->at(i).phi();
     ev_.l_eta[ev_.nl]    = elecs->at(i).eta();
+    ev_.l_mass[ev_.nl]   = elecs->at(i).mass();
     ev_.l_relIso[ev_.nl] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
     ev_.l_g[ev_.nl] = -1;
     for (int ig = 0; ig < ev_.ngl; ig++) {

@@ -11,7 +11,7 @@ Implementation:
    - lepton isolation needs to be refined
    - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/UPGTrackerTDRStudies#Muon_identification
    - electron ID comes from https://indico.cern.ch/event/623893/contributions/2531742/attachments/1436144/2208665/UPSG_EGM_Workshop_Mar29.pdf
-   - no jet ID is applied
+   - no jet ID nor JEC are applied
    - b-tagging is not available 
 
 */

@@ -100,3 +100,36 @@ before running
 source /cvmfs/cms.cern.ch/crab3/crab.sh
 crab submit crabConfig.py
 ```
+
+Producing flat ntuples
+-----------------
+
+Flat ntuples can be produced in the `NTupler` folder, either from PAT or RECO events, by running interactively:
+```bash
+cmsRun scripts/produceNtuples_cfg.py skim=False/True outFilename=MiniEvents.root inputFormat=RECO/PAT
+```
+
+The `skim` flag can be used to reduce the size of the output files. A histogram containing the number of events before the skim is then stored in the output files. By default, events are required to contain at least 1 lepton and 2 jets, but this can be easily modified ll.71-97 of `src/produceNtuples_cfg.py`.
+
+The structure of the output tree can be seen/modified in `interface/MiniEvent.h` and `src/MiniEvent.cc`.
+
+The main analyzers are:
+   * `plugins/MiniFromPat.cc` -- to run over PAT events 
+   * `plugins/MiniFromReco.cc` -- to run over RECO events 
+Details on the object definitions are given in the `implementation` section.
+
+A skeleton of crab configuration file is also provided. The following fields need to be updated:
+   * `config.General.requestName` 
+   * `config.Data.inputDataset`
+   * `config.Data.outLFNDirBase`
+
+before running
+```bash
+source /cvmfs/cms.cern.ch/crab3/crab.sh
+crab submit crabConfig.py
+```
+
+To adjust the input parameters of `scripts/produceNtuples_cfg.py`, the three following fields need to be modified consistently:
+   * `config.JobType.pyCfgParams`
+   * `config.JobType.inputFiles`
+   * `config.JobType.outputFiles`

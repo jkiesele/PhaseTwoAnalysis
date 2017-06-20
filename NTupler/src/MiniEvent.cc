@@ -22,7 +22,6 @@ void createMiniEventTree(TTree *t,MiniEvent_t &ev)
   t->Branch("gj_eta",     ev.gj_eta,     "gj_eta[ngj]/F");
   t->Branch("gj_phi",     ev.gj_phi,     "gj_phi[ngj]/F");
   t->Branch("gj_mass",    ev.gj_mass,    "gj_mass[ngj]/F");
-  t->Branch("gj_pid",     ev.gj_pid,     "gj_pid[ngj]/I");
 
   //reco level event
   t->Branch("nvtx",       &ev.nvtx,      "nvtx/I");
@@ -86,7 +85,6 @@ void attachToMiniEventTree(TTree *t,MiniEvent_t &ev)
   t->SetBranchAddress("gj_eta",      ev.gj_eta);
   t->SetBranchAddress("gj_phi",      ev.gj_phi);
   t->SetBranchAddress("gj_mass",     ev.gj_mass);
-  t->SetBranchAddress("gj_pid",      ev.gj_pid);
 
   //reco level event
   t->SetBranchAddress("nvtx",        &ev.nvtx);

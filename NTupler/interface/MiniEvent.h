@@ -24,7 +24,6 @@ struct MiniEvent_t
   Float_t gl_pt[50], gl_eta[50], gl_phi[50], gl_mass[50], gl_relIso[50];
   Int_t gl_pid[50];
   Float_t gj_pt[200], gj_eta[200], gj_phi[200], gj_mass[200];
-  Int_t gj_pid[200];
 
   //reco level event
   Int_t nvtx;
