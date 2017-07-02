@@ -7,9 +7,11 @@ config.General.workArea = 'crab_tasks/'
 
 config.section_("JobType")
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName = 'ConfFile_cfg.py'
-config.JobType.inputFiles = ['TMVAClassification_BDT.weights.xml']
-config.JobType.outputFiles = ['histos.root']
+config.JobType.psetName = 'scripts/produceNtuples_cfg.py'
+config.JobType.pyCfgParams= ['skim=False','inputFormat=PAT','outFileName=MiniEvents.root']
+# Uncomment the following line when running on PAT events
+#config.JobType.inputFiles = ['TMVAClassification_BDT.weights.xml']
+config.JobType.outputFiles = ['MiniEvents.root']
 
 config.section_("Data")
 config.Data.inputDataset = <'inputDataset'>

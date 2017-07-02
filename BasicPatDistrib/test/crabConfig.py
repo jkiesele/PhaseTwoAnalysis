@@ -15,6 +15,8 @@ config.Data.inputDataset = <'inputDataset'>
 config.Data.inputDBS = 'global'
 config.Data.splitting = 'FileBased'
 config.Data.unitsPerJob = 10
+# Uncomment to run on a fraction of the dataset
+#config.Data.totalUnits = 10
 config.Data.outLFNDirBase = <'dirBase'>  
 config.Data.publication = False
 

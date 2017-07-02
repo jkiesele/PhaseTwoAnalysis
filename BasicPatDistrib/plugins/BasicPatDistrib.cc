@@ -15,6 +15,7 @@ Implementation:
       - PFClusterProducer does not run on miniAOD
       - jurassic isolation needs tracks
    - PF jet ID comes from Run-2 https://github.com/cms-sw/cmssw/blob/CMSSW_9_1_1_patch1/PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h
+   - no JEC applied
    - b-tagging WP come from Run-2 https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation80XReReco#Supported_Algorithms_and_Operati 
       - for pfCombinedInclusiveSecondaryVertexV2BJetTags: L = 0.5426, M = 0.8484, T = 0.9535)
       - for deepCSV: L = 0.2219, M = 0.6324, T = 0.8958
