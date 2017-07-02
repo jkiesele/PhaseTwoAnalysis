@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-analysis = cms.EDAnalyzer('MiniFromPat',
+ntuple = cms.EDAnalyzer('MiniFromPat',
         vertices      = cms.InputTag("offlineSlimmedPrimaryVertices"),
         electrons     = cms.InputTag("slimmedElectrons"),
         beamspot      = cms.InputTag("offlineBeamSpot"),
@@ -8,7 +8,6 @@ analysis = cms.EDAnalyzer('MiniFromPat',
         muons         = cms.InputTag("slimmedMuons"),
         jets          = cms.InputTag("slimmedJetsPuppi"),
         mets          = cms.InputTag("slimmedMETsPuppi"),
-        pfCands       = cms.InputTag('packedPFCandidates'), 
         genParts      = cms.InputTag("packedGenParticles"),
         genJets       = cms.InputTag("slimmedGenJets"),
 )

@@ -1,12 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 
-analysis = cms.EDAnalyzer('MiniFromReco',
+ntuple = cms.EDAnalyzer('MiniFromReco',
         electrons    = cms.InputTag("ecalDrivenGsfElectrons"),
         beamspot     = cms.InputTag("offlineBeamSpot"),
         conversions  = cms.InputTag("particleFlowEGamma"),
         trackIsoValueMap = cms.InputTag("electronTrackIsolationLcone"),
         muons        = cms.InputTag("muons"),
-        pfCands      = cms.InputTag("particleFlow"),
         pfCandsNoLep = cms.InputTag("particleFlow"),
         jets         = cms.InputTag("ak4PFJetsCHS"),
         met          = cms.InputTag("pfMet"),

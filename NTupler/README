@@ -1,8 +1,0 @@
-NTupler/run
-
-directory for storing the CMSSW configuration file to be run with cmsRun for ntuple production
-(please keep clean)
-
-```bash
-cmsRun scripts/produceNtuples_cfg.py skim=False outFilename=MiniEvents.root inputFormat=RECO
-```

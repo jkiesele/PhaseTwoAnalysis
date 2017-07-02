@@ -130,13 +130,13 @@ process.electronTrackIsolationLcone.intRadiusEndcap = 0.04
 moduleName = "MiniFromPat"    
 if (options.inputFormat.lower() == "reco"):
     moduleName = "MiniFromReco"
-process.analysis = cms.EDAnalyzer(moduleName)
+process.ntuple = cms.EDAnalyzer(moduleName)
 process.load("PhaseTwoAnalysis.NTupler."+moduleName+"_cfi")
 if (options.inputFormat.lower() == "reco"):
-    process.analysis.jets = "ak4PUPPIJets"
-    process.analysis.pfCands = "puppi"
-    process.analysis.pfCandsNoLep = "puppiNoLep"
-    process.analysis.met = "puppiMet"
+    process.ntuple.jets = "ak4PUPPIJets"
+    process.ntuple.pfCands = "puppi"
+    process.ntuple.pfCandsNoLep = "puppiNoLep"
+    process.ntuple.met = "puppiMet"
 
 # output
 process.TFileService = cms.Service("TFileService",
@@ -146,11 +146,11 @@ process.TFileService = cms.Service("TFileService",
 # run
 if options.skim:
     if (options.inputFormat.lower() == "reco"):
-        process.p = cms.Path(process.weightCounter * process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.preYieldFilter * process.analysis)
+        process.p = cms.Path(process.weightCounter * process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.preYieldFilter * process.ntuple)
     else:
-        process.p = cms.Path(process.weightCounter*process.preYieldFilter*process.analysis)
+        process.p = cms.Path(process.weightCounter*process.preYieldFilter*process.ntuple)
 else:
     if (options.inputFormat.lower() == "reco"):
-        process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.analysis)
+        process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.ntuple)
     else:
-        process.p = cms.Path(process.analysis)
+        process.p = cms.Path(process.ntuple)
