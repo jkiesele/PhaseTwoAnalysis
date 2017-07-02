@@ -1,0 +1,11 @@
+<use name="FWCore/Framework"/>
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/ParameterSet"/>
+<use name="FWCore/Utilities"/>
+<use name="FWCore/MessageLogger"/>
+<use name="DataFormats/PatCandidates"/>
+<use name="DataFormats/MuonReco"/>
+<use name="DataFormats/Candidate"/>
+<use name="DataFormats/VertexReco"/>
+<use name="DataFormats/Common"/>
+<flags EDM_PLUGIN="1"/>
