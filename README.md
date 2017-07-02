@@ -116,6 +116,7 @@ The structure of the output tree can be seen/modified in `interface/MiniEvent.h`
 The main analyzers are:
    * `plugins/MiniFromPat.cc` -- to run over PAT events 
    * `plugins/MiniFromReco.cc` -- to run over RECO events 
+
 Details on the object definitions are given in the `implementation` section.
 
 A skeleton of crab configuration file is also provided. The following fields need to be updated:
