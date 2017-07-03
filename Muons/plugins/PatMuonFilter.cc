@@ -5,7 +5,7 @@
 // 
 /**\class PatMuonFilter PatMuonFilter.cc PhaseTwoAnalysis/PatMuonFilter/plugins/PatMuonFilter.cc
 
-Description: adds a vector of loose pat muons
+Description: adds a vector of pat muons
 
 Implementation:
 - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/UPGTrackerTDRStudies#Muon_identification
@@ -84,7 +84,11 @@ PatMuonFilter::PatMuonFilter(const edm::ParameterSet& iConfig):
   muonsToken_(consumes<std::vector<pat::Muon>>(iConfig.getParameter<edm::InputTag>("muons")))
 {
   produces<std::vector<pat::Muon>>("LooseMuons");
+  produces<std::vector<double>>("LooseMuonRelIso");
+  produces<std::vector<pat::Muon>>("MediumMuons");
+  produces<std::vector<double>>("MediumMuonRelIso");
   produces<std::vector<pat::Muon>>("TightMuons");
+  produces<std::vector<double>>("TightMuonRelIso");
 
 }
 
@@ -116,36 +120,59 @@ PatMuonFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (vertices->at(i).ndof() <= 4) continue;
     if (prVtx < 0) prVtx = i;
   }
-  if (prVtx < 0) return;
 
   Handle<std::vector<pat::Muon>> muons;
   iEvent.getByToken(muonsToken_, muons);
   std::unique_ptr<std::vector<pat::Muon>> filteredLooseMuons;
+  std::unique_ptr<std::vector<double>> filteredLooseMuonRelIso;
+  std::unique_ptr<std::vector<pat::Muon>> filteredMediumMuons;
+  std::unique_ptr<std::vector<double>> filteredMediumMuonRelIso;
   std::unique_ptr<std::vector<pat::Muon>> filteredTightMuons;
+  std::unique_ptr<std::vector<double>> filteredTightMuonRelIso;
   std::vector<pat::Muon> looseVec;
+  std::vector<double> looseIsoVec;
+  std::vector<pat::Muon> mediumVec;
+  std::vector<double> mediumIsoVec;
   std::vector<pat::Muon> tightVec;
+  std::vector<double> tightIsoVec;
   for (size_t i = 0; i < muons->size(); i++) {
     if (muons->at(i).pt() < 10.) continue;
     if (fabs(muons->at(i).eta()) > 3.) continue;
 
     bool isLoose = (fabs(muons->at(i).eta()) < 2.4 && muon::isLooseMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.5));
-    // bool isMedium = (fabs(muons->at(i).eta()) < 2.4 && muon::isMediumMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.3));
-    bool isTight = (fabs(muons->at(i).eta()) < 2.4 && vertices->size() > 0 && muon::isTightMuon(muons->at(i),vertices->at(prVtx))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.1));
+    bool isMedium = (fabs(muons->at(i).eta()) < 2.4 && muon::isMediumMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.3));
+    bool isTight = (fabs(muons->at(i).eta()) < 2.4 && prVtx > -0.5 && muon::isTightMuon(muons->at(i),vertices->at(prVtx))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.1));
+    double relIso = (muons->at(i).puppiNoLeptonsChargedHadronIso() + muons->at(i).puppiNoLeptonsNeutralHadronIso() + muons->at(i).puppiNoLeptonsPhotonIso()) / muons->at(i).pt();
 
     if (!isLoose) continue;
     looseVec.push_back(muons->at(i));
+    looseIsoVec.push_back(relIso);
+
+    if (!isMedium) continue;
+    mediumVec.push_back(muons->at(i));
+    mediumIsoVec.push_back(relIso);
 
     if (!isTight) continue;
     tightVec.push_back(muons->at(i));
+    tightIsoVec.push_back(relIso);
 
   }
 
   filteredLooseMuons.reset(new std::vector<pat::Muon>(looseVec));
+  filteredLooseMuonRelIso.reset(new std::vector<double>(looseIsoVec));
+  filteredMediumMuons.reset(new std::vector<pat::Muon>(mediumVec));
+  filteredMediumMuonRelIso.reset(new std::vector<double>(mediumIsoVec));
   filteredTightMuons.reset(new std::vector<pat::Muon>(tightVec));
+  filteredTightMuonRelIso.reset(new std::vector<double>(tightIsoVec));
 
   iEvent.put(std::move(filteredLooseMuons), "LooseMuons");
+  iEvent.put(std::move(filteredLooseMuonRelIso), "LooseMuonRelIso");
+  iEvent.put(std::move(filteredMediumMuons), "MediumMuons");
+  iEvent.put(std::move(filteredMediumMuonRelIso), "MediumMuonRelIso");
   iEvent.put(std::move(filteredTightMuons), "TightMuons");
+  iEvent.put(std::move(filteredTightMuonRelIso), "TightMuonRelIso");
 
+  return;
 }
 
 // ------------ method called once each stream before processing any runs, lumis or events  ------------

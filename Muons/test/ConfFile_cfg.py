@@ -39,6 +39,14 @@ if (options.inputFormat.lower() == "reco"):
         '/store/relval/CMSSW_9_1_1_patch1/RelValTTbar_14TeV/GEN-SIM-RECO/PU25ns_91X_upgrade2023_realistic_v1_D17PU200r1-v1/10000/00052551-024E-E711-B071-0242AC130002.root',
     ))
 
+# run Puppi 
+process.load('CommonTools/PileupAlgos/Puppi_cff')
+process.load('CommonTools/PileupAlgos/PhotonPuppi_cff')
+process.load('CommonTools/PileupAlgos/softKiller_cfi')
+from CommonTools.PileupAlgos.PhotonPuppi_cff        import setupPuppiPhoton
+from PhysicsTools.PatAlgos.slimming.puppiForMET_cff import makePuppies
+makePuppies(process)
+process.puSequence = cms.Sequence(process.pfNoLepPUPPI * process.puppiNoLep)
 
 # producer
 moduleName = "PatMuonFilter"    
@@ -46,12 +54,19 @@ if (options.inputFormat.lower() == "reco"):
     moduleName = "RecoMuonFilter"
 process.muonfilter = cms.EDAnalyzer(moduleName)
 process.load("PhaseTwoAnalysis.Muons."+moduleName+"_cfi")
+if (options.inputFormat.lower() == "reco"):
+    process.muonfilter.pfCandsNoLep = "puppiNoLep"
 
 process.out = cms.OutputModule("PoolOutputModule",
+    outputCommands = cms.untracked.vstring('keep *_*_*_*',
+                                           'drop patMuons_slimmedMuons_*_*',
+                                           'drop recoMuons_muons_*_*'),
     fileName = cms.untracked.string(options.outFilename)
 )
-
   
-process.p = cms.Path(process.muonfilter)
+if (options.inputFormat.lower() == "reco"):
+    process.p = cms.Path(process.puSequence * process.muonfilter)
+else:
+    process.p = cms.Path(process.muonfilter)
 
 process.e = cms.EndPath(process.out)

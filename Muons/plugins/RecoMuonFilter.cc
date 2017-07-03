@@ -5,7 +5,7 @@
 // 
 /**\class RecoMuonFilter RecoMuonFilter.cc PhaseTwoAnalysis/RecoMuonFilter/plugins/RecoMuonFilter.cc
 
-Description: adds a vector of loose reco muons
+Description: adds a vector of reco muons
 
 Implementation:
 - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/UPGTrackerTDRStudies#Muon_identification
@@ -35,9 +35,11 @@ Implementation:
 #include "DataFormats/MuonReco/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 
 #include <vector>
+#include "Math/GenVector/VectorUtil.h"
 
 //
 // class declaration
@@ -65,6 +67,8 @@ class RecoMuonFilter : public edm::stream::EDProducer<> {
     // ----------member data ---------------------------
     edm::EDGetTokenT<std::vector<reco::Vertex>> verticesToken_;
     edm::EDGetTokenT<std::vector<reco::Muon>> muonsToken_;
+    edm::EDGetTokenT<std::vector<reco::PFCandidate>> pfCandsNoLepToken_;
+    
 };
 
 //
@@ -81,10 +85,15 @@ class RecoMuonFilter : public edm::stream::EDProducer<> {
 //
 RecoMuonFilter::RecoMuonFilter(const edm::ParameterSet& iConfig):
   verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices"))),
-  muonsToken_(consumes<std::vector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("muons")))
+  muonsToken_(consumes<std::vector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("muons"))),
+  pfCandsNoLepToken_(consumes<std::vector<reco::PFCandidate>>(iConfig.getParameter<edm::InputTag>("pfCandsNoLep")))    
 {
   produces<std::vector<reco::Muon>>("LooseMuons");
+  produces<std::vector<double>>("LooseMuonRelIso");
+  produces<std::vector<reco::Muon>>("MediumMuons");
+  produces<std::vector<double>>("MediumMuonRelIso");
   produces<std::vector<reco::Muon>>("TightMuons");
+  produces<std::vector<double>>("TightMuonRelIso");
 
 }
 
@@ -116,36 +125,67 @@ RecoMuonFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (vertices->at(i).ndof() <= 4) continue;
     if (prVtx < 0) prVtx = i;
   }
-  if (prVtx < 0) return;
 
   Handle<std::vector<reco::Muon>> muons;
   iEvent.getByToken(muonsToken_, muons);
+  Handle<std::vector<reco::PFCandidate>> pfCandsNoLep;
+  iEvent.getByToken(pfCandsNoLepToken_, pfCandsNoLep);  
   std::unique_ptr<std::vector<reco::Muon>> filteredLooseMuons;
+  std::unique_ptr<std::vector<double>> filteredLooseMuonRelIso;
+  std::unique_ptr<std::vector<reco::Muon>> filteredMediumMuons;
+  std::unique_ptr<std::vector<double>> filteredMediumMuonRelIso;
   std::unique_ptr<std::vector<reco::Muon>> filteredTightMuons;
+  std::unique_ptr<std::vector<double>> filteredTightMuonRelIso;
   std::vector<reco::Muon> looseVec;
+  std::vector<double> looseIsoVec;
+  std::vector<reco::Muon> mediumVec;
+  std::vector<double> mediumIsoVec;
   std::vector<reco::Muon> tightVec;
+  std::vector<double> tightIsoVec;
   for (size_t i = 0; i < muons->size(); i++) {
     if (muons->at(i).pt() < 10.) continue;
     if (fabs(muons->at(i).eta()) > 3.) continue;
 
     bool isLoose = (fabs(muons->at(i).eta()) < 2.4 && muon::isLooseMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.5));
-    // bool isMedium = (fabs(muons->at(i).eta()) < 2.4 && muon::isMediumMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.3));
-    bool isTight = (fabs(muons->at(i).eta()) < 2.4 && vertices->size() > 0 && muon::isTightMuon(muons->at(i),vertices->at(prVtx))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.1));
+    bool isMedium = (fabs(muons->at(i).eta()) < 2.4 && muon::isMediumMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.3));
+    bool isTight = (fabs(muons->at(i).eta()) < 2.4 && prVtx > -0.5 && muon::isTightMuon(muons->at(i),vertices->at(prVtx))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.1));
+    double relIso = 0.;
+    for (size_t k = 0; k < pfCandsNoLep->size(); k++) {
+      if (ROOT::Math::VectorUtil::DeltaR(muons->at(i).p4(),pfCandsNoLep->at(k).p4()) > 0.3) continue;
+      relIso += pfCandsNoLep->at(k).pt();
+    }
+    if (muons->at(i).pt() > 0.) relIso = relIso / muons->at(i).pt();
+    else relIso = -1.;
 
     if (!isLoose) continue;
     looseVec.push_back(muons->at(i));
+    looseIsoVec.push_back(relIso);
+
+    if (!isMedium) continue;
+    mediumVec.push_back(muons->at(i));
+    mediumIsoVec.push_back(relIso);
 
     if (!isTight) continue;
     tightVec.push_back(muons->at(i));
+    tightIsoVec.push_back(relIso);
 
   }
 
   filteredLooseMuons.reset(new std::vector<reco::Muon>(looseVec));
+  filteredLooseMuonRelIso.reset(new std::vector<double>(looseIsoVec));
+  filteredMediumMuons.reset(new std::vector<reco::Muon>(mediumVec));
+  filteredMediumMuonRelIso.reset(new std::vector<double>(mediumIsoVec));
   filteredTightMuons.reset(new std::vector<reco::Muon>(tightVec));
+  filteredTightMuonRelIso.reset(new std::vector<double>(tightIsoVec));
 
   iEvent.put(std::move(filteredLooseMuons), "LooseMuons");
+  iEvent.put(std::move(filteredLooseMuonRelIso), "LooseMuonRelIso");
+  iEvent.put(std::move(filteredMediumMuons), "MediumMuons");
+  iEvent.put(std::move(filteredMediumMuonRelIso), "MediumMuonRelIso");
   iEvent.put(std::move(filteredTightMuons), "TightMuons");
+  iEvent.put(std::move(filteredTightMuonRelIso), "TightMuonRelIso");
 
+  return;
 }
 
 // ------------ method called once each stream before processing any runs, lumis or events  ------------
