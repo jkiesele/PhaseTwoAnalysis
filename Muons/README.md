@@ -3,7 +3,7 @@ Recipes for muon selection in analysis of simulated events with the CMS phase 2 
 
 One should run:
 ```bash
-cmsRun test/ConfFile_cfg.py outFilename=FilteredEvents.root inputFormat=RECO/PAT
+cmsRun ConfFile_cfg.py outFilename=FilteredEvents.root inputFormat=RECO/PAT
 ```
 
 whether the input file format is RECO or miniAOD.
@@ -21,4 +21,5 @@ For each ID quality, a vector of muons and a vector of double corresponding to t
    * `reco(pat)Muons_muonfilter_LooseMuons_MuonFilter`
    * `reco(pat)Muons_muonfilter_MediumMuons_MuonFilter`
    * `reco(pat)Muons_muonfilter_TightMuons_MuonFilter`
+
 The initial vector of muons is dropped to avoid any confusion.

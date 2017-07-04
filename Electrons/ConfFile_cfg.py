@@ -15,7 +15,7 @@ options.register('inputFormat', 'PAT',
 options.parseArguments()
 
 
-process = cms.Process("MuonFilter")
+process = cms.Process("ElectronFilter")
 
 # Log settings
 process.load("FWCore.MessageService.MessageLogger_cfi")
@@ -48,25 +48,36 @@ from PhysicsTools.PatAlgos.slimming.puppiForMET_cff import makePuppies
 makePuppies(process)
 process.puSequence = cms.Sequence(process.pfNoLepPUPPI * process.puppiNoLep)
 
+# PF cluster producer for HFCal ID
+process.load('Configuration.Geometry.GeometryExtended2023D17Reco_cff')
+process.load("RecoParticleFlow.PFClusterProducer.particleFlowRecHitHGC_cff")
+
+# jurassic track isolation
+# https://indico.cern.ch/event/27568/contributions/1618615/attachments/499629/690192/080421.Isolation.Update.RecHits.pdf
+process.load("RecoEgamma.EgammaIsolationAlgos.electronTrackIsolationLcone_cfi")
+process.electronTrackIsolationLcone.electronProducer = cms.InputTag("ecalDrivenGsfElectrons")
+process.electronTrackIsolationLcone.intRadiusBarrel = 0.04
+process.electronTrackIsolationLcone.intRadiusEndcap = 0.04
+
 # producer
-moduleName = "PatMuonFilter"    
+moduleName = "PatElectronFilter"    
 if (options.inputFormat.lower() == "reco"):
-    moduleName = "RecoMuonFilter"
-process.muonfilter = cms.EDAnalyzer(moduleName)
-process.load("PhaseTwoAnalysis.Muons."+moduleName+"_cfi")
+    moduleName = "RecoElectronFilter"
+process.electronfilter = cms.EDProducer(moduleName)
+process.load("PhaseTwoAnalysis.Electrons."+moduleName+"_cfi")
 if (options.inputFormat.lower() == "reco"):
-    process.muonfilter.pfCandsNoLep = "puppiNoLep"
+    process.electronfilter.pfCandsNoLep = "puppiNoLep"
 
 process.out = cms.OutputModule("PoolOutputModule",
     outputCommands = cms.untracked.vstring('keep *_*_*_*',
-                                           'drop patMuons_slimmedMuons_*_*',
-                                           'drop recoMuons_muons_*_*'),
+                                           'drop patElectrons_slimmedElectrons_*_*',
+                                           'drop recoGsfElectrons_gedGsfElectrons_*_*'),
     fileName = cms.untracked.string(options.outFilename)
 )
   
 if (options.inputFormat.lower() == "reco"):
-    process.p = cms.Path(process.puSequence * process.muonfilter)
+    process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.electronfilter)
 else:
-    process.p = cms.Path(process.muonfilter)
+    process.p = cms.Path(process.electronfilter)
 
 process.e = cms.EndPath(process.out)

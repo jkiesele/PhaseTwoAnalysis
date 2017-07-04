@@ -8,6 +8,7 @@
 Description: adds a vector of reco muons
 
 Implementation:
+- lepton isolation needs to be refined
 - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/UPGTrackerTDRStudies#Muon_identification
 */
 //
@@ -68,7 +69,7 @@ class RecoMuonFilter : public edm::stream::EDProducer<> {
     edm::EDGetTokenT<std::vector<reco::Vertex>> verticesToken_;
     edm::EDGetTokenT<std::vector<reco::Muon>> muonsToken_;
     edm::EDGetTokenT<std::vector<reco::PFCandidate>> pfCandsNoLepToken_;
-    
+
 };
 
 //
@@ -199,6 +200,7 @@ void
 RecoMuonFilter::endStream() {
 }
 
+// ------------ method to improve ME0 muon ID ----------------
   bool 
 RecoMuonFilter::isME0MuonSel(reco::Muon muon, double pullXCut, double dXCut, double pullYCut, double dYCut, double dPhi)
 {
