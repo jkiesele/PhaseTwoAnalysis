@@ -1,0 +1,11 @@
+<use name="root"/>
+<use name="roofit"/>
+<use name="rootrflx"/>
+<use name="PhysicsTools/PatAlgos"/>
+<use name="CondFormats/BTauObjects"/>
+<use name="CondTools/BTau"/>
+<use name="CondFormats/JetMETObjects"/>
+<Flags CXXFLAGS="-ggdb"/>
+<export>
+  <lib name="1"/>
+</export>
