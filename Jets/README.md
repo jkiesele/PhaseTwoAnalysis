@@ -26,6 +26,6 @@ The following vectors of PF loose jets are added when running over PAT events:
    * `patJets_jetfilter_TightDeepCSVJets_JetFilter`
 
 whereas only the following vector of jets is added when running over RECO events:
-   * `recoJets_jetfilter_Jets_JetFilter`
+   * `recoPFJets_jetfilter_Jets_JetFilter`
 
 The initial vector of jets is dropped to avoid any confusion.

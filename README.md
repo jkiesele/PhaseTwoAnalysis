@@ -134,3 +134,64 @@ To adjust the input parameters of `scripts/produceNtuples_cfg.py`, the three fol
    * `config.JobType.pyCfgParams`
    * `config.JobType.inputFiles`
    * `config.JobType.outputFiles`
+
+Producing edm ntuples
+-----------------
+
+CMS edm ntuples can be produced in the `NTupler` folder too, either from PAT or RECO events, by running interactively:
+```bash
+cmsRun scripts/edmFilter_cfg.py outFilename=FilteredEvents.root inputFormat=RECO/PAT
+```
+
+whether the input file format is RECO or miniAOD.
+
+To run over PAT events, the main producers are:
+   * `../Electrons/plugins/PatElectronFilter.cc` 
+   * `../Muons/plugins/PatMuonFilter.cc` 
+   * `../Jets/plugins/PatJetFilter.cc`
+
+while for RECO events, they are: 
+   * `../Electrons/plugins/RecoElectronFilter.cc` 
+   * `../Muons/plugins/RecoMuonFilter.cc` 
+   * `../Jets/plugins/RecoJetFilter.cc` 
+
+Details on the object definitions are given in the `implementation` section, but, please, already note that no JEC is applied and ak4 and PUPPI algorithms are considered everywhere.
+
+When running over PAT events, the following collections are produced:
+   * `doubles_electronfilter_LooseElectronRelIso_EDMFilter`
+   * `doubles_electronfilter_MediumElectronRelIso_EDMFilter`
+   * `doubles_electronfilter_TightElectronRelIso_EDMFilter`
+   * `patElectrons_electronfilter_LooseElectrons_EDMFilter`
+   * `patElectrons_electronfilter_MediumElectrons_EDMFilter`
+   * `patElectrons_electronfilter_TightElectrons_EDMFilter`
+   * `doubles_muonfilter_LooseMuonRelIso_EDMFilter`
+   * `doubles_muonfilter_MediumMuonRelIso_EDMFilter`
+   * `doubles_muonfilter_TightMuonRelIso_EDMFilter`
+   * `patMuons_muonfilter_LooseMuons_EDMFilter`
+   * `patMuons_muonfilter_MediumMuons_EDMFilter`
+   * `patMuons_muonfilter_TightMuons_EDMFilter`
+   * `patJets_jetfilter_Jets_EDMFilter`
+   * `patJets_jetfilter_LooseCSVv2Jets_EDMFilter`
+   * `patJets_jetfilter_MediumCSVv2Jets_EDMFilter`
+   * `patJets_jetfilter_TightCSVv2Jets_EDMFilter`
+   * `patJets_jetfilter_LooseDeepCSVJets_EDMFilter`
+   * `patJets_jetfilter_MediumDeepCSVJets_EDMFilter`
+   * `patJets_jetfilter_TightDeepCSVJets_EDMFilter`
+
+while for RECO events, they are:
+   * `doubles_electronfilter_LooseElectronRelIso_EDMFilter`
+   * `doubles_electronfilter_MediumElectronRelIso_EDMFilter`
+   * `doubles_electronfilter_TightElectronRelIso_EDMFilter`
+   * `recoGsfElectrons_electronfilter_LooseElectrons_EDMFilter`
+   * `recoGsfElectrons_electronfilter_MediumElectrons_EDMFilter`
+   * `recoGsfElectrons_electronfilter_TightElectrons_EDMFilter`
+   * `doubles_muonfilter_LooseMuonRelIso_EDMFilter`
+   * `doubles_muonfilter_MediumMuonRelIso_EDMFilter`
+   * `doubles_muonfilter_TightMuonRelIso_EDMFilter`
+   * `recoMuons_muonfilter_LooseMuons_EDMFilter`
+   * `recoMuons_muonfilter_MediumMuons_EDMFilter`
+   * `recoMuons_muonfilter_TightMuons_EDMFilter`
+   * `recoPFJets_jetfilter_Jets_EDMFilter`
+   * `recoPFMETs_puppiMet__EDMFilter`
+
+The initial vectors of electrons, muons, jets (and PFMETs) are dropped to avoid any confusion.

@@ -18,8 +18,8 @@ For each ID quality, a vector of muons and a vector of double corresponding to t
    * `doubles_electronfilter_LooseElectronRelIso_ElectronFilter`
    * `doubles_electronfilter_MediumElectronRelIso_ElectronFilter`
    * `doubles_electronfilter_TightElectronRelIso_ElectronFilter`
-   * `reco(pat)Electrons_electronfilter_LooseElectrons_ElectronFilter`
-   * `reco(pat)Electrons_electronfilter_MediumElectrons_ElectronFilter`
-   * `reco(pat)Electrons_electronfilter_TightElectrons_ElectronFilter`
+   * `[recoGsf|pat]Electrons_electronfilter_LooseElectrons_ElectronFilter`
+   * `[recoGsf|pat]Electrons_electronfilter_MediumElectrons_ElectronFilter`
+   * `[recoGsf|pat]Electrons_electronfilter_TightElectrons_ElectronFilter`
 
 The initial vector of electrons is dropped to avoid any confusion.

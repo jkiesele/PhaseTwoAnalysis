@@ -18,8 +18,8 @@ For each ID quality, a vector of muons and a vector of double corresponding to t
    * `doubles_muonfilter_LooseMuonRelIso_MuonFilter`
    * `doubles_muonfilter_MediumMuonRelIso_MuonFilter`
    * `doubles_muonfilter_TightMuonRelIso_MuonFilter`
-   * `reco(pat)Muons_muonfilter_LooseMuons_MuonFilter`
-   * `reco(pat)Muons_muonfilter_MediumMuons_MuonFilter`
-   * `reco(pat)Muons_muonfilter_TightMuons_MuonFilter`
+   * `[reco|pat]Muons_muonfilter_LooseMuons_MuonFilter`
+   * `[reco|pat]Muons_muonfilter_MediumMuons_MuonFilter`
+   * `[reco|pat]Muons_muonfilter_TightMuons_MuonFilter`
 
 The initial vector of muons is dropped to avoid any confusion.
