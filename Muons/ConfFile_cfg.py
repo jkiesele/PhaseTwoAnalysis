@@ -19,6 +19,8 @@ process = cms.Process("MuonFilter")
 
 # Log settings
 process.load("FWCore.MessageService.MessageLogger_cfi")
+process.load('Configuration.Geometry.GeometryExtended2023D17Reco_cff')
+process.load('Configuration.StandardSequences.MagneticField_cff')
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.MessageLogger.cerr.threshold = 'INFO'
 process.MessageLogger.categories.append('MyAna')
