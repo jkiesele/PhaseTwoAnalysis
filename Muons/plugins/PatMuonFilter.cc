@@ -26,6 +26,7 @@ Implementation:
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
+#include "FWCore/Framework/interface/ESHandle.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/StreamID.h"
@@ -36,6 +37,10 @@ Implementation:
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
+
+#include "Geometry/Records/interface/MuonGeometryRecord.h"
+#include "Geometry/GEMGeometry/interface/ME0EtaPartitionSpecs.h"
+#include "Geometry/GEMGeometry/interface/ME0Geometry.h"
 
 #include <vector>
 
@@ -56,8 +61,9 @@ class PatMuonFilter : public edm::stream::EDProducer<> {
         virtual void endStream() override;
 
         bool isME0MuonSel(reco::Muon muon, double pullXCut, double dXCut, double pullYCut, double dYCut, double dPhi);
+        bool isME0MuonSelNew(reco::Muon, double, double, double);
 
-        //virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
+        virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
         //virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
         //virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
         //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
@@ -65,6 +71,7 @@ class PatMuonFilter : public edm::stream::EDProducer<> {
         // ----------member data ---------------------------
         edm::EDGetTokenT<std::vector<reco::Vertex>> verticesToken_;
         edm::EDGetTokenT<std::vector<pat::Muon>> muonsToken_;
+        const ME0Geometry* ME0Geometry_; 
 };
 
 //
@@ -92,7 +99,14 @@ PatMuonFilter::PatMuonFilter(const edm::ParameterSet& iConfig):
 
 }
 
-
+void
+PatMuonFilter::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
+{
+  edm::ESHandle<ME0Geometry> hGeom;
+  iSetup.get<MuonGeometryRecord>().get(hGeom);
+  ME0Geometry_ =( &*hGeom);
+}
+    
 PatMuonFilter::~PatMuonFilter()
 {
 
@@ -135,26 +149,54 @@ PatMuonFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     std::vector<double> mediumIsoVec;
     std::vector<pat::Muon> tightVec;
     std::vector<double> tightIsoVec;
+
     for (size_t i = 0; i < muons->size(); i++) {
-        if (muons->at(i).pt() < 10.) continue;
-        if (fabs(muons->at(i).eta()) > 3.) continue;
+      if (muons->at(i).pt() < 2.) continue;
+      if (std::abs(muons->at(i).eta()) > 3.) continue;
 
-        bool isLoose = (fabs(muons->at(i).eta()) < 2.4 && muon::isLooseMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.5));
-        bool isMedium = (fabs(muons->at(i).eta()) < 2.4 && muon::isMediumMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.3));
-        bool isTight = (fabs(muons->at(i).eta()) < 2.4 && prVtx > -0.5 && muon::isTightMuon(muons->at(i),vertices->at(prVtx))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSel(muons->at(i), 3, 4, 3, 4, 0.1));
-        double relIso = (muons->at(i).puppiNoLeptonsChargedHadronIso() + muons->at(i).puppiNoLeptonsNeutralHadronIso() + muons->at(i).puppiNoLeptonsPhotonIso()) / muons->at(i).pt();
+      auto priVertex = vertices->at(prVtx);
+      auto muon = muons->at(i);
+    
+      bool isLoose = muon::isLooseMuon(muon);
+      bool isMedium = muon::isMediumMuon(muon);
+      bool isTight = (prVtx > -0.5 && muon::isTightMuon(muon,priVertex));
 
-        if (!isLoose) continue;
-        looseVec.push_back(muons->at(i));
-        looseIsoVec.push_back(relIso);
+      double mom = muon.p();
+      double dPhiCut_ = std::min(std::max(1.2/mom,1.2/100),0.056);
+      double dPhiBendCut_ = std::min(std::max(0.2/mom,0.2/100),0.0096);
+      bool isLooseME0 = isME0MuonSelNew(muon, 0.077, dPhiCut_, dPhiBendCut_);
+      
+      bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
+      if (muon.innerTrack().isNonnull()){
+      	ipxy = std::abs(muon.muonBestTrack()->dxy(priVertex.position())) < 0.2;
+      	ipz = std::abs(muon.muonBestTrack()->dz((priVertex.position()))) < 0.5;
+      	validPxlHit = muon.innerTrack()->hitPattern().numberOfValidPixelHits() > 0;
+      	highPurity = muon.innerTrack()->quality(reco::Track::highPurity);
+      }
+      // isMediumME0 - just loose with track requirements for now, this needs to be updated
+      bool isMediumME0 = isME0MuonSelNew(muon, 0.077, dPhiCut_, dPhiBendCut_) && ipxy && validPxlHit && highPurity;
 
-        if (!isMedium) continue;
-        mediumVec.push_back(muons->at(i));
-        mediumIsoVec.push_back(relIso);
+      // tighter cuts for tight ME0
+      dPhiCut_ = std::min(std::max(1.2/mom,1.2/100),0.032);
+      dPhiBendCut_ = std::min(std::max(0.2/mom,0.2/100),0.0041);
+      bool isTightME0 = isME0MuonSelNew(muon, 0.048, dPhiCut_, dPhiBendCut_) && ipxy && ipz && validPxlHit && highPurity;
+      
+      double relIso = (muon.puppiNoLeptonsChargedHadronIso() + muon.puppiNoLeptonsNeutralHadronIso() + muon.puppiNoLeptonsPhotonIso()) / muon.pt();
+      
+      if (isLoose || (std::abs(muon.eta()) > 2.4 && isLooseME0) ){
+	looseVec.push_back(muon);
+	looseIsoVec.push_back(relIso);
+      }
 
-        if (!isTight) continue;
-        tightVec.push_back(muons->at(i));
-        tightIsoVec.push_back(relIso);
+      if (isMedium || (std::abs(muon.eta()) > 2.4 && isMediumME0) ){
+	mediumVec.push_back(muon);
+	mediumIsoVec.push_back(relIso);
+      }
+    
+      if (isTight || (std::abs(muon.eta()) > 2.4 && isTightME0) ){
+	tightVec.push_back(muon);
+	tightIsoVec.push_back(relIso);
+      }
 
     }
 
@@ -211,11 +253,11 @@ PatMuonFilter::isME0MuonSel(reco::Muon muon, double pullXCut, double dXCut, doub
 
                 if (chamber->detector() == 5){
 
-                    deltaX   = fabs(chamber->x - segment->x);
-                    deltaY   = fabs(chamber->y - segment->y);
-                    pullX    = fabs(chamber->x - segment->x) / std::sqrt(chamber->xErr + segment->xErr);
-                    pullY    = fabs(chamber->y - segment->y) / std::sqrt(chamber->yErr + segment->yErr);
-                    deltaPhi = fabs(atan(chamber->dXdZ) - atan(segment->dXdZ));
+                    deltaX   = std::abs(chamber->x - segment->x);
+                    deltaY   = std::abs(chamber->y - segment->y);
+                    pullX    = std::abs(chamber->x - segment->x) / std::sqrt(chamber->xErr + segment->xErr);
+                    pullY    = std::abs(chamber->y - segment->y) / std::sqrt(chamber->yErr + segment->yErr);
+                    deltaPhi = std::abs(atan(chamber->dXdZ) - atan(segment->dXdZ));
 
                 }
             }
@@ -231,6 +273,56 @@ PatMuonFilter::isME0MuonSel(reco::Muon muon, double pullXCut, double dXCut, doub
 
     return result;
 
+}
+
+bool PatMuonFilter::isME0MuonSelNew(reco::Muon muon, double dEtaCut, double dPhiCut, double dPhiBendCut)
+{
+    
+    bool result = false;
+    bool isME0 = muon.isME0Muon();
+    
+    if(isME0){
+        
+        double deltaEta = 999;
+        double deltaPhi = 999;
+        double deltaPhiBend = 999;
+
+        const std::vector<reco::MuonChamberMatch>& chambers = muon.matches();
+        for( std::vector<reco::MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
+            
+            if (chamber->detector() == 5){
+            
+                for ( std::vector<reco::MuonSegmentMatch>::const_iterator segment = chamber->me0Matches.begin(); segment != chamber->me0Matches.end(); ++segment ){
+
+                    LocalPoint trk_loc_coord(chamber->x, chamber->y, 0);
+                    LocalPoint seg_loc_coord(segment->x, segment->y, 0);
+                    LocalVector trk_loc_vec(chamber->dXdZ, chamber->dYdZ, 1);
+                    LocalVector seg_loc_vec(segment->dXdZ, segment->dYdZ, 1);
+                    
+                    const ME0Chamber * me0chamber = ME0Geometry_->chamber(chamber->id);
+                    
+                    GlobalPoint trk_glb_coord = me0chamber->toGlobal(trk_loc_coord);
+                    GlobalPoint seg_glb_coord = me0chamber->toGlobal(seg_loc_coord);
+                    
+                    //double segDPhi = segment->me0SegmentRef->deltaPhi();
+		    // need to check if this works
+		    double segDPhi = me0chamber->computeDeltaPhi(seg_loc_coord, seg_loc_vec);
+                    double trackDPhi = me0chamber->computeDeltaPhi(trk_loc_coord, trk_loc_vec);
+                    
+                    deltaEta = std::abs(trk_glb_coord.eta() - seg_glb_coord.eta() );
+                    deltaPhi = std::abs(trk_glb_coord.phi() - seg_glb_coord.phi() );
+                    deltaPhiBend = std::abs(segDPhi - trackDPhi);
+                    
+                    if (deltaEta < dEtaCut && deltaPhi < dPhiCut && deltaPhiBend < dPhiBendCut) result = true;
+                    
+                }
+            }
+        }
+        
+    }
+    
+    return result;
+    
 }
 
 // ------------ method called when starting to processes a run  ------------
