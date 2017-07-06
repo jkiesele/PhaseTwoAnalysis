@@ -159,7 +159,7 @@ RecoMuonFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   for (size_t i = 0; i < muons->size(); i++) {
     if (muons->at(i).pt() < 2.) continue;
-    if (fabs(muons->at(i).eta()) > 3.) continue;
+    if (std::abs(muons->at(i).eta()) > 3.) continue;
 
     auto priVertex = vertices->at(prVtx);
     auto muon = muons->at(i);
@@ -196,17 +196,17 @@ RecoMuonFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (muon.pt() > 0.) relIso = relIso / muon.pt();
     else relIso = -1.;
 
-    if (isLoose || (fabs(muon.eta()) > 2.4 && isLooseME0) ){
+    if (isLoose || (std::abs(muon.eta()) > 2.4 && isLooseME0) ){
       looseVec.push_back(muon);
       looseIsoVec.push_back(relIso);
     }
 
-    if (isMedium || (fabs(muon.eta()) > 2.4 && isMediumME0) ){
+    if (isMedium || (std::abs(muon.eta()) > 2.4 && isMediumME0) ){
       mediumVec.push_back(muon);
       mediumIsoVec.push_back(relIso);
     }
     
-    if (isTight || (fabs(muon.eta()) > 2.4 && isTightME0) ){
+    if (isTight || (std::abs(muon.eta()) > 2.4 && isTightME0) ){
       tightVec.push_back(muon);
       tightIsoVec.push_back(relIso);
     }
@@ -266,11 +266,11 @@ RecoMuonFilter::isME0MuonSel(reco::Muon muon, double pullXCut, double dXCut, dou
 
         if (chamber->detector() == 5){
 
-          deltaX   = fabs(chamber->x - segment->x);
-          deltaY   = fabs(chamber->y - segment->y);
-          pullX    = fabs(chamber->x - segment->x) / std::sqrt(chamber->xErr + segment->xErr);
-          pullY    = fabs(chamber->y - segment->y) / std::sqrt(chamber->yErr + segment->yErr);
-          deltaPhi = fabs(atan(chamber->dXdZ) - atan(segment->dXdZ));
+          deltaX   = std::abs(chamber->x - segment->x);
+          deltaY   = std::abs(chamber->y - segment->y);
+          pullX    = std::abs(chamber->x - segment->x) / std::sqrt(chamber->xErr + segment->xErr);
+          pullY    = std::abs(chamber->y - segment->y) / std::sqrt(chamber->yErr + segment->yErr);
+          deltaPhi = std::abs(atan(chamber->dXdZ) - atan(segment->dXdZ));
 
         }
       }
@@ -319,9 +319,9 @@ bool RecoMuonFilter::isME0MuonSelNew(reco::Muon muon, double dEtaCut, double dPh
                     double segDPhi = segment->me0SegmentRef->deltaPhi();
                     double trackDPhi = me0chamber->computeDeltaPhi(trk_loc_coord, trk_loc_vec);
                     
-                    deltaEta = fabs(trk_glb_coord.eta() - seg_glb_coord.eta() );
-                    deltaPhi = fabs(trk_glb_coord.phi() - seg_glb_coord.phi() );
-                    deltaPhiBend = fabs(segDPhi - trackDPhi);
+                    deltaEta = std::abs(trk_glb_coord.eta() - seg_glb_coord.eta() );
+                    deltaPhi = std::abs(trk_glb_coord.phi() - seg_glb_coord.phi() );
+                    deltaPhiBend = std::abs(segDPhi - trackDPhi);
                     
                     if (deltaEta < dEtaCut && deltaPhi < dPhiCut && deltaPhiBend < dPhiBendCut) result = true;
                     
