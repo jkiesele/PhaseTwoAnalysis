@@ -26,5 +26,8 @@
 <use name="RecoEgamma/EgammaTools"/>
 
 <use name="RecoEgamma/Phase2InterimID"/>
+<use name="Geometry/GEMGeometry"/>
+<use name="Geometry/GEMGeometryBuilder"/>
+<use name="Geometry/Records"/>
 
 <flags EDM_PLUGIN="1"/>
