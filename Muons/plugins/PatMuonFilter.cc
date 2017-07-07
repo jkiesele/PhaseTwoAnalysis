@@ -152,7 +152,7 @@ PatMuonFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
     for (size_t i = 0; i < muons->size(); i++) {
       if (muons->at(i).pt() < 2.) continue;
-      if (std::abs(muons->at(i).eta()) > 3.) continue;
+      if (std::abs(muons->at(i).eta()) > 2.8) continue;
 
       auto priVertex = vertices->at(prVtx);
       auto muon = muons->at(i);
