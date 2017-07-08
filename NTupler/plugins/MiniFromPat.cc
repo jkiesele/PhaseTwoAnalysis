@@ -95,7 +95,7 @@ Implementation:
 // constructor "usesResource("TFileService");"
 // This will improve performance in multithreaded jobs.
 
-class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
+class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::one::WatchRuns>  {
   public:
     explicit MiniFromPat(const edm::ParameterSet&);
     ~MiniFromPat();
@@ -110,10 +110,11 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 
   private:
     virtual void beginJob() override;
-    virtual void beginRun(edm::Run const&, edm::EventSetup const&);
+    virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
     void genAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetup);
     void recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetup);
     virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
+    virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
     virtual void endJob() override;
 
     bool isLooseElec(const pat::Electron & patEl, edm::Handle<reco::ConversionCollection> conversions, const reco::BeamSpot beamspot); 
@@ -681,6 +682,12 @@ MiniFromPat::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
   edm::ESHandle<ME0Geometry> hGeom;
   iSetup.get<MuonGeometryRecord>().get(hGeom);
   ME0Geometry_ =( &*hGeom);
+}
+
+// ------------ method called when ending the processing of a run  ------------
+  void
+MiniFromPat::endRun(edm::Run const&, edm::EventSetup const&)
+{
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

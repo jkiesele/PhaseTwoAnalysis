@@ -33,7 +33,9 @@ process.source = cms.Source("PoolSource",
 
 process.myana = cms.EDAnalyzer('BasicPatDistrib')
 process.load("PhaseTwoAnalysis.BasicPatDistrib.CfiFile_cfi")
-process.myana.useDeepCSV = True
+#process.myana.useDeepCSV = True
+#process.myana.jets = cms.InputTag("slimmedJets"),
+#process.myana.mets = cms.InputTag("slimmedMETs"),
 
 process.TFileService = cms.Service("TFileService",
         fileName = cms.string('histos.root') 

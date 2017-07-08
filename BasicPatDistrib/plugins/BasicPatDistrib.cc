@@ -89,7 +89,7 @@ Implementation:
 // constructor "usesResource("TFileService");"
 // This will improve performance in multithreaded jobs.
 
-class BasicPatDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
+class BasicPatDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::one::WatchRuns>  {
   public:
     explicit BasicPatDistrib(const edm::ParameterSet&);
     ~BasicPatDistrib();
@@ -104,8 +104,9 @@ class BasicPatDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources>  
 
   private:
     virtual void beginJob() override;
-    virtual void beginRun(edm::Run const&, edm::EventSetup const&);
+    virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
     virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
+    virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
     virtual void endJob() override;
 
     bool isLooseElec(const pat::Electron & patEl, edm::Handle<reco::ConversionCollection> conversions, const reco::BeamSpot beamspot); 
@@ -194,6 +195,7 @@ class BasicPatDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources>  
     TH1D* h_goodJets_phi_;
     TH1D* h_goodJets_eta_;
     TH1D* h_goodJets_csv_;
+    TH2D* h_goodJets_nhFrac_pFrac_;
     TH1D* h_goodLJets_n_;
     TH1D* h_goodLJets_nb_;
     TH1D* h_goodLJets_pt_;
@@ -322,6 +324,7 @@ BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   h_goodJets_phi_ = fs_->make<TH1D>("GoodJetsPhi",";#phi(jet);Events / 0.1", 60, -3., 3.);
   h_goodJets_eta_ = fs_->make<TH1D>("GoodJetsEta",";#eta(jet);Events / 0.1", 100, -5., 5.);
   h_goodJets_csv_ = fs_->make<TH1D>("GoodJetsCSV",";CSV discriminant;Events / 0.02", 50, 0., 1.);
+  h_goodJets_nhFrac_pFrac_ = fs_->make<TH2D>("GoodJetsNeutralHadronFractionPhotonFraction",";neutral hadron frac.;photon frac.;", 50, 0., 1., 50., 0., 1.);
   h_goodLJets_n_ = fs_->make<TH1D>("GoodLightJetsN",";Jet multiplicity;Events / 1", 12, 0., 12.);
   h_goodLJets_nb_ = fs_->make<TH1D>("GoodLightJetsNb",";b jet multiplicity;Events / 1", 5, 0., 5.);
   h_goodLJets_pt_ = fs_->make<TH1D>("GoodLightJetsPt",";p_{T}(jet) (GeV);Events / (2 GeV)", 90, 20., 200.);
@@ -585,6 +588,7 @@ BasicPatDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     h_goodJets_phi_->Fill(jets->at(i).phi());
     h_goodJets_eta_->Fill(jets->at(i).eta());
     h_goodJets_csv_->Fill(btagDisc); 
+    h_goodJets_nhFrac_pFrac_->Fill(jets->at(i).neutralHadronEnergyFraction(), jets->at(i).photonEnergyFraction());
     ++nGoodJets;
     if (jets->at(i).genParton() && fabs(jets->at(i).genParton()->pdgId()) == 5) ++nbGoodJets;
     if ((useDeepCSV_ && btagDisc > 0.6324)
@@ -789,6 +793,12 @@ BasicPatDistrib::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
   edm::ESHandle<ME0Geometry> hGeom;
   iSetup.get<MuonGeometryRecord>().get(hGeom);
   ME0Geometry_ =( &*hGeom);
+}
+
+// ------------ method called when ending the processing of a run  ------------
+  void
+BasicPatDistrib::endRun(edm::Run const&, edm::EventSetup const&)
+{
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

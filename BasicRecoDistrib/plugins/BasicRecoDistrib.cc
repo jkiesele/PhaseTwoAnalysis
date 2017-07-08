@@ -78,7 +78,7 @@ Implementation:
 // constructor "usesResource("TFileService");"
 // This will improve performance in multithreaded jobs.
 
-class BasicRecoDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
+class BasicRecoDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::one::WatchRuns>  {
   public:
     explicit BasicRecoDistrib(const edm::ParameterSet&);
     ~BasicRecoDistrib();
@@ -92,8 +92,9 @@ class BasicRecoDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources> 
 
   private:
     virtual void beginJob() override;
-    virtual void beginRun(edm::Run const&, edm::EventSetup const&);
+    virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
     virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
+    virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
     virtual void endJob() override;
 
     bool isME0MuonSel(reco::Muon, double pullXCut, double dXCut, double pullYCut, double dYCut, double dPhi);
@@ -192,21 +193,25 @@ class BasicRecoDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources> 
     TH1D* h_jet20_pt_;
     TH1D* h_jet20_eta_;
     TH1D* h_jet20_phi_;
+    TH2D* h_jet20_nhFrac_pFrac_;
     // ... with p_T > 30 GeV
     TH1D* h_jet30_n_;
     TH1D* h_jet30_pt_;
     TH1D* h_jet30_eta_;
     TH1D* h_jet30_phi_;
+    TH2D* h_jet30_nhFrac_pFrac_;
     // ... with p_T > 40 GeV
     TH1D* h_jet40_n_;
     TH1D* h_jet40_pt_;
     TH1D* h_jet40_eta_;
     TH1D* h_jet40_phi_;
+    TH2D* h_jet40_nhFrac_pFrac_;
     // ... with p_T > 50 GeV
     TH1D* h_jet50_n_;
     TH1D* h_jet50_pt_;
     TH1D* h_jet50_eta_;
     TH1D* h_jet50_phi_;
+    TH2D* h_jet50_nhFrac_pFrac_;
 
     // MET
     TH1D* h_met_;
@@ -348,21 +353,25 @@ BasicRecoDistrib::BasicRecoDistrib(const edm::ParameterSet& iConfig):
   h_jet20_pt_ = fs_->make<TH1D>("Jets20Pt",";p_{T}(jet) (GeV);Events / (5 GeV)",46,20.,250.);
   h_jet20_eta_ = fs_->make<TH1D>("Jets20Eta",";#eta(jet);Events / 0.2",40,-4.,4.);
   h_jet20_phi_ = fs_->make<TH1D>("Jets20Phi",";#phi(jet);Events / 0.2",30,-3.,3.);
+  h_jet20_nhFrac_pFrac_ = fs_->make<TH2D>("Jets20NeutralHadronFractionPhotonFraction",";neutral hadron frac.;photon frac.;", 50, 0., 1., 50., 0., 1.);
   // ... with p_T > 30 GeV
   h_jet30_n_ = fs_->make<TH1D>("Jets30N",";Number of jets;Events / 1",14,0.,14.);
   h_jet30_pt_ = fs_->make<TH1D>("Jets30Pt",";p_{T}(jet) (GeV);Events / (5 GeV)",44,30.,250.);
   h_jet30_eta_ = fs_->make<TH1D>("Jets30Eta",";#eta(jet);Events / 0.2",40,-4.,4.);
   h_jet30_phi_ = fs_->make<TH1D>("Jets30Phi",";#phi(jet);Events / 0.2",30,-3.,3.);
+  h_jet30_nhFrac_pFrac_ = fs_->make<TH2D>("Jets30NeutralHadronFractionPhotonFraction",";neutral hadron frac.;photon frac.;", 50, 0., 1., 50., 0., 1.);
   // ... with p_T > 40 GeV
   h_jet40_n_ = fs_->make<TH1D>("Jets40N",";Number of jets;Events / 1",12,0.,12);
   h_jet40_pt_ = fs_->make<TH1D>("Jets40Pt",";p_{T}(jet) (GeV);Events / (5 GeV)",42,40.,250.);
   h_jet40_eta_ = fs_->make<TH1D>("Jets40Eta",";#eta(jet);Events / 0.2",40,-4.,4.);
   h_jet40_phi_ = fs_->make<TH1D>("Jets40Phi",";#phi(jet);Events / 0.2",30,-3.,3.);
+  h_jet40_nhFrac_pFrac_ = fs_->make<TH2D>("Jets40NeutralHadronFractionPhotonFraction",";neutral hadron frac.;photon frac.;", 50, 0., 1., 50., 0., 1.);
   // ... with p_T > 50 GeV
   h_jet50_n_ = fs_->make<TH1D>("Jets50N",";Number of jets;Events / 1",12,0.,12);
   h_jet50_pt_ = fs_->make<TH1D>("Jets50Pt",";p_{T}(jet) (GeV);Events / (5 GeV)",40,50.,250);
   h_jet50_eta_ = fs_->make<TH1D>("Jets50Eta",";#eta(jet);Events / 0.2",40,-4.,4.);
   h_jet50_phi_ = fs_->make<TH1D>("Jets50Phi",";#phi(jet);Events / 0.2",30,-3.,3.);
+  h_jet50_nhFrac_pFrac_ = fs_->make<TH2D>("Jets50NeutralHadronFractionPhotonFraction",";neutral hadron frac.;photon frac.;", 50, 0., 1., 50., 0., 1.);
 
   // MET
   h_met_ = fs_->make<TH1D>("METPt",";p_{T}(MET) (GeV); Events / (5 GeV)",60,0.,300.);
@@ -628,24 +637,28 @@ BasicRecoDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     h_jet20_pt_->Fill(jets->at(i).pt());
     h_jet20_eta_->Fill(jets->at(i).eta());
     h_jet20_phi_->Fill(jets->at(i).phi());
+    h_jet20_nhFrac_pFrac_->Fill(jets->at(i).neutralHadronEnergyFraction(), jets->at(i).photonEnergyFraction());
     ++nJet20;
 
     if (jets->at(i).pt() < 30.) continue;
     h_jet30_pt_->Fill(jets->at(i).pt());
     h_jet30_eta_->Fill(jets->at(i).eta());
     h_jet30_phi_->Fill(jets->at(i).phi());
+    h_jet30_nhFrac_pFrac_->Fill(jets->at(i).neutralHadronEnergyFraction(), jets->at(i).photonEnergyFraction());
     ++nJet30;
 
     if (jets->at(i).pt() < 40.) continue;
     h_jet40_pt_->Fill(jets->at(i).pt());
     h_jet40_eta_->Fill(jets->at(i).eta());
     h_jet40_phi_->Fill(jets->at(i).phi());
+    h_jet40_nhFrac_pFrac_->Fill(jets->at(i).neutralHadronEnergyFraction(), jets->at(i).photonEnergyFraction());
     ++nJet40;
 
     if (jets->at(i).pt() < 50.) continue;
     h_jet50_pt_->Fill(jets->at(i).pt());
     h_jet50_eta_->Fill(jets->at(i).eta());
     h_jet50_phi_->Fill(jets->at(i).phi());
+    h_jet50_nhFrac_pFrac_->Fill(jets->at(i).neutralHadronEnergyFraction(), jets->at(i).photonEnergyFraction());
     ++nJet50;
   }
   h_jet20_n_->Fill(nJet20);
@@ -947,6 +960,12 @@ BasicRecoDistrib::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
   edm::ESHandle<ME0Geometry> hGeom;
   iSetup.get<MuonGeometryRecord>().get(hGeom);
   ME0Geometry_ =( &*hGeom);
+}
+
+// ------------ method called when ending the processing of a run  ------------
+  void
+BasicRecoDistrib::endRun(edm::Run const&, edm::EventSetup const&)
+{
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
