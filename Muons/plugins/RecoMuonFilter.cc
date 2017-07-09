@@ -73,8 +73,12 @@ class RecoMuonFilter : public edm::stream::EDProducer<> {
 
     // ----------member data ---------------------------
     edm::EDGetTokenT<std::vector<reco::Vertex>> verticesToken_;
-    edm::EDGetTokenT<std::vector<reco::Muon>> muonsToken_;
-    edm::EDGetTokenT<std::vector<reco::PFCandidate>> pfCandsNoLepToken_;
+    edm::EDGetTokenT<edm::View<reco::Muon>> muonsToken_;
+
+    edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_charged_hadrons_;
+    edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_neutral_hadrons_;
+    edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_photons_;
+  
     const ME0Geometry* ME0Geometry_; 
 };
 
@@ -92,16 +96,18 @@ class RecoMuonFilter : public edm::stream::EDProducer<> {
 //
 RecoMuonFilter::RecoMuonFilter(const edm::ParameterSet& iConfig):
   verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices"))),
-  muonsToken_(consumes<std::vector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("muons"))),
-  pfCandsNoLepToken_(consumes<std::vector<reco::PFCandidate>>(iConfig.getParameter<edm::InputTag>("pfCandsNoLep")))    
+  muonsToken_(consumes<edm::View<reco::Muon>>(iConfig.getParameter<edm::InputTag>("muons")))
 {
+  PUPPINoLeptonsIsolation_charged_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationChargedHadrons"));
+  PUPPINoLeptonsIsolation_neutral_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationNeutralHadrons"));
+  PUPPINoLeptonsIsolation_photons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationPhotons"));
+  
   produces<std::vector<reco::Muon>>("LooseMuons");
   produces<std::vector<double>>("LooseMuonRelIso");
   produces<std::vector<reco::Muon>>("MediumMuons");
   produces<std::vector<double>>("MediumMuonRelIso");
   produces<std::vector<reco::Muon>>("TightMuons");
   produces<std::vector<double>>("TightMuonRelIso");
-
 }
 
 void
@@ -140,10 +146,16 @@ RecoMuonFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (prVtx < 0) prVtx = i;
   }
 
-  Handle<std::vector<reco::Muon>> muons;
+  Handle<View<reco::Muon> > muons;
   iEvent.getByToken(muonsToken_, muons);
-  Handle<std::vector<reco::PFCandidate>> pfCandsNoLep;
-  iEvent.getByToken(pfCandsNoLepToken_, pfCandsNoLep);  
+  
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_charged_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_neutral_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_photons;
+  iEvent.getByToken(PUPPINoLeptonsIsolation_charged_hadrons_, PUPPINoLeptonsIsolation_charged_hadrons);
+  iEvent.getByToken(PUPPINoLeptonsIsolation_neutral_hadrons_, PUPPINoLeptonsIsolation_neutral_hadrons);
+  iEvent.getByToken(PUPPINoLeptonsIsolation_photons_, PUPPINoLeptonsIsolation_photons);  
+  
   std::unique_ptr<std::vector<reco::Muon>> filteredLooseMuons;
   std::unique_ptr<std::vector<double>> filteredLooseMuonRelIso;
   std::unique_ptr<std::vector<reco::Muon>> filteredMediumMuons;
@@ -161,6 +173,8 @@ RecoMuonFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (muons->at(i).pt() < 2.) continue;
     if (std::abs(muons->at(i).eta()) > 2.8) continue;
 
+    edm::RefToBase<reco::Muon> muref = muons->refAt(i);
+    
     auto priVertex = vertices->at(prVtx);
     auto muon = muons->at(i);
     
@@ -188,14 +202,11 @@ RecoMuonFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     dPhiBendCut_ = std::min(std::max(0.2/mom,0.2/100),0.0041);
     bool isTightME0 = isME0MuonSelNew(muon, 0.048, dPhiCut_, dPhiBendCut_) && ipxy && ipz && validPxlHit && highPurity;
     
-    double relIso = 0.;
-    for (size_t k = 0; k < pfCandsNoLep->size(); k++) {
-      if (ROOT::Math::VectorUtil::DeltaR(muon.p4(),pfCandsNoLep->at(k).p4()) > 0.3) continue;
-      relIso += pfCandsNoLep->at(k).pt();
-    }
-    if (muon.pt() > 0.) relIso = relIso / muon.pt();
-    else relIso = -1.;
-
+    double muon_puppiIsoNoLep_ChargedHadron = (*PUPPINoLeptonsIsolation_charged_hadrons)[muref];
+    double muon_puppiIsoNoLep_NeutralHadron = (*PUPPINoLeptonsIsolation_neutral_hadrons)[muref];
+    double muon_puppiIsoNoLep_Photon = (*PUPPINoLeptonsIsolation_photons)[muref];
+    double relIso = (muon_puppiIsoNoLep_ChargedHadron+muon_puppiIsoNoLep_NeutralHadron+muon_puppiIsoNoLep_Photon)/muon.pt();
+    
     if (isLoose || (std::abs(muon.eta()) > 2.4 && isLooseME0) ){
       looseVec.push_back(muon);
       looseIsoVec.push_back(relIso);

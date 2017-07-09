@@ -21,6 +21,9 @@ process = cms.Process("MuonFilter")
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.load('Configuration.Geometry.GeometryExtended2023D17Reco_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+from Configuration.AlCa.GlobalTag import GlobalTag
+process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic', '')
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.MessageLogger.cerr.threshold = 'INFO'
 process.MessageLogger.categories.append('MyAna')
@@ -42,13 +45,17 @@ if (options.inputFormat.lower() == "reco"):
     ))
 
 # run Puppi 
-process.load('CommonTools/PileupAlgos/Puppi_cff')
-process.load('CommonTools/PileupAlgos/PhotonPuppi_cff')
-process.load('CommonTools/PileupAlgos/softKiller_cfi')
-from CommonTools.PileupAlgos.PhotonPuppi_cff        import setupPuppiPhoton
-from PhysicsTools.PatAlgos.slimming.puppiForMET_cff import makePuppies
-makePuppies(process)
-process.puSequence = cms.Sequence(process.pfNoLepPUPPI * process.puppiNoLep)
+process.load('CommonTools.PileupAlgos.Puppi_cff')
+process.particleFlowNoLep = cms.EDFilter("PdgIdCandViewSelector",
+                                    src = cms.InputTag("particleFlow"), 
+                                    pdgId = cms.vint32( 1,2,22,111,130,310,2112,211,-211,321,-321,999211,2212,-2212 )
+                                    )
+process.puppiNoLep = process.puppi.clone(candName = cms.InputTag('particleFlowNoLep'))
+
+process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
+process.load("PhysicsTools.PatAlgos.slimming.primaryVertexAssociation_cfi")
+process.load("PhysicsTools.PatAlgos.slimming.offlineSlimmedPrimaryVertices_cfi")
+process.load("PhysicsTools.PatAlgos.slimming.packedPFCandidates_cfi")
 
 # producer
 moduleName = "PatMuonFilter"    
@@ -56,8 +63,6 @@ if (options.inputFormat.lower() == "reco"):
     moduleName = "RecoMuonFilter"
 process.muonfilter = cms.EDProducer(moduleName)
 process.load("PhaseTwoAnalysis.Muons."+moduleName+"_cfi")
-if (options.inputFormat.lower() == "reco"):
-    process.muonfilter.pfCandsNoLep = "puppiNoLep"
 
 process.out = cms.OutputModule("PoolOutputModule",
     outputCommands = cms.untracked.vstring('keep *_*_*_*',
@@ -67,7 +72,11 @@ process.out = cms.OutputModule("PoolOutputModule",
 )
   
 if (options.inputFormat.lower() == "reco"):
-    process.p = cms.Path(process.puSequence * process.muonfilter)
+    process.p = cms.Path(process.primaryVertexAssociation
+                         +process.puppi
+                         +process.particleFlowNoLep+process.puppiNoLep
+                         +process.offlineSlimmedPrimaryVertices+process.packedPFCandidates
+                         +process.muonIsolationPUPPI+process.muonIsolationPUPPINoLep * process.muonfilter)
 else:
     process.p = cms.Path(process.muonfilter)
 
