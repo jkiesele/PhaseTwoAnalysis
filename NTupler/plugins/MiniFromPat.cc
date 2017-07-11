@@ -10,16 +10,16 @@ Description: produces flat ntuples from PAT collections
    - storing gen and reco jets with pT > 20 GeV and |eta| < 5
 
 Implementation:
-   - lepton isolation might need to be refined
-   - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/UPGTrackerTDRStudies#Muon_identification
+   - muon isolation comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Muon_isolation
+   - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Muon_identification
+   - electron isolation might need to be refined
    - electron ID comes from https://indico.cern.ch/event/623893/contributions/2531742/attachments/1436144/2208665/UPSG_EGM_Workshop_Mar29.pdf
       /!\ no ID is implemented for forward electrons as:
       - PFClusterProducer does not run on miniAOD
       - jurassic isolation needs tracks
    - PF jet ID comes from Run-2 https://github.com/cms-sw/cmssw/blob/CMSSW_9_1_1_patch1/PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h
-   - b-tagging WP come from Run-2 https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation80XReReco#Supported_Algorithms_and_Operati 
-      - for pfCombinedInclusiveSecondaryVertexV2BJetTags: L = 0.5426, M = 0.8484, T = 0.9535)
-      - for deepCSV: L = 0.2219, M = 0.6324, T = 0.8958
+   - no JEC applied
+   - b-tagging WPs come from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#B_tagging 
 */
 
 //
@@ -126,6 +126,7 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
     // ----------member data ---------------------------
     edm::Service<TFileService> fs_;
 
+    unsigned int pileup_;
     edm::EDGetTokenT<std::vector<reco::Vertex>> verticesToken_;
     edm::EDGetTokenT<std::vector<pat::Electron>> elecsToken_;
     edm::EDGetTokenT<reco::BeamSpot> bsToken_;
@@ -138,6 +139,8 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
     edm::EDGetTokenT<std::vector<reco::GenJet>> genJetsToken_;
     edm::EDGetTokenT<std::vector<pat::PackedGenParticle>> genPartsToken_;
     const ME0Geometry* ME0Geometry_; 
+    double mvaThres_[3];
+    double deepThres_[3];
 
     TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_looseElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_puppiJets_, *t_puppiMET_;
 
@@ -156,6 +159,7 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
 // constructors and destructor
 //
 MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
+  pileup_(iConfig.getParameter<unsigned int>("pileup")),
   verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices"))),
   elecsToken_(consumes<std::vector<pat::Electron>>(iConfig.getParameter<edm::InputTag>("electrons"))),
   bsToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamspot"))),
@@ -169,6 +173,36 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
   genPartsToken_(consumes<std::vector<pat::PackedGenParticle>>(iConfig.getParameter<edm::InputTag>("genParts")))
 {
   //now do what ever initialization is needed
+  if (pileup_ == 0) {
+    mvaThres_[0] = -0.694;
+    mvaThres_[1] = 0.128;
+    mvaThres_[2] = 0.822;
+    deepThres_[0] = 0.131;
+    deepThres_[1] = 0.432;
+    deepThres_[2] = 0.741;
+  } else if (pileup_ == 140) {
+    mvaThres_[0] = -0.654;
+    mvaThres_[1] = 0.214;
+    mvaThres_[2] = 0.864;
+    deepThres_[0] = 0.159;
+    deepThres_[1] = 0.507;
+    deepThres_[2] = 0.799;
+  } else if (pileup_ == 200) {
+    mvaThres_[0] = -0.642;
+    mvaThres_[1] = 0.236;
+    mvaThres_[2] = 0.878;
+    deepThres_[0] = 0.170;
+    deepThres_[1] = 0.527;
+    deepThres_[2] = 0.821;
+  } else {
+    mvaThres_[0] = -1.;
+    mvaThres_[1] = -1.;
+    mvaThres_[2] = -1.;
+    deepThres_[0] = 0.;
+    deepThres_[1] = 0.;
+    deepThres_[2] = 0.;
+  }  
+
   usesResource("TFileService");
 
   t_event_      = fs_->make<TTree>("Event","Event");
@@ -248,9 +282,7 @@ MiniFromPat::genAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetup
       std::vector<const reco::Candidate *> jconst = genJets->at(jGenJets[j]).getJetConstituentsQuick();
       for (size_t k = 0; k < jconst.size(); k++) {
         double deltaR = ROOT::Math::VectorUtil::DeltaR(genParts->at(i).p4(),jconst[k]->p4());
-        if (deltaR < 0.01) continue;
-        if (abs(genParts->at(i).pdgId()) == 13 && deltaR > 0.4) continue;
-        if (abs(genParts->at(i).pdgId()) == 11 && deltaR > 0.3) continue;
+        if (deltaR < 0.01 || deltaR > 0.4) continue;
         genIso = genIso + jconst[k]->pt();
       }
     }
@@ -446,22 +478,22 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     retTight.set(false);
     bool isTight = jetIDTight_(jets->at(i), retTight);
 
-    double csvv2   = jets->at(i).bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags"); 
-    bool isLooseCSVv2  = csvv2 > 0.5426;
-    bool isMediumCSVv2 = csvv2 > 0.8484;
-    bool isTightCSVv2  = csvv2 > 0.9535;
+    double mvav2   = jets->at(i).bDiscriminator("pfCombinedMVAV2BJetTags"); 
+    bool isLooseMVAv2  = mvav2 > mvaThres_[0];
+    bool isMediumMVAv2 = mvav2 > mvaThres_[1];
+    bool isTightMVAv2  = mvav2 > mvaThres_[2];
     double deepcsv = jets->at(i).bDiscriminator("pfDeepCSVJetTags:probb") +
                             jets->at(i).bDiscriminator("pfDeepCSVJetTags:probbb");
-    bool isLooseDeepCSV  = deepcsv > 0.2219;
-    bool isMediumDeepCSV = deepcsv > 0.6324;
-    bool isTightDeepCSV  = deepcsv > 0.8958;
+    bool isLooseDeepCSV  = deepcsv > deepThres_[0];
+    bool isMediumDeepCSV = deepcsv > deepThres_[1];
+    bool isTightDeepCSV  = deepcsv > deepThres_[2];
 
     ev_.j_id[ev_.nj]      = (isTight | (isLoose<<1));
     ev_.j_pt[ev_.nj]      = jets->at(i).pt();
     ev_.j_phi[ev_.nj]     = jets->at(i).phi();
     ev_.j_eta[ev_.nj]     = jets->at(i).eta();
     ev_.j_mass[ev_.nj]    = jets->at(i).mass();
-    ev_.j_csvv2[ev_.nj]   = (isTightCSVv2 | (isMediumCSVv2<<1) | (isLooseCSVv2<<2)); 
+    ev_.j_mvav2[ev_.nj]   = (isTightMVAv2 | (isMediumMVAv2<<1) | (isLooseMVAv2<<2)); 
     ev_.j_deepcsv[ev_.nj] = (isTightDeepCSV | (isMediumDeepCSV<<1) | (isLooseDeepCSV<<2));
     ev_.j_flav[ev_.nj]    = jets->at(i).partonFlavour();
     ev_.j_hadflav[ev_.nj] = jets->at(i).hadronFlavour();

@@ -4,6 +4,9 @@ process = cms.Process("MyAna")
 
 process.load('Configuration.Geometry.GeometryExtended2023D17Reco_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+from Configuration.AlCa.GlobalTag import GlobalTag
+process.GlobalTag = GlobalTag(process.GlobalTag, '91X_upgrade2023_realistic_v3', '')
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = 'INFO'
@@ -31,6 +34,15 @@ process.load('CommonTools/PileupAlgos/softKiller_cfi')
 from CommonTools.PileupAlgos.PhotonPuppi_cff        import setupPuppiPhoton
 from PhysicsTools.PatAlgos.slimming.puppiForMET_cff import makePuppies
 makePuppies(process)
+process.particleFlowNoLep = cms.EDFilter("PdgIdCandViewSelector",
+                                    src = cms.InputTag("particleFlow"), 
+                                    pdgId = cms.vint32( 1,2,22,111,130,310,2112,211,-211,321,-321,999211,2212,-2212 )
+                                    )
+process.puppiNoLep = process.puppi.clone(candName = cms.InputTag('particleFlowNoLep'))
+process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
+process.load("PhysicsTools.PatAlgos.slimming.primaryVertexAssociation_cfi")
+process.load("PhysicsTools.PatAlgos.slimming.offlineSlimmedPrimaryVertices_cfi")
+process.load("PhysicsTools.PatAlgos.slimming.packedPFCandidates_cfi")
 
 # recluster jets
 process.load('RecoJets/Configuration/RecoPFJets_cff')
@@ -40,8 +52,6 @@ process.ak4PUPPIJets  = process.ak4PFJets.clone(rParam=0.4, src = cms.InputTag('
 process.load('RecoMET.METProducers.PFMET_cfi')
 process.puppiMet = process.pfMet.clone()
 process.puppiMet.src = cms.InputTag('puppi')
-
-process.puSequence = cms.Sequence(process.pfNoLepPUPPI * process.puppi * process.puppiNoLep * process.ak4PUPPIJets * process.puppiMet)
 
 # PF cluster producer for HFCal ID
 process.load("RecoParticleFlow.PFClusterProducer.particleFlowRecHitHGC_cff")
@@ -65,6 +75,8 @@ process.myana.met = "puppiMet"
 process.TFileService = cms.Service("TFileService",
         fileName = cms.string('histos.root')
 )
+
+process.puSequence = cms.Sequence(process.primaryVertexAssociation * process.pfNoLepPUPPI * process.puppi * process.particleFlowNoLep * process.puppiNoLep * process.offlineSlimmedPrimaryVertices * process.packedPFCandidates * process.muonIsolationPUPPI * process.muonIsolationPUPPINoLep * process.ak4PUPPIJets * process.puppiMet)
 
 process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.myana) 
 

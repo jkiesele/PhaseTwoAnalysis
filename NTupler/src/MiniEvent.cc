@@ -76,7 +76,7 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_puppiJets_->Branch("Eta",           ev.j_eta,       "Eta[JetPUPPI_size]/F");
   t_puppiJets_->Branch("Phi",           ev.j_phi,       "Phi[JetPUPPI_size]/F");
   t_puppiJets_->Branch("Mass",          ev.j_mass,      "Mass[JetPUPPI_size]/F");
-  t_puppiJets_->Branch("CSVv2",         ev.j_csvv2,     "CSVv2[JetPUPPI_size]/I");
+  t_puppiJets_->Branch("MVAv2",         ev.j_mvav2,     "MVAv2[JetPUPPI_size]/I");
   t_puppiJets_->Branch("DeepCSV",       ev.j_deepcsv,   "DeepCSV[JetPUPPI_size]/I");
   t_puppiJets_->Branch("PartonFlavor",  ev.j_flav,      "PartonFlavor[JetPUPPI_size]/I");
   t_puppiJets_->Branch("HadronFlavor",  ev.j_hadflav,   "HadronFlavor[JetPUPPI_size]/I");

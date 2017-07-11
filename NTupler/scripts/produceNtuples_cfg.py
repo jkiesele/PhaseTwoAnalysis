@@ -104,6 +104,14 @@ process.load('CommonTools/PileupAlgos/softKiller_cfi')
 from CommonTools.PileupAlgos.PhotonPuppi_cff        import setupPuppiPhoton
 from PhysicsTools.PatAlgos.slimming.puppiForMET_cff import makePuppies
 makePuppies(process)
+process.particleFlowNoLep = cms.EDFilter("PdgIdCandViewSelector",
+                                    src = cms.InputTag("particleFlow"), 
+                                    pdgId = cms.vint32( 1,2,22,111,130,310,2112,211,-211,321,-321,999211,2212,-2212 )
+                                    )
+process.puppiNoLep = process.puppi.clone(candName = cms.InputTag('particleFlowNoLep'))
+process.load("PhysicsTools.PatAlgos.slimming.primaryVertexAssociation_cfi")
+process.load("PhysicsTools.PatAlgos.slimming.offlineSlimmedPrimaryVertices_cfi")
+process.load("PhysicsTools.PatAlgos.slimming.packedPFCandidates_cfi")
 
 # recluster jets
 process.load('RecoJets/Configuration/RecoPFJets_cff')
@@ -113,8 +121,6 @@ process.ak4PUPPIJets  = process.ak4PFJets.clone(rParam=0.4, src = cms.InputTag('
 process.load('RecoMET.METProducers.PFMET_cfi')
 process.puppiMet = process.pfMet.clone()
 process.puppiMet.src = cms.InputTag('puppi')
-
-process.puSequence = cms.Sequence(process.pfNoLepPUPPI * process.puppi * process.puppiNoLep * process.ak4PUPPIJets * process.puppiMet)
 
 # PF cluster producer for HFCal ID
 process.load("RecoParticleFlow.PFClusterProducer.particleFlowRecHitHGC_cff")
@@ -134,7 +140,6 @@ process.ntuple = cms.EDAnalyzer(moduleName)
 process.load("PhaseTwoAnalysis.NTupler."+moduleName+"_cfi")
 if (options.inputFormat.lower() == "reco"):
     process.ntuple.jets = "ak4PUPPIJets"
-    process.ntuple.pfCands = "puppi"
     process.ntuple.pfCandsNoLep = "puppiNoLep"
     process.ntuple.met = "puppiMet"
 
@@ -144,6 +149,8 @@ process.TFileService = cms.Service("TFileService",
                                    )
 
 # run
+process.puSequence = cms.Sequence(process.primaryVertexAssociation * process.pfNoLepPUPPI * process.puppi * process.particleFlowNoLep * process.puppiNoLep * process.offlineSlimmedPrimaryVertices * process.packedPFCandidates * process.muonIsolationPUPPI * process.muonIsolationPUPPINoLep * process.ak4PUPPIJets * process.puppiMet)
+
 if options.skim:
     if (options.inputFormat.lower() == "reco"):
         process.p = cms.Path(process.weightCounter * process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.preYieldFilter * process.ntuple)

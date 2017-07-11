@@ -37,7 +37,7 @@ struct MiniEvent_t
   Float_t lm_pt[50], lm_eta[50], lm_phi[50], lm_mass[50], lm_relIso[50];
   Int_t tm_ch[50], tm_g[50];
   Float_t tm_pt[50], tm_eta[50], tm_phi[50], tm_mass[50], tm_relIso[50];
-  Int_t j_id[200], j_g[200], j_csvv2[200], j_deepcsv[200], j_flav[200], j_hadflav[200], j_pid[200];
+  Int_t j_id[200], j_g[200], j_mvav2[200], j_deepcsv[200], j_flav[200], j_hadflav[200], j_pid[200];
   Float_t j_pt[200], j_eta[200], j_phi[200], j_mass[200];
   Float_t met_pt[10], met_eta[10], met_phi[10];
 

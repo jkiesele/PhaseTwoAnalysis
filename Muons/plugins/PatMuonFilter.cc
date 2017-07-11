@@ -8,7 +8,8 @@
 Description: adds a vector of pat muons
 
 Implementation:
-- muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/UPGTrackerTDRStudies#Muon_identification
+- muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Muon_identification
+- muon iso comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Muon_isolation
 */
 //
 // Original Author:  Elvire Bouvier

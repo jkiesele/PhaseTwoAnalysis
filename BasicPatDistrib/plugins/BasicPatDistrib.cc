@@ -8,17 +8,16 @@
 Description: produces histograms of basic quantities from PAT collections
 
 Implementation:
-   - lepton isolation might need to be refined
-   - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/UPGTrackerTDRStudies#Muon_identification
+   - muon isolation comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Muon_isolation
+   - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Muon_identification
+   - electron isolation might need to be refined
    - electron ID comes from https://indico.cern.ch/event/623893/contributions/2531742/attachments/1436144/2208665/UPSG_EGM_Workshop_Mar29.pdf
       /!\ no ID is implemented for forward electrons as:
       - PFClusterProducer does not run on miniAOD
       - jurassic isolation needs tracks
    - PF jet ID comes from Run-2 https://github.com/cms-sw/cmssw/blob/CMSSW_9_1_1_patch1/PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h
    - no JEC applied
-   - b-tagging WP come from Run-2 https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation80XReReco#Supported_Algorithms_and_Operati 
-      - for pfCombinedInclusiveSecondaryVertexV2BJetTags: L = 0.5426, M = 0.8484, T = 0.9535)
-      - for deepCSV: L = 0.2219, M = 0.6324, T = 0.8958
+   - b-tagging WPs come from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#B_tagging 
 */
 
 //
@@ -118,6 +117,7 @@ class BasicPatDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, e
     // ----------member data ---------------------------
     edm::Service<TFileService> fs_;
 
+    unsigned int pileup_;
     bool useDeepCSV_;
     edm::EDGetTokenT<std::vector<reco::Vertex>> verticesToken_;
     edm::EDGetTokenT<std::vector<pat::Electron>> elecsToken_;
@@ -131,6 +131,9 @@ class BasicPatDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, e
     edm::EDGetTokenT<std::vector<pat::PackedGenParticle>> genPartsToken_;
     edm::EDGetTokenT<std::vector<reco::GenJet>> genJetsToken_;
     const ME0Geometry* ME0Geometry_; 
+    double mvaThres_;
+    double deepThres_;
+    double muThres_;
 
     // MC truth in fiducial phase space
     TH1D* h_genMuons_n_;
@@ -186,7 +189,7 @@ class BasicPatDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, e
     TH1D* h_allJets_pt_;
     TH1D* h_allJets_phi_;
     TH1D* h_allJets_eta_;
-    TH1D* h_allJets_csv_;
+    TH1D* h_allJets_disc_;
     TH1D* h_allJets_id_;
     // ... that pass kin cuts, loose ID
     TH1D* h_goodJets_n_;
@@ -194,20 +197,19 @@ class BasicPatDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, e
     TH1D* h_goodJets_pt_;
     TH1D* h_goodJets_phi_;
     TH1D* h_goodJets_eta_;
-    TH1D* h_goodJets_csv_;
-    TH2D* h_goodJets_nhFrac_pFrac_;
+    TH1D* h_goodJets_disc_;
     TH1D* h_goodLJets_n_;
     TH1D* h_goodLJets_nb_;
     TH1D* h_goodLJets_pt_;
     TH1D* h_goodLJets_phi_;
     TH1D* h_goodLJets_eta_;
-    TH1D* h_goodLJets_csv_;
+    TH1D* h_goodLJets_disc_;
     TH1D* h_goodBJets_n_;
     TH1D* h_goodBJets_nb_;
     TH1D* h_goodBJets_pt_;
     TH1D* h_goodBJets_phi_;
     TH1D* h_goodBJets_eta_;
-    TH1D* h_goodBJets_csv_;
+    TH1D* h_goodBJets_disc_;
 
     TH1D* h_goodMET_pt_;
     TH1D* h_goodMET_phi_;      
@@ -225,6 +227,7 @@ class BasicPatDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, e
 // constructors and destructor
 //
 BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
+  pileup_(iConfig.getParameter<unsigned int>("pileup")),
   useDeepCSV_(iConfig.getParameter<bool>("useDeepCSV")),
   verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices"))),
   elecsToken_(consumes<std::vector<pat::Electron>>(iConfig.getParameter<edm::InputTag>("electrons"))),
@@ -239,6 +242,24 @@ BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   genJetsToken_(consumes<std::vector<reco::GenJet>>(iConfig.getParameter<edm::InputTag>("genJets"))) 
 {
   //now do what ever initialization is needed
+  if (pileup_ == 0) {
+     mvaThres_ = 0.822;
+     deepThres_ = 0.741;
+     muThres_ = 0.152;
+  } else if (pileup_ == 140) {
+    mvaThres_ = 0.864;
+    deepThres_ = 0.799;
+    muThres_ = 0.204;
+  } else if (pileup_ == 200) {
+    mvaThres_ = 0.878;
+    deepThres_ = 0.821;
+    muThres_ = 0.212;
+  } else {
+    mvaThres_ = -1.;
+    deepThres_ = 0.;
+    muThres_ = 0.;
+  }  
+
   usesResource("TFileService");
 
   // MC truth in fiducial phase space
@@ -246,7 +267,7 @@ BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   h_genMuons_pt_ = fs_->make<TH1D>("GenMuonsPt",";p_{T}(#mu) (GeV);Events / (5 GeV)", 26, 20., 150.);
   h_genMuons_phi_ = fs_->make<TH1D>("GenMuonsPhi",";#phi(#mu);Events / 0.2", 30, -3., 3.);
   h_genMuons_eta_ = fs_->make<TH1D>("GenMuonsEta",";#eta(#mu);Events / 0.2", 30, -3., 3.);
-  h_genMuons_iso_ = fs_->make<TH1D>("GenMuonsIso",";I_{rel}^{PUPPI}(#mu);Events / 0.01", 20, 0., 0.2); 
+  h_genMuons_iso_ = fs_->make<TH1D>("GenMuonsIso",";I_{rel}^{PUPPI}(#mu);Events / 0.01", 22, 0., 0.22); 
   h_genElecs_n_ = fs_->make<TH1D>("GenElecsN",";Electron multiplicity;Events / 1", 4, 0., 4.);
   h_genElecs_pt_ = fs_->make<TH1D>("GenElecsPt",";p_{T}(e) (GeV);Events / (5 GeV)", 26, 20., 150.);
   h_genElecs_phi_ = fs_->make<TH1D>("GenElecsPhi",";#phi(e);Events / 0.2", 30, -3., 3.);
@@ -281,7 +302,7 @@ BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   h_goodMuons_pt_ = fs_->make<TH1D>("GoodMuonsPt",";p_{T}(#mu) (GeV);Events / (5 GeV)", 26, 20., 150.);
   h_goodMuons_phi_ = fs_->make<TH1D>("GoodMuonsPhi",";#phi(#mu);Events / 0.2", 30, -3., 3.);
   h_goodMuons_eta_ = fs_->make<TH1D>("GoodMuonsEta",";#eta(#mu);Events / 0.2", 30, -3., 3.);
-  h_goodMuons_iso_ = fs_->make<TH1D>("GoodMuonsIso",";I_{rel}^{PUPPI}(#mu);Events / 0.01", 20, 0., 0.2);
+  h_goodMuons_iso_ = fs_->make<TH1D>("GoodMuonsIso",";I_{rel}^{PUPPI}(#mu);Events / 0.01", 22, 0., 0.22);
 
   // Elecs
   h_allElecs_n_ = fs_->make<TH1D>("AllElecsN",";Electron multiplicity;Events / 1", 6, 0., 6.);
@@ -309,7 +330,7 @@ BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   h_allJets_pt_ = fs_->make<TH1D>("AllJetsPt",";p_{T}(jet) (GeV);Events / (2 GeV)", 100, 0., 200.);
   h_allJets_phi_ = fs_->make<TH1D>("AllJetsPhi",";#phi(jet);Events / 0.1", 60, -3., 3.);
   h_allJets_eta_ = fs_->make<TH1D>("AllJetsEta",";#eta(jet);Events / 0.1", 100, -5., 5.);
-  h_allJets_csv_ = fs_->make<TH1D>("AllJetsCSV",";CSV discriminant;Events / 0.02", 50, 0., 1.);
+  h_allJets_disc_ = fs_->make<TH1D>("AllJetsDisc",";b-tagging discriminant;Events / 0.02", 50, 0., 1.);
   h_allJets_id_ = fs_->make<TH1D>("AllJetsID",";;Jets / 1", 3, 0., 3.);
   h_allJets_id_->SetOption("bar");
   h_allJets_id_->SetBarWidth(0.75);
@@ -323,20 +344,19 @@ BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   h_goodJets_pt_ = fs_->make<TH1D>("GoodJetsPt",";p_{T}(jet) (GeV);Events / (2 GeV)", 90, 20., 200.);
   h_goodJets_phi_ = fs_->make<TH1D>("GoodJetsPhi",";#phi(jet);Events / 0.1", 60, -3., 3.);
   h_goodJets_eta_ = fs_->make<TH1D>("GoodJetsEta",";#eta(jet);Events / 0.1", 100, -5., 5.);
-  h_goodJets_csv_ = fs_->make<TH1D>("GoodJetsCSV",";CSV discriminant;Events / 0.02", 50, 0., 1.);
-  h_goodJets_nhFrac_pFrac_ = fs_->make<TH2D>("GoodJetsNeutralHadronFractionPhotonFraction",";neutral hadron frac.;photon frac.;", 50, 0., 1., 50., 0., 1.);
+  h_goodJets_disc_ = fs_->make<TH1D>("GoodJetsDisc",";b-tagging discriminant;Events / 0.02", 50, 0., 1.);
   h_goodLJets_n_ = fs_->make<TH1D>("GoodLightJetsN",";Jet multiplicity;Events / 1", 12, 0., 12.);
   h_goodLJets_nb_ = fs_->make<TH1D>("GoodLightJetsNb",";b jet multiplicity;Events / 1", 5, 0., 5.);
   h_goodLJets_pt_ = fs_->make<TH1D>("GoodLightJetsPt",";p_{T}(jet) (GeV);Events / (2 GeV)", 90, 20., 200.);
   h_goodLJets_phi_ = fs_->make<TH1D>("GoodLightJetsPhi",";#phi(jet);Events / 0.1", 60, -3., 3.);
   h_goodLJets_eta_ = fs_->make<TH1D>("GoodLightJetsEta",";#eta(jet);Events / 0.1", 100, -5., 5.);
-  h_goodLJets_csv_ = fs_->make<TH1D>("GoodLightJetsCSV",";CSV discriminant;Events / 0.02", 50, 0., 1.);
+  h_goodLJets_disc_ = fs_->make<TH1D>("GoodLightJetsDisc",";b-tagging discriminant;Events / 0.02", 50, 0., 1.);
   h_goodBJets_n_ = fs_->make<TH1D>("GoodBtaggedJetsN",";Jet multiplicity;Events / 1", 5, 0., 5.);
   h_goodBJets_nb_ = fs_->make<TH1D>("GoodBtaggedJetsNb",";b jet multiplicity;Events / 1", 5, 0., 5.);
   h_goodBJets_pt_ = fs_->make<TH1D>("GoodBtaggedJetsPt",";p_{T}(jet) (GeV);Events / (5 GeV)", 36, 20., 200.);
   h_goodBJets_phi_ = fs_->make<TH1D>("GoodBtaggedJetsPhi",";#phi(jet);Events / 0.2", 30, -3., 3.);
   h_goodBJets_eta_ = fs_->make<TH1D>("GoodBtaggedJetsEta",";#eta(jet);Events / 0.2", 50, -5., 5.);
-  h_goodBJets_csv_ = fs_->make<TH1D>("GoodBtaggedJetsCSV",";CSV discriminant;Events / 0.01", 20, 0.8, 1.);
+  h_goodBJets_disc_ = fs_->make<TH1D>("GoodBtaggedJetsDisc",";b-tagging discriminant;Events / 0.01", 20, 0.8, 1.);
 
   // MET
   h_goodMET_pt_ = fs_->make<TH1D>("GoodMETPt",";p_{T}(MET) (GeV);Events / (5 GeV)", 60, 0., 300.);
@@ -439,15 +459,13 @@ BasicPatDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       std::vector<const reco::Candidate *> jconst = genJets->at(jGenJets[j]).getJetConstituentsQuick();
       for (size_t k = 0; k < jconst.size(); k++) {
         double deltaR = ROOT::Math::VectorUtil::DeltaR(genParts->at(i).p4(),jconst[k]->p4());
-        if (deltaR < 0.01) continue;
-        if (abs(genParts->at(i).pdgId()) == 13 && deltaR > 0.4) continue;
-        if (abs(genParts->at(i).pdgId()) == 11 && deltaR > 0.3) continue;
+        if (deltaR < 0.01 || deltaR > 0.4) continue;
         genIso = genIso + jconst[k]->pt();
       }
     }
     genIso = genIso / genParts->at(i).pt();
-    if (genIso > 0.15) continue;
     if (abs(genParts->at(i).pdgId()) == 13) {
+      if (genIso > muThres_) continue;
       if (genParts->at(i).pt() < 26.) continue;
       h_genMuons_pt_->Fill(genParts->at(i).pt());
       h_genMuons_phi_->Fill(genParts->at(i).phi());
@@ -456,6 +474,7 @@ BasicPatDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       ++nGenMuons;
     }
     if (abs(genParts->at(i).pdgId()) == 11) {
+      if (genIso > 0.15) continue;
       if (genParts->at(i).pt() < 30.) continue;
       h_genElecs_pt_->Fill(genParts->at(i).pt());
       h_genElecs_phi_->Fill(genParts->at(i).phi());
@@ -502,7 +521,7 @@ BasicPatDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
     if (muons->at(i).pt() < 26.) continue;
     if (fabs(muons->at(i).eta()) > 2.8) continue;
-    if ((muons->at(i).puppiNoLeptonsChargedHadronIso() + muons->at(i).puppiNoLeptonsNeutralHadronIso() + muons->at(i).puppiNoLeptonsPhotonIso()) / muons->at(i).pt() > 0.15) continue;
+    if ((muons->at(i).puppiNoLeptonsChargedHadronIso() + muons->at(i).puppiNoLeptonsNeutralHadronIso() + muons->at(i).puppiNoLeptonsPhotonIso()) / muons->at(i).pt() > muThres_) continue;
     if (!isTightMuon) continue;
     h_goodMuons_pt_->Fill(muons->at(i).pt());
     h_goodMuons_phi_->Fill(muons->at(i).phi());
@@ -567,12 +586,12 @@ BasicPatDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         btagDisc = jets->at(i).bDiscriminator("pfDeepCSVJetTags:probb") +
             jets->at(i).bDiscriminator("pfDeepCSVJetTags:probbb");
     else
-        btagDisc = jets->at(i).bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
+        btagDisc = jets->at(i).bDiscriminator("pfCombinedMVAV2BJetTags");
     
     h_allJets_pt_->Fill(jets->at(i).pt());
     h_allJets_phi_->Fill(jets->at(i).phi());
     h_allJets_eta_->Fill(jets->at(i).eta());
-    h_allJets_csv_->Fill(btagDisc); 
+    h_allJets_disc_->Fill(btagDisc); 
     h_allJets_id_->Fill(0.);
     pat::strbitset retLoose = jetIDLoose_.getBitTemplate();
     retLoose.set(false);
@@ -587,23 +606,22 @@ BasicPatDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     h_goodJets_pt_->Fill(jets->at(i).pt());
     h_goodJets_phi_->Fill(jets->at(i).phi());
     h_goodJets_eta_->Fill(jets->at(i).eta());
-    h_goodJets_csv_->Fill(btagDisc); 
-    h_goodJets_nhFrac_pFrac_->Fill(jets->at(i).neutralHadronEnergyFraction(), jets->at(i).photonEnergyFraction());
+    h_goodJets_disc_->Fill(btagDisc); 
     ++nGoodJets;
     if (jets->at(i).genParton() && fabs(jets->at(i).genParton()->pdgId()) == 5) ++nbGoodJets;
-    if ((useDeepCSV_ && btagDisc > 0.6324)
-            || (!useDeepCSV_ && btagDisc > 0.8484)){  
+    if ((useDeepCSV_ && btagDisc > deepThres_)
+            || (!useDeepCSV_ && btagDisc > mvaThres_)){  
       h_goodBJets_pt_->Fill(jets->at(i).pt());
       h_goodBJets_phi_->Fill(jets->at(i).phi());
       h_goodBJets_eta_->Fill(jets->at(i).eta());
-      h_goodBJets_csv_->Fill(btagDisc);
+      h_goodBJets_disc_->Fill(btagDisc);
       ++nGoodBtaggedJets;
       if (jets->at(i).genParton() && fabs(jets->at(i).genParton()->pdgId()) == 5) ++nbGoodBtaggedJets;
     } else {
       h_goodLJets_pt_->Fill(jets->at(i).pt());
       h_goodLJets_phi_->Fill(jets->at(i).phi());
       h_goodLJets_eta_->Fill(jets->at(i).eta());
-      h_goodLJets_csv_->Fill(btagDisc); 
+      h_goodLJets_disc_->Fill(btagDisc); 
       ++nGoodLightJets;
       if (jets->at(i).genParton() && fabs(jets->at(i).genParton()->pdgId()) == 5) ++nbGoodLightJets;
     }

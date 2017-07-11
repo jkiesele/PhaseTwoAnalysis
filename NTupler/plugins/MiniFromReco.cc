@@ -10,8 +10,9 @@ Description: produces flat ntuples from RECO collections
    - storing gen and reco jets with pT > 20 GeV and |eta| < 5
 
 Implementation:
-   - lepton isolation needs to be refined
-   - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/UPGTrackerTDRStudies#Muon_identification
+   - muon isolation comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Muon_isolatio0n
+   - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Muon_identification
+   - electron isolation needs to be refined
    - electron ID comes from https://indico.cern.ch/event/623893/contributions/2531742/attachments/1436144/2208665/UPSG_EGM_Workshop_Mar29.pdf
    - no jet ID is stored
    - b-tagging is not available 
@@ -126,6 +127,9 @@ class MiniFromReco : public edm::one::EDAnalyzer<edm::one::SharedResources, edm:
     edm::EDGetTokenT<std::vector<reco::Conversion>> convToken_;
     edm::EDGetTokenT<edm::ValueMap<double>> trackIsoValueMapToken_;
     edm::EDGetTokenT<std::vector<reco::Muon>> muonsToken_;
+    edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_charged_hadrons_;
+    edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_neutral_hadrons_;
+    edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_photons_;
     edm::EDGetTokenT<std::vector<reco::PFCandidate>> pfCandsNoLepToken_;
     edm::EDGetTokenT<std::vector<reco::PFJet>> jetsToken_;
     edm::EDGetTokenT<std::vector<reco::PFMET>> metToken_;
@@ -164,6 +168,10 @@ MiniFromReco::MiniFromReco(const edm::ParameterSet& iConfig):
   verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices")))
 {
   //now do what ever initialization is needed
+  PUPPINoLeptonsIsolation_charged_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationChargedHadrons"));
+  PUPPINoLeptonsIsolation_neutral_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationNeutralHadrons"));
+  PUPPINoLeptonsIsolation_photons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationPhotons"));
+
   usesResource("TFileService");
 
   const edm::ParameterSet& hgcIdCfg = iConfig.getParameterSet("HGCalIDToolConfig");
@@ -314,6 +322,12 @@ MiniFromReco::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   Handle<std::vector<reco::Muon>> muons;
   iEvent.getByToken(muonsToken_, muons);
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_charged_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_neutral_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_photons;
+  iEvent.getByToken(PUPPINoLeptonsIsolation_charged_hadrons_, PUPPINoLeptonsIsolation_charged_hadrons);
+  iEvent.getByToken(PUPPINoLeptonsIsolation_neutral_hadrons_, PUPPINoLeptonsIsolation_neutral_hadrons);
+  iEvent.getByToken(PUPPINoLeptonsIsolation_photons_, PUPPINoLeptonsIsolation_photons);  
 
   Handle<std::vector<reco::PFCandidate>> pfCandsNoLep;
   iEvent.getByToken(pfCandsNoLepToken_, pfCandsNoLep);
@@ -353,13 +367,11 @@ MiniFromReco::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSet
     if (muons->at(i).pt() < 2.) continue;
     if (fabs(muons->at(i).eta()) > 2.8) continue;
 
-    double isoMu = 0.;
-    for (size_t k = 0; k < pfCandsNoLep->size(); k++) {
-      if (ROOT::Math::VectorUtil::DeltaR(muons->at(i).p4(),pfCandsNoLep->at(k).p4()) > 0.3) continue;
-      isoMu += pfCandsNoLep->at(k).pt();
-    }
-    if (muons->at(i).pt() > 0.) isoMu = isoMu / muons->at(i).pt();
-    else isoMu = -1.;
+    Ptr<const reco::Muon> muref(muons,i);
+    double muon_puppiIsoNoLep_ChargedHadron = (*PUPPINoLeptonsIsolation_charged_hadrons)[muref];
+    double muon_puppiIsoNoLep_NeutralHadron = (*PUPPINoLeptonsIsolation_neutral_hadrons)[muref];
+    double muon_puppiIsoNoLep_Photon = (*PUPPINoLeptonsIsolation_photons)[muref];
+    double isoMu = (muon_puppiIsoNoLep_ChargedHadron+muon_puppiIsoNoLep_NeutralHadron+muon_puppiIsoNoLep_Photon)/muons->at(i).pt();
 
     // Loose ID
     double dPhiCut = std::min(std::max(1.2/muons->at(i).p(),1.2/100),0.056);
@@ -503,7 +515,7 @@ MiniFromReco::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSet
     ev_.j_phi[ev_.nj]     = jets->at(i).phi();
     ev_.j_eta[ev_.nj]     = jets->at(i).eta();
     ev_.j_mass[ev_.nj]    = jets->at(i).mass();
-    ev_.j_csvv2[ev_.nj]   = -1; 
+    ev_.j_mvav2[ev_.nj]   = -1; 
     ev_.j_deepcsv[ev_.nj] = -1;
     ev_.j_flav[ev_.nj]    = -1;
     ev_.j_hadflav[ev_.nj] = -1;

@@ -18,9 +18,9 @@ Details on the object definitions are given in the `implementation` section.
 
 The following vectors of PF loose jets are added when running over PAT events: 
    * `patJets_jetfilter_Jets_JetFilter`
-   * `patJets_jetfilter_LooseCSVv2Jets_JetFilter`
-   * `patJets_jetfilter_MediumCSVv2Jets_JetFilter`
-   * `patJets_jetfilter_TightCSVv2Jets_JetFilter`
+   * `patJets_jetfilter_LooseMVAv2Jets_JetFilter`
+   * `patJets_jetfilter_MediumMVAv2Jets_JetFilter`
+   * `patJets_jetfilter_TightMVAv2Jets_JetFilter`
    * `patJets_jetfilter_LooseDeepCSVJets_JetFilter`
    * `patJets_jetfilter_MediumDeepCSVJets_JetFilter`
    * `patJets_jetfilter_TightDeepCSVJets_JetFilter`

@@ -9,9 +9,7 @@ Description: adds vectors of pat ak4 PUPPI loose PF jets
 
 Implementation:
 - PF jet ID comes from Run-2 https://github.com/cms-sw/cmssw/blob/CMSSW_9_1_1_patch1/PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h
-- b-tagging WP come from Run-2 https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation80XReReco#Supported_Algorithms_and_Operati 
-   - for pfCombinedInclusiveSecondaryVertexV2BJetTags: L = 0.5426, M = 0.8484, T = 0.9535)
-   - for deepCSV: L = 0.2219, M = 0.6324, T = 0.8958
+- b-tagging WPs come from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#B_tagging 
 */
 //
 // Original Author:  Elvire Bouvier
@@ -65,10 +63,13 @@ class PatJetFilter : public edm::stream::EDProducer<> {
     //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
 
     // ----------member data ---------------------------
+    unsigned int pileup_;
     edm::EDGetTokenT<std::vector<pat::Electron>> elecsToken_;
     edm::EDGetTokenT<std::vector<pat::Muon>> muonsToken_;
     edm::EDGetTokenT<std::vector<pat::Jet>> jetsToken_;
     PFJetIDSelectionFunctor jetIDLoose_;
+    double mvaThres_[3];
+    double deepThres_[3];
 };
 
 //
@@ -84,18 +85,49 @@ class PatJetFilter : public edm::stream::EDProducer<> {
 // constructors and destructor
 //
 PatJetFilter::PatJetFilter(const edm::ParameterSet& iConfig):
+  pileup_(iConfig.getParameter<unsigned int>("pileup")),
   elecsToken_(consumes<std::vector<pat::Electron>>(iConfig.getParameter<edm::InputTag>("electrons"))),
   muonsToken_(consumes<std::vector<pat::Muon>>(iConfig.getParameter<edm::InputTag>("muons"))),
   jetsToken_(consumes<std::vector<pat::Jet>>(iConfig.getParameter<edm::InputTag>("jets"))),
   jetIDLoose_(PFJetIDSelectionFunctor::FIRSTDATA, PFJetIDSelectionFunctor::LOOSE) 
 {
   produces<std::vector<pat::Jet>>("Jets");
-  produces<std::vector<pat::Jet>>("LooseCSVv2Jets");
-  produces<std::vector<pat::Jet>>("MediumCSVv2Jets");
-  produces<std::vector<pat::Jet>>("TightCSVv2Jets");
+  produces<std::vector<pat::Jet>>("LooseMVAv2Jets");
+  produces<std::vector<pat::Jet>>("MediumMVAv2Jets");
+  produces<std::vector<pat::Jet>>("TightMVAv2Jets");
   produces<std::vector<pat::Jet>>("LooseDeepCSVJets");
   produces<std::vector<pat::Jet>>("MediumDeepCSVJets");
   produces<std::vector<pat::Jet>>("TightDeepCSVJets");
+
+  if (pileup_ == 0) {
+     mvaThres_[0] = -0.694;
+     mvaThres_[1] = 0.128;
+     mvaThres_[2] = 0.822;
+     deepThres_[0] = 0.131;
+     deepThres_[1] = 0.432;
+     deepThres_[2] = 0.741;
+  } else if (pileup_ == 140) {
+    mvaThres_[0] = -0.654;
+    mvaThres_[1] = 0.214;
+    mvaThres_[2] = 0.864;
+    deepThres_[0] = 0.159;
+    deepThres_[1] = 0.507;
+    deepThres_[2] = 0.799;
+  } else if (pileup_ == 200) {
+    mvaThres_[0] = -0.642;
+    mvaThres_[1] = 0.236;
+    mvaThres_[2] = 0.878;
+    deepThres_[0] = 0.170;
+    deepThres_[1] = 0.527;
+    deepThres_[2] = 0.821;
+  } else {
+    mvaThres_[0] = -1.;
+    mvaThres_[1] = -1.;
+    mvaThres_[2] = -1.;
+    deepThres_[0] = 0.;
+    deepThres_[1] = 0.;
+    deepThres_[2] = 0.;
+  }
 }
 
 
@@ -126,16 +158,16 @@ PatJetFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(jetsToken_, jets);
 
   std::unique_ptr<std::vector<pat::Jet>> filteredJets;
-  std::unique_ptr<std::vector<pat::Jet>> filteredLooseCSVv2Jets;
-  std::unique_ptr<std::vector<pat::Jet>> filteredMediumCSVv2Jets;
-  std::unique_ptr<std::vector<pat::Jet>> filteredTightCSVv2Jets;
+  std::unique_ptr<std::vector<pat::Jet>> filteredLooseMVAv2Jets;
+  std::unique_ptr<std::vector<pat::Jet>> filteredMediumMVAv2Jets;
+  std::unique_ptr<std::vector<pat::Jet>> filteredTightMVAv2Jets;
   std::unique_ptr<std::vector<pat::Jet>> filteredLooseDeepCSVJets;
   std::unique_ptr<std::vector<pat::Jet>> filteredMediumDeepCSVJets;
   std::unique_ptr<std::vector<pat::Jet>> filteredTightDeepCSVJets;
   std::vector<pat::Jet> Vec;
-  std::vector<pat::Jet> looseCSVv2Vec;
-  std::vector<pat::Jet> mediumCSVv2Vec;
-  std::vector<pat::Jet> tightCSVv2Vec;
+  std::vector<pat::Jet> looseMVAv2Vec;
+  std::vector<pat::Jet> mediumMVAv2Vec;
+  std::vector<pat::Jet> tightMVAv2Vec;
   std::vector<pat::Jet> looseDeepCSVVec;
   std::vector<pat::Jet> mediumDeepCSVVec;
   std::vector<pat::Jet> tightDeepCSVVec;
@@ -167,31 +199,31 @@ PatJetFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (!isLoose) continue;
     Vec.push_back(jets->at(i));
 
-    double csvv2   = jets->at(i).bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags"); 
-    if (csvv2 > 0.5426) looseCSVv2Vec.push_back(jets->at(i));
-    if (csvv2 > 0.8484) mediumCSVv2Vec.push_back(jets->at(i));
-    if (csvv2 > 0.9535) tightCSVv2Vec.push_back(jets->at(i));
+    double mvav2   = jets->at(i).bDiscriminator("pfCombinedMVAV2BJetTags"); 
+    if (mvav2 > mvaThres_[0]) looseMVAv2Vec.push_back(jets->at(i));
+    if (mvav2 > mvaThres_[1]) mediumMVAv2Vec.push_back(jets->at(i));
+    if (mvav2 > mvaThres_[2]) tightMVAv2Vec.push_back(jets->at(i));
 
     double deepcsv = jets->at(i).bDiscriminator("pfDeepCSVJetTags:probb") +
       jets->at(i).bDiscriminator("pfDeepCSVJetTags:probbb");
-    if (deepcsv > 0.2219) looseDeepCSVVec.push_back(jets->at(i));
-    if (deepcsv > 0.6324) mediumDeepCSVVec.push_back(jets->at(i));
-    if (deepcsv > 0.8958) tightDeepCSVVec.push_back(jets->at(i));
+    if (deepcsv > deepThres_[0]) looseDeepCSVVec.push_back(jets->at(i));
+    if (deepcsv > deepThres_[1]) mediumDeepCSVVec.push_back(jets->at(i));
+    if (deepcsv > deepThres_[2]) tightDeepCSVVec.push_back(jets->at(i));
 
   }
 
   filteredJets.reset(new std::vector<pat::Jet>(Vec));
-  filteredLooseCSVv2Jets.reset(new std::vector<pat::Jet>(looseCSVv2Vec));
-  filteredMediumCSVv2Jets.reset(new std::vector<pat::Jet>(mediumCSVv2Vec));
-  filteredTightCSVv2Jets.reset(new std::vector<pat::Jet>(tightCSVv2Vec));
+  filteredLooseMVAv2Jets.reset(new std::vector<pat::Jet>(looseMVAv2Vec));
+  filteredMediumMVAv2Jets.reset(new std::vector<pat::Jet>(mediumMVAv2Vec));
+  filteredTightMVAv2Jets.reset(new std::vector<pat::Jet>(tightMVAv2Vec));
   filteredLooseDeepCSVJets.reset(new std::vector<pat::Jet>(looseDeepCSVVec));
   filteredMediumDeepCSVJets.reset(new std::vector<pat::Jet>(mediumDeepCSVVec));
   filteredTightDeepCSVJets.reset(new std::vector<pat::Jet>(tightDeepCSVVec));
 
   iEvent.put(std::move(filteredJets), "Jets");
-  iEvent.put(std::move(filteredLooseCSVv2Jets), "LooseCSVv2Jets");
-  iEvent.put(std::move(filteredMediumCSVv2Jets), "MediumCSVv2Jets");
-  iEvent.put(std::move(filteredTightCSVv2Jets), "TightCSVv2Jets");
+  iEvent.put(std::move(filteredLooseMVAv2Jets), "LooseMVAv2Jets");
+  iEvent.put(std::move(filteredMediumMVAv2Jets), "MediumMVAv2Jets");
+  iEvent.put(std::move(filteredTightMVAv2Jets), "TightMVAv2Jets");
   iEvent.put(std::move(filteredLooseDeepCSVJets), "LooseDeepCSVJets");
   iEvent.put(std::move(filteredMediumDeepCSVJets), "MediumDeepCSVJets");
   iEvent.put(std::move(filteredTightDeepCSVJets), "TightDeepCSVJets");

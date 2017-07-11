@@ -77,7 +77,7 @@ crab submit crabConfig.py
 Plotting basic distributions from PAT collections
 -----------------
 
-A basic EDAnalyzer is available in the `BasicPatDistrib` folder. Several private functions handle central electron and forward muon ID. A flag (`useDeepCSV`) can be set to true in the configuration file to use deepCSV rather than CSVv2 as b-tagging discriminant. Normalization to luminosity is not handled. More details are given in the `implementation` section of the `.cc` file.
+A basic EDAnalyzer is available in the `BasicPatDistrib` folder. Several private functions handle central electron and forward muon ID. A flag (`useDeepCSV`) can be set to true in the configuration file to use deepCSV rather than MVAv2 as b-tagging discriminant. Normalization to luminosity is not handled. More details are given in the `implementation` section of the `.cc` file.
 After updating the list of input files, the analyzer can be run interactively from the `test` subfolder :
 ```bash
 cmsRun ConfFile_cfg.py
@@ -171,9 +171,9 @@ When running over PAT events, the following collections are produced:
    * `patMuons_muonfilter_MediumMuons_EDMFilter`
    * `patMuons_muonfilter_TightMuons_EDMFilter`
    * `patJets_jetfilter_Jets_EDMFilter`
-   * `patJets_jetfilter_LooseCSVv2Jets_EDMFilter`
-   * `patJets_jetfilter_MediumCSVv2Jets_EDMFilter`
-   * `patJets_jetfilter_TightCSVv2Jets_EDMFilter`
+   * `patJets_jetfilter_LooseMVAv2Jets_EDMFilter`
+   * `patJets_jetfilter_MediumMVAv2Jets_EDMFilter`
+   * `patJets_jetfilter_TightMVAv2Jets_EDMFilter`
    * `patJets_jetfilter_LooseDeepCSVJets_EDMFilter`
    * `patJets_jetfilter_MediumDeepCSVJets_EDMFilter`
    * `patJets_jetfilter_TightDeepCSVJets_EDMFilter`

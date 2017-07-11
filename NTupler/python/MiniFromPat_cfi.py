@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 ntuple = cms.EDAnalyzer('MiniFromPat',
+        pileup        = cms.uint32(200),
         vertices      = cms.InputTag("offlineSlimmedPrimaryVertices"),
         electrons     = cms.InputTag("slimmedElectrons"),
         beamspot      = cms.InputTag("offlineBeamSpot"),

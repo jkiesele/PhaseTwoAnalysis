@@ -8,8 +8,9 @@
 Description: produces histograms of basic quantities from RECO collections
 
 Implementation:
-   - lepton isolation needs to be refined
-   - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/UPGTrackerTDRStudies#Muon_identification
+   - muon isolation comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Muon_isolation 
+   - muon ID comes from https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Muon_identification
+   - electron isolation needs to be refined
    - electron ID comes from https://indico.cern.ch/event/623893/contributions/2531742/attachments/1436144/2208665/UPSG_EGM_Workshop_Mar29.pdf
    - no jet ID nor JEC are applied
    - b-tagging is not available 
@@ -113,11 +114,15 @@ class BasicRecoDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, 
     TMVA::Reader tmvaReader_;
     float hgcId_startPosition, hgcId_lengthCompatibility, hgcId_sigmaietaieta, hgcId_deltaEtaStartPosition, hgcId_deltaPhiStartPosition, hOverE_hgcalSafe, hgcId_cosTrackShowerAngle, trackIsoR04jurassic_D_pt, ooEmooP, d0, dz, pt, etaSC, phiSC, nPV, expectedMissingInnerHits, passConversionVeto, isTrue;
 
+    unsigned int pileup_;
     edm::EDGetTokenT<std::vector<reco::GsfElectron>> elecsToken_;
     edm::EDGetTokenT<reco::BeamSpot> bsToken_;
     edm::EDGetTokenT<std::vector<reco::Conversion>> convToken_;
     edm::EDGetTokenT<edm::ValueMap<double>> trackIsoValueMapToken_;
     edm::EDGetTokenT<std::vector<reco::Muon>> muonsToken_;
+    edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_charged_hadrons_;
+    edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_neutral_hadrons_;
+    edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_photons_;
     edm::EDGetTokenT<std::vector<reco::PFCandidate>> pfCandsToken_;
     edm::EDGetTokenT<std::vector<reco::PFCandidate>> pfCandsNoLepToken_;
     edm::EDGetTokenT<std::vector<reco::PFJet>> jetsToken_;
@@ -126,6 +131,7 @@ class BasicRecoDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, 
     edm::EDGetTokenT<std::vector<reco::GenJet>> genJetsToken_;
     edm::EDGetTokenT<std::vector<reco::Vertex>> verticesToken_;
     const ME0Geometry* ME0Geometry_; 
+    double muThres_;
 
     // Electrons
     TH1D* h_allElecs_n_;
@@ -193,25 +199,21 @@ class BasicRecoDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, 
     TH1D* h_jet20_pt_;
     TH1D* h_jet20_eta_;
     TH1D* h_jet20_phi_;
-    TH2D* h_jet20_nhFrac_pFrac_;
     // ... with p_T > 30 GeV
     TH1D* h_jet30_n_;
     TH1D* h_jet30_pt_;
     TH1D* h_jet30_eta_;
     TH1D* h_jet30_phi_;
-    TH2D* h_jet30_nhFrac_pFrac_;
     // ... with p_T > 40 GeV
     TH1D* h_jet40_n_;
     TH1D* h_jet40_pt_;
     TH1D* h_jet40_eta_;
     TH1D* h_jet40_phi_;
-    TH2D* h_jet40_nhFrac_pFrac_;
     // ... with p_T > 50 GeV
     TH1D* h_jet50_n_;
     TH1D* h_jet50_pt_;
     TH1D* h_jet50_eta_;
     TH1D* h_jet50_phi_;
-    TH2D* h_jet50_nhFrac_pFrac_;
 
     // MET
     TH1D* h_met_;
@@ -230,6 +232,7 @@ class BasicRecoDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, 
 // constructors and destructor
 //
 BasicRecoDistrib::BasicRecoDistrib(const edm::ParameterSet& iConfig): 
+  pileup_(iConfig.getParameter<unsigned int>("pileup")),
   elecsToken_(consumes<std::vector<reco::GsfElectron>>(iConfig.getParameter<edm::InputTag>("electrons"))),
   bsToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamspot"))),
   convToken_(consumes<std::vector<reco::Conversion>>(iConfig.getParameter<edm::InputTag>("conversions"))),
@@ -244,6 +247,19 @@ BasicRecoDistrib::BasicRecoDistrib(const edm::ParameterSet& iConfig):
   verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices")))
 {
   //now do what ever initialization is needed
+  PUPPINoLeptonsIsolation_charged_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationChargedHadrons"));
+  PUPPINoLeptonsIsolation_neutral_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationNeutralHadrons"));
+  PUPPINoLeptonsIsolation_photons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationPhotons"));
+
+  if (pileup_ == 0) {
+    muThres_ = 0.152;
+  } else if (pileup_ == 140) {
+    muThres_ = 0.204;
+  } else if (pileup_ == 200) {
+    muThres_ = 0.212;
+  } else 
+    muThres_ = 0.;
+
   usesResource("TFileService");
 
   const edm::ParameterSet& hgcIdCfg = iConfig.getParameterSet("HGCalIDToolConfig");
@@ -353,25 +369,21 @@ BasicRecoDistrib::BasicRecoDistrib(const edm::ParameterSet& iConfig):
   h_jet20_pt_ = fs_->make<TH1D>("Jets20Pt",";p_{T}(jet) (GeV);Events / (5 GeV)",46,20.,250.);
   h_jet20_eta_ = fs_->make<TH1D>("Jets20Eta",";#eta(jet);Events / 0.2",40,-4.,4.);
   h_jet20_phi_ = fs_->make<TH1D>("Jets20Phi",";#phi(jet);Events / 0.2",30,-3.,3.);
-  h_jet20_nhFrac_pFrac_ = fs_->make<TH2D>("Jets20NeutralHadronFractionPhotonFraction",";neutral hadron frac.;photon frac.;", 50, 0., 1., 50., 0., 1.);
   // ... with p_T > 30 GeV
   h_jet30_n_ = fs_->make<TH1D>("Jets30N",";Number of jets;Events / 1",14,0.,14.);
   h_jet30_pt_ = fs_->make<TH1D>("Jets30Pt",";p_{T}(jet) (GeV);Events / (5 GeV)",44,30.,250.);
   h_jet30_eta_ = fs_->make<TH1D>("Jets30Eta",";#eta(jet);Events / 0.2",40,-4.,4.);
   h_jet30_phi_ = fs_->make<TH1D>("Jets30Phi",";#phi(jet);Events / 0.2",30,-3.,3.);
-  h_jet30_nhFrac_pFrac_ = fs_->make<TH2D>("Jets30NeutralHadronFractionPhotonFraction",";neutral hadron frac.;photon frac.;", 50, 0., 1., 50., 0., 1.);
   // ... with p_T > 40 GeV
   h_jet40_n_ = fs_->make<TH1D>("Jets40N",";Number of jets;Events / 1",12,0.,12);
   h_jet40_pt_ = fs_->make<TH1D>("Jets40Pt",";p_{T}(jet) (GeV);Events / (5 GeV)",42,40.,250.);
   h_jet40_eta_ = fs_->make<TH1D>("Jets40Eta",";#eta(jet);Events / 0.2",40,-4.,4.);
   h_jet40_phi_ = fs_->make<TH1D>("Jets40Phi",";#phi(jet);Events / 0.2",30,-3.,3.);
-  h_jet40_nhFrac_pFrac_ = fs_->make<TH2D>("Jets40NeutralHadronFractionPhotonFraction",";neutral hadron frac.;photon frac.;", 50, 0., 1., 50., 0., 1.);
   // ... with p_T > 50 GeV
   h_jet50_n_ = fs_->make<TH1D>("Jets50N",";Number of jets;Events / 1",12,0.,12);
   h_jet50_pt_ = fs_->make<TH1D>("Jets50Pt",";p_{T}(jet) (GeV);Events / (5 GeV)",40,50.,250);
   h_jet50_eta_ = fs_->make<TH1D>("Jets50Eta",";#eta(jet);Events / 0.2",40,-4.,4.);
   h_jet50_phi_ = fs_->make<TH1D>("Jets50Phi",";#phi(jet);Events / 0.2",30,-3.,3.);
-  h_jet50_nhFrac_pFrac_ = fs_->make<TH2D>("Jets50NeutralHadronFractionPhotonFraction",";neutral hadron frac.;photon frac.;", 50, 0., 1., 50., 0., 1.);
 
   // MET
   h_met_ = fs_->make<TH1D>("METPt",";p_{T}(MET) (GeV); Events / (5 GeV)",60,0.,300.);
@@ -413,6 +425,12 @@ BasicRecoDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
   Handle<std::vector<reco::Muon>> muons;
   iEvent.getByToken(muonsToken_, muons);
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_charged_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_neutral_hadrons;
+  edm::Handle<edm::ValueMap<float>> PUPPINoLeptonsIsolation_photons;
+  iEvent.getByToken(PUPPINoLeptonsIsolation_charged_hadrons_, PUPPINoLeptonsIsolation_charged_hadrons);
+  iEvent.getByToken(PUPPINoLeptonsIsolation_neutral_hadrons_, PUPPINoLeptonsIsolation_neutral_hadrons);
+  iEvent.getByToken(PUPPINoLeptonsIsolation_photons_, PUPPINoLeptonsIsolation_photons);  
 
   Handle<std::vector<reco::PFCandidate>> pfCands;
   iEvent.getByToken(pfCandsToken_, pfCands);
@@ -529,13 +547,11 @@ BasicRecoDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     h_allMuons_pt_->Fill(muons->at(i).pt());
     h_allMuons_eta_->Fill(muons->at(i).eta());
     h_allMuons_phi_->Fill(muons->at(i).phi());
-    double isoMu = 0.;
-    for (size_t k = 0; k < pfCandsNoLep->size(); k++) {
-      if (ROOT::Math::VectorUtil::DeltaR(muons->at(i).p4(),pfCandsNoLep->at(k).p4()) > 0.3) continue;
-      isoMu += pfCandsNoLep->at(k).pt();
-    }
-    if (muons->at(i).pt() > 0.) isoMu = isoMu / muons->at(i).pt();
-    else isoMu = -1.;
+    Ptr<const reco::Muon> muref(muons,i);
+    double muon_puppiIsoNoLep_ChargedHadron = (*PUPPINoLeptonsIsolation_charged_hadrons)[muref];
+    double muon_puppiIsoNoLep_NeutralHadron = (*PUPPINoLeptonsIsolation_neutral_hadrons)[muref];
+    double muon_puppiIsoNoLep_Photon = (*PUPPINoLeptonsIsolation_photons)[muref];
+    double isoMu = (muon_puppiIsoNoLep_ChargedHadron+muon_puppiIsoNoLep_NeutralHadron+muon_puppiIsoNoLep_Photon)/muons->at(i).pt();
     h_allMuons_iso_->Fill(isoMu);
     
     // Loose ID
@@ -572,7 +588,7 @@ BasicRecoDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     h_muons_iso_->Fill(isoMu);
     ++nMuon;
 
-    if (muons->at(i).pt() < 26. || isoMu > 0.15) continue;
+    if (muons->at(i).pt() < 26. || isoMu > muThres_) continue;
     h_goodMuons_pt_->Fill(muons->at(i).pt());
     h_goodMuons_eta_->Fill(muons->at(i).eta());
     h_goodMuons_phi_->Fill(muons->at(i).phi());
@@ -588,7 +604,7 @@ BasicRecoDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (abs(pfCands->at(i).pdgId()) != 13) continue;
     double isoPFMu = 0.;
     for (size_t k = 0; k < pfCandsNoLep->size(); k++) {
-      if (ROOT::Math::VectorUtil::DeltaR(pfCands->at(i).p4(),pfCandsNoLep->at(k).p4()) > 0.3) continue;
+      if (ROOT::Math::VectorUtil::DeltaR(pfCands->at(i).p4(),pfCandsNoLep->at(k).p4()) > 0.4) continue;
       isoPFMu += pfCandsNoLep->at(k).pt();
     }
     isoPFMu = isoPFMu / pfCands->at(i).pt();
@@ -600,7 +616,7 @@ BasicRecoDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     h_PFMuons_iso_->Fill(isoPFMu);
     ++nPFMuon;
 
-    if (pfCands->at(i).pt() < 26. || isoPFMu > 0.15) continue;
+    if (pfCands->at(i).pt() < 26. || isoPFMu > muThres_) continue;
     h_goodPFMuons_pt_->Fill(pfCands->at(i).pt());
     h_goodPFMuons_eta_->Fill(pfCands->at(i).eta());
     h_goodPFMuons_phi_->Fill(pfCands->at(i).phi());
@@ -637,28 +653,24 @@ BasicRecoDistrib::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     h_jet20_pt_->Fill(jets->at(i).pt());
     h_jet20_eta_->Fill(jets->at(i).eta());
     h_jet20_phi_->Fill(jets->at(i).phi());
-    h_jet20_nhFrac_pFrac_->Fill(jets->at(i).neutralHadronEnergyFraction(), jets->at(i).photonEnergyFraction());
     ++nJet20;
 
     if (jets->at(i).pt() < 30.) continue;
     h_jet30_pt_->Fill(jets->at(i).pt());
     h_jet30_eta_->Fill(jets->at(i).eta());
     h_jet30_phi_->Fill(jets->at(i).phi());
-    h_jet30_nhFrac_pFrac_->Fill(jets->at(i).neutralHadronEnergyFraction(), jets->at(i).photonEnergyFraction());
     ++nJet30;
 
     if (jets->at(i).pt() < 40.) continue;
     h_jet40_pt_->Fill(jets->at(i).pt());
     h_jet40_eta_->Fill(jets->at(i).eta());
     h_jet40_phi_->Fill(jets->at(i).phi());
-    h_jet40_nhFrac_pFrac_->Fill(jets->at(i).neutralHadronEnergyFraction(), jets->at(i).photonEnergyFraction());
     ++nJet40;
 
     if (jets->at(i).pt() < 50.) continue;
     h_jet50_pt_->Fill(jets->at(i).pt());
     h_jet50_eta_->Fill(jets->at(i).eta());
     h_jet50_phi_->Fill(jets->at(i).phi());
-    h_jet50_nhFrac_pFrac_->Fill(jets->at(i).neutralHadronEnergyFraction(), jets->at(i).photonEnergyFraction());
     ++nJet50;
   }
   h_jet20_n_->Fill(nJet20);
