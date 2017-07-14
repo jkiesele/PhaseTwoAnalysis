@@ -1,7 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
 from JetMETCorrections.Configuration.JetCorrectionServicesAllAlgos_cff import *
-#from JetMETCorrections.Configuration.JetCorrectors_cff import *
 
 ak4PFPuppiL1Fastjet = cms.ESProducer(
     'L1FastjetCorrectionESProducer',
