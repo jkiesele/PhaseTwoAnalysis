@@ -66,26 +66,33 @@ from CommonTools.PileupAlgos.PhotonPuppi_cff        import setupPuppiPhoton
 from PhysicsTools.PatAlgos.slimming.puppiForMET_cff import makePuppies
 makePuppies(process)
 
-# recluster jets
+# recluster jets and create a sequence
 process.load('RecoJets/Configuration/RecoPFJets_cff')
 process.ak4PUPPIJets  = process.ak4PFJets.clone(rParam=0.4, src = cms.InputTag('puppi'))
-
 process.puSequence = cms.Sequence(process.puppi * process.ak4PUPPIJets )
 
-# producer
+# setup the producer
 moduleName = "PatJetFilter"    
 if (options.inputFormat.lower() == "reco"):
     moduleName = "RecoJetFilter"
 process.jetfilter = cms.EDProducer(moduleName)
 process.load("PhaseTwoAnalysis.Jets."+moduleName+"_cfi")
+
+# change some of the producer options based on the input format and whether of not the JEC need to be updated
 if (options.inputFormat.lower() == "reco"):
     if options.updateJEC:
+        # This will load several ESProducers and EDProducers which make the corrected jet collections
+        # In this case the collection will be called ak4PUPPIJetsL1FastL2L3
         process.load('PhaseTwoAnalysis.Jets.JetCorrection_cff')
         process.jetfilter.jets = "ak4PUPPIJetsL1FastL2L3"
     else:
+        # This simply switches the default AK4PFJetsCHS collection to the ak4PUPPIJets collection now that it has been produced
         process.jetfilter.jets = "ak4PUPPIJets"
 else:
     if options.updateJEC:
+        # The updateJetCollection function will uncorred the jets from MiniAOD and then recorrect them using the current
+        #  set of JEC in the event setup
+        # The new name of the updated jet collection becomes updatedPatJetsUpdatedJECAK4PFPuppi
         from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
         updateJetCollection(process,
                             jetSource = cms.InputTag('slimmedJetsPuppi'),
@@ -100,7 +107,9 @@ process.out = cms.OutputModule("PoolOutputModule",
                                            'drop reco*_ak4*Jets*_*_*'),
     fileName = cms.untracked.string(options.outFilename)
 )
-  
+
+# These lines set up the path to run depending upon the input format and whether or not the JEC need to be updated
+# Different modules will need to be run in each case
 if (options.inputFormat.lower() == "reco"):
     if options.updateJEC:
         process.p = cms.Path(process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.jetfilter)
