@@ -56,7 +56,7 @@ After updating the list of input files, the analyzer can be run interactively fr
 cmsRun ConfFile_cfg.py
 ```
 
-If you want to rerun JEC, you can use the `updateJEC' argument with the path to the SQLite file.
+If you want to rerun JEC, you can use the `updateJEC` argument with the path to the SQLite file.
 Befor the EDAnalyzer, PUPPI is run on the fly and jets are re-clustered. The MET is also recomputed but not exactly with the official recipe (that needs PAT collections).
 
 Plots in a pdf format can be obtained by running:
@@ -87,7 +87,7 @@ After updating the list of input files, the analyzer can be run interactively fr
 cmsRun ConfFile_cfg.py
 ```
 
-If you want to rerun JEC, you can use the `updateJEC' argument with the path to the SQLite file.
+If you want to rerun JEC, you can use the `updateJEC` argument with the path to the SQLite file.
 
 Plots in a pdf format can be obtained by running:
 ```bash
@@ -114,7 +114,7 @@ Flat ntuples can be produced in the `NTupler` folder, either from PAT or RECO ev
 ```bash
 cmsRun scripts/produceNtuples_cfg.py skim=False/True outFilename=MiniEvents.root inputFormat=RECO/PAT
 ```
-If you want to rerun JEC, you can use the `updateJEC' argument with the path to the SQLite file.
+If you want to rerun JEC, you can use the `updateJEC` argument with the path to the SQLite file.
 
 The `skim` flag can be used to reduce the size of the output files. A histogram containing the number of events before the skim is then stored in the output files. By default, events are required to contain at least 1 lepton and 2 jets, but this can be easily modified ll.71-97 of `src/produceNtuples_cfg.py`.
 
@@ -151,7 +151,7 @@ cmsRun scripts/edmFilter_cfg.py outFilename=FilteredEvents.root inputFormat=RECO
 ```
 
 whether the input file format is RECO or miniAOD.
-If you want to rerun JEC, you can use the `updateJEC' argument with the path to the SQLite file.
+If you want to rerun JEC, you can use the `updateJEC` argument with the path to the SQLite file.
 
 To run over PAT events, the main producers are:
    * `../Electrons/plugins/PatElectronFilter.cc` 
