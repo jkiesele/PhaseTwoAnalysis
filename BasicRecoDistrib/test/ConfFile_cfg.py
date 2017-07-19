@@ -1,5 +1,14 @@
 import FWCore.ParameterSet.Config as cms
 
+from FWCore.ParameterSet.VarParsing import VarParsing
+options = VarParsing('python')
+options.register('updateJEC', '',
+                 VarParsing.multiplicity.list,
+                 VarParsing.varType.string,
+                 "Name of the SQLite file (with path and extension) used to update the jet collection to the latest JEC and the era of the new JEC"
+                )
+options.parseArguments()
+
 process = cms.Process("MyAna")
 
 process.load('Configuration.Geometry.GeometryExtended2023D17Reco_cff')
@@ -25,6 +34,20 @@ process.source = cms.Source("PoolSource",
         '/store/mc/PhaseIITDRSpring17DR/TTToSemiLepton_TuneCUETP8M1_14TeV-powheg-pythia8/AODSIM/PU200_91X_upgrade2023_realistic_v3-v1/120000/000CD008-7A58-E711-82DB-1CB72C0A3A61.root',
     ))
 )
+
+# Get new JEC from an SQLite file rather than a GT
+if options.updateJEC:
+    from CondCore.DBCommon.CondDBSetup_cfi import *
+    process.jec = cms.ESSource("PoolDBESSource",CondDBSetup,
+                               connect = cms.string('sqlite_file:'+options.updateJEC[0]),
+                               toGet =  cms.VPSet(
+            cms.PSet(record = cms.string("JetCorrectionsRecord"),
+                     tag = cms.string("JetCorrectorParametersCollection_"+options.updateJEC[1]+"_AK4PFPuppi"),
+                     label = cms.untracked.string("AK4PFPuppi"))
+            )
+                               )
+    process.es_prefer_jec = cms.ESPrefer("PoolDBESSource","jec")
+
 process.source.inputCommands = cms.untracked.vstring("keep *")
 
 #run Puppi 
@@ -67,10 +90,18 @@ process.electronTrackIsolationLcone.intRadiusEndcap = 0.04
 process.myana = cms.EDAnalyzer('BasicRecoDistrib'
 )
 process.load("PhaseTwoAnalysis.BasicRecoDistrib.CfiFile_cfi")
-process.myana.jets = "ak4PUPPIJets"
 process.myana.pfCands = "puppi"
 process.myana.pfCandsNoLep = "puppiNoLep"
 process.myana.met = "puppiMet"
+if options.updateJEC:
+    # This will load several ESProducers and EDProducers which make the corrected jet collections
+    # In this case the collection will be called ak4PUPPIJetsL1FastL2L3
+    process.load('PhaseTwoAnalysis.Jets.JetCorrection_cff')
+    process.myana.jets = "ak4PUPPIJetsL1FastL2L3"
+else:
+    # This simply switches the default AK4PFJetsCHS collection to the ak4PUPPIJets collection now that it has been produced
+    process.myana.jets = "ak4PUPPIJets"
+
 
 process.TFileService = cms.Service("TFileService",
         fileName = cms.string('histos.root')
@@ -78,6 +109,9 @@ process.TFileService = cms.Service("TFileService",
 
 process.puSequence = cms.Sequence(process.primaryVertexAssociation * process.pfNoLepPUPPI * process.puppi * process.particleFlowNoLep * process.puppiNoLep * process.offlineSlimmedPrimaryVertices * process.packedPFCandidates * process.muonIsolationPUPPI * process.muonIsolationPUPPINoLep * process.ak4PUPPIJets * process.puppiMet)
 
-process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.myana) 
+if options.updateJEC:
+    process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.myana) 
+else:
+    process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.myana) 
 
 

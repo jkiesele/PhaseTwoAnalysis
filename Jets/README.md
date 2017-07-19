@@ -9,6 +9,7 @@ cmsRun ConfFile_cfg.py outFilename=FilteredEvents.root inputFormat=RECO/PAT
 ```
 
 whether the input file format is RECO or miniAOD.
+If you want to rerun JEC, you can use the `updateJEC' argument with the path to the SQLite file.
 
 The main producers are:
    * `plugins/PatJetFilter.cc` -- to run over PAT events 

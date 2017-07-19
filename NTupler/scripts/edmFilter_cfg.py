@@ -17,6 +17,11 @@ options.register('skim', True,
                  VarParsing.varType.bool,
                  "skim events with one lepton and 2 jets"
                  )
+options.register('updateJEC', '',
+                 VarParsing.multiplicity.list,
+                 VarParsing.varType.string,
+                 "Name of the SQLite file (with path and extension) used to update the jet collection to the latest JEC and the era of the new JEC"
+                )
 options.parseArguments()
 
 process = cms.Process("EDMFilter")
@@ -55,6 +60,20 @@ if (options.inputFormat.lower() == "reco"):
     process.source.fileNames = cms.untracked.vstring(*(
         '/store/mc/PhaseIITDRSpring17DR/TTToSemiLepton_TuneCUETP8M1_14TeV-powheg-pythia8/AODSIM/PU200_91X_upgrade2023_realistic_v3-v1/120000/000CD008-7A58-E711-82DB-1CB72C0A3A61.root',
     ))
+
+# Get new JEC from an SQLite file rather than a GT
+if options.updateJEC:
+    from CondCore.DBCommon.CondDBSetup_cfi import *
+    process.jec = cms.ESSource("PoolDBESSource",CondDBSetup,
+                               connect = cms.string('sqlite_file:'+options.updateJEC[0]),
+                               toGet =  cms.VPSet(
+            cms.PSet(record = cms.string("JetCorrectionsRecord"),
+                     tag = cms.string("JetCorrectorParametersCollection_"+options.updateJEC[1]+"_AK4PFPuppi"),
+                     label = cms.untracked.string("AK4PFPuppi"))
+            )
+                               )
+    process.es_prefer_jec = cms.ESPrefer("PoolDBESSource","jec")
+
 process.source.inputCommands = cms.untracked.vstring("keep *")
 
 # run Puppi 
@@ -101,8 +120,6 @@ if (options.inputFormat.lower() == "reco"):
     moduleMuonName = "RecoMuonFilter"
 process.muonfilter = cms.EDProducer(moduleMuonName)
 process.load("PhaseTwoAnalysis.Muons."+moduleMuonName+"_cfi")
-if (options.inputFormat.lower() == "reco"):
-    process.muonfilter.pfCandsNoLep = "puppiNoLep"    
 
 # producer
 moduleJetName = "PatJetFilter"    
@@ -111,7 +128,26 @@ if (options.inputFormat.lower() == "reco"):
 process.jetfilter = cms.EDProducer(moduleJetName)
 process.load("PhaseTwoAnalysis.Jets."+moduleJetName+"_cfi")
 if (options.inputFormat.lower() == "reco"):
-    process.jetfilter.jets = "ak4PUPPIJets"    
+    if options.updateJEC:
+        # This will load several ESProducers and EDProducers which make the corrected jet collections
+        # In this case the collection will be called ak4PUPPIJetsL1FastL2L3
+        process.load('PhaseTwoAnalysis.Jets.JetCorrection_cff')
+        process.jetfilter.jets = "ak4PUPPIJetsL1FastL2L3"
+    else:
+        # This simply switches the default AK4PFJetsCHS collection to the ak4PUPPIJets collection now that it has been produced
+        process.jetfilter.jets = "ak4PUPPIJets"
+else:
+    if options.updateJEC:
+        # The updateJetCollection function will uncorred the jets from MiniAOD and then recorrect them using the current
+        #  set of JEC in the event setup
+        # The new name of the updated jet collection becomes updatedPatJetsUpdatedJECAK4PFPuppi
+        from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
+        updateJetCollection(process,
+                            jetSource = cms.InputTag('slimmedJetsPuppi'),
+                            postfix = 'UpdatedJECAK4PFPuppi',
+                            jetCorrections = ('AK4PFPuppi', ['L1FastJet','L2Relative','L3Absolute'], 'None')
+                            )
+        process.jetfilter.jets = "updatedPatJetsUpdatedJECAK4PFPuppi"
         
 # output
 process.out = cms.OutputModule("PoolOutputModule",
@@ -129,9 +165,15 @@ process.out = cms.OutputModule("PoolOutputModule",
 
 # run
 if (options.inputFormat.lower() == "reco"):
-    process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.electronfilter * process.muonfilter * process.jetfilter)
+    if options.updateJEC:
+        process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.electronfilter * process.muonfilter * process.jetfilter)
+    else:
+        process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.electronfilter * process.muonfilter * process.jetfilter)
 else:
-    process.p = cms.Path(process.electronfilter * process.muonfilter * process.jetfilter)
+    if options.updateJEC:
+        process.p = cms.Path(process.electronfilter * process.muonfilter * process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.jetfilter)
+    else:
+        process.p = cms.Path(process.electronfilter * process.muonfilter * process.jetfilter)
 
 process.e = cms.EndPath(process.out)
     
