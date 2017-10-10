@@ -214,7 +214,8 @@ void cms_myStyleBis(TString pileup){
   pt_exp->AddText(d);
   pt_exp->Draw();
 
-  TString lumi_s = "3 ab^{-1} (14 TeV";
+  //TString lumi_s = "3 ab^{-1} (14 TeV";
+  TString lumi_s = "(14 TeV";
   if (pileup.Length() > 0) lumi_s = lumi_s + TString::Format(", %s PU)", pileup.Data());
   else lumi_s = lumi_s + ")";
   TPaveText* pt_lumi = new TPaveText(0.1, 1 - 0.5 * TOP_MARGIN, 0.9, 1, "brNDC");
@@ -241,7 +242,8 @@ void cms_myStyle(TString pileup){
   pt_exp->AddText(d);
   pt_exp->Draw();
 
-  TString lumi_s = "3 ab^{-1} (14 TeV";
+  //TString lumi_s = "3 ab^{-1} (14 TeV";
+  TString lumi_s = "(14 TeV";
   if (pileup.Length() > 0) lumi_s = lumi_s + TString::Format(", %s PU)", pileup.Data());
   else lumi_s = lumi_s + ")";
   TPaveText* pt_lumi = new TPaveText(LEFT_MARGIN, 1 - 0.5 * TOP_MARGIN, 1 - RIGHT_MARGIN, 1, "brNDC");
@@ -269,7 +271,9 @@ int plot1D(TString outdir, TH1D* histo)
 
   TCanvas* cn = new TCanvas("cn","canvas");
   cn->cd();
+  if (sName.EndsWith("Phi")) histo->SetMinimum(0);
   histo->DrawCopy("hist");
+  //cms_myStyle("0");
   cms_myStyle("200");
   cn->SaveAs(outdir+sName+".C");
   cn->SaveAs(outdir+sName+".pdf");
