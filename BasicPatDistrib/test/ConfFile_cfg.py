@@ -56,7 +56,7 @@ if options.updateJEC:
 process.myana = cms.EDAnalyzer('BasicPatDistrib')
 process.load("PhaseTwoAnalysis.BasicPatDistrib.CfiFile_cfi")
 #process.myana.useDeepCSV = True
-#process.myana.PU200 = True #set this flag to true if you are using a high PU sample, so that the distributions of number of jets and vertices have an appropriate x range
+#process.myana.pileup = 0
 #process.myana.mets = cms.InputTag("slimmedMETs"),
 if options.updateJEC:
     # The updateJetCollection function will uncorred the jets from MiniAOD and then recorrect them using the current

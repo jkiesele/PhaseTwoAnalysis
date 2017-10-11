@@ -119,7 +119,6 @@ class BasicPatDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, e
 
     unsigned int pileup_;
     bool useDeepCSV_;
-    bool PU200_;
     edm::EDGetTokenT<std::vector<reco::Vertex>> verticesToken_;
     edm::EDGetTokenT<std::vector<pat::Electron>> elecsToken_;
     edm::EDGetTokenT<reco::BeamSpot> bsToken_;
@@ -230,7 +229,6 @@ class BasicPatDistrib : public edm::one::EDAnalyzer<edm::one::SharedResources, e
 BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   pileup_(iConfig.getParameter<unsigned int>("pileup")),
   useDeepCSV_(iConfig.getParameter<bool>("useDeepCSV")),
-  PU200_(iConfig.getParameter<bool>("PU200")), 
   verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices"))),
   elecsToken_(consumes<std::vector<pat::Electron>>(iConfig.getParameter<edm::InputTag>("electrons"))),
   bsToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamspot"))),
@@ -281,10 +279,10 @@ BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   h_genJets_eta_ = fs_->make<TH1D>("GenJetsEta",";#eta(jet);Events / 0.1", 100, -5., 5.);
 
   // Vertices
-  if(PU200_) h_allVertices_n_ = fs_->make<TH1D>("AllVertices",";Vertex multiplicity;Events / 1", 20, 0., 200.);
+  if (pileup_ == 200)  h_allVertices_n_ = fs_->make<TH1D>("AllVertices",";Vertex multiplicity;Events / 1", 20, 0., 200.);
   else h_allVertices_n_ = fs_->make<TH1D>("AllVertices",";Vertex multiplicity;Events / 1", 7, 0., 7.);
   // ... that pass ID
-  if(PU200_) h_goodVertices_n_ = fs_->make<TH1D>("GoodVertices",";Vertex multiplicity;Events / 1", 20, 0., 200.);
+  if (pileup_ == 200)  h_goodVertices_n_ = fs_->make<TH1D>("GoodVertices",";Vertex multiplicity;Events / 1", 20, 0., 200.);
   else h_goodVertices_n_ = fs_->make<TH1D>("GoodVertices",";Vertex multiplicity;Events / 1", 7, 0., 7.);
 
   // Muons
@@ -330,7 +328,7 @@ BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   h_goodElecs_iso_ = fs_->make<TH1D>("GoodElecsIso",";I_{rel}^{PUPPI}(e);Events / 0.01", 20, 0., 0.2);
 
   // Jets
-  if(PU200_) h_allJets_n_ = fs_->make<TH1D>("AllJetsN",";Jet multiplicity;Events / 1", 20, 0., 200.);
+  if (pileup_ == 200)  h_allJets_n_ = fs_->make<TH1D>("AllJetsN",";Jet multiplicity;Events / 1", 20, 0., 200.);
   else h_allJets_n_ = fs_->make<TH1D>("AllJetsN",";Jet multiplicity;Events / 1", 15, 0., 15.);
   h_allJets_pt_ = fs_->make<TH1D>("AllJetsPt",";p_{T}(jet) (GeV);Events / (2 GeV)", 100, 0., 200.);
   h_allJets_phi_ = fs_->make<TH1D>("AllJetsPhi",";#phi(jet);Events / 0.1", 60, -3., 3.);
@@ -344,14 +342,14 @@ BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   h_allJets_id_->GetXaxis()->SetBinLabel(2,"Loose");
   h_allJets_id_->GetXaxis()->SetBinLabel(3,"Tight");
   // ... that pass kin cuts, loose ID
-  if(PU200_) h_goodJets_n_ = fs_->make<TH1D>("GoodJetsN",";Jet multiplicity;Events / 1", 20, 0., 200.);
+  if (pileup_ == 200)  h_goodJets_n_ = fs_->make<TH1D>("GoodJetsN",";Jet multiplicity;Events / 1", 20, 0., 200.);
   else h_goodJets_n_ = fs_->make<TH1D>("GoodJetsN",";Jet multiplicity;Events / 1", 14, 0., 14.);
   h_goodJets_nb_ = fs_->make<TH1D>("GoodJetsNb",";b jet multiplicity;Events / 1", 5, 0., 5.);
   h_goodJets_pt_ = fs_->make<TH1D>("GoodJetsPt",";p_{T}(jet) (GeV);Events / (2 GeV)", 90, 20., 200.);
   h_goodJets_phi_ = fs_->make<TH1D>("GoodJetsPhi",";#phi(jet);Events / 0.1", 60, -3., 3.);
   h_goodJets_eta_ = fs_->make<TH1D>("GoodJetsEta",";#eta(jet);Events / 0.1", 100, -5., 5.);
   h_goodJets_disc_ = fs_->make<TH1D>("GoodJetsDisc",";b-tagging discriminant;Events / 0.02", 50, 0., 1.);
-  if(PU200_)h_goodLJets_n_ = fs_->make<TH1D>("GoodLightJetsN",";Jet multiplicity;Events / 1", 20, 0., 200.);
+  if (pileup_ == 200) h_goodLJets_n_ = fs_->make<TH1D>("GoodLightJetsN",";Jet multiplicity;Events / 1", 20, 0., 200.);
   else h_goodLJets_n_ = fs_->make<TH1D>("GoodLightJetsN",";Jet multiplicity;Events / 1", 12, 0., 12.);
   h_goodLJets_nb_ = fs_->make<TH1D>("GoodLightJetsNb",";b jet multiplicity;Events / 1", 5, 0., 5.);
   h_goodLJets_pt_ = fs_->make<TH1D>("GoodLightJetsPt",";p_{T}(jet) (GeV);Events / (2 GeV)", 90, 20., 200.);
