@@ -328,8 +328,7 @@ BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   h_goodElecs_iso_ = fs_->make<TH1D>("GoodElecsIso",";I_{rel}^{PUPPI}(e);Events / 0.01", 20, 0., 0.2);
 
   // Jets
-  if (pileup_ == 200)  h_allJets_n_ = fs_->make<TH1D>("AllJetsN",";Jet multiplicity;Events / 1", 20, 0., 200.);
-  else h_allJets_n_ = fs_->make<TH1D>("AllJetsN",";Jet multiplicity;Events / 1", 15, 0., 15.);
+  h_allJets_n_ = fs_->make<TH1D>("AllJetsN",";Jet multiplicity;Events / 1", 15, 0., 15.);
   h_allJets_pt_ = fs_->make<TH1D>("AllJetsPt",";p_{T}(jet) (GeV);Events / (2 GeV)", 100, 0., 200.);
   h_allJets_phi_ = fs_->make<TH1D>("AllJetsPhi",";#phi(jet);Events / 0.1", 60, -3., 3.);
   h_allJets_eta_ = fs_->make<TH1D>("AllJetsEta",";#eta(jet);Events / 0.1", 100, -5., 5.);
@@ -342,15 +341,13 @@ BasicPatDistrib::BasicPatDistrib(const edm::ParameterSet& iConfig):
   h_allJets_id_->GetXaxis()->SetBinLabel(2,"Loose");
   h_allJets_id_->GetXaxis()->SetBinLabel(3,"Tight");
   // ... that pass kin cuts, loose ID
-  if (pileup_ == 200)  h_goodJets_n_ = fs_->make<TH1D>("GoodJetsN",";Jet multiplicity;Events / 1", 20, 0., 200.);
-  else h_goodJets_n_ = fs_->make<TH1D>("GoodJetsN",";Jet multiplicity;Events / 1", 14, 0., 14.);
+  h_goodJets_n_ = fs_->make<TH1D>("GoodJetsN",";Jet multiplicity;Events / 1", 14, 0., 14.);
   h_goodJets_nb_ = fs_->make<TH1D>("GoodJetsNb",";b jet multiplicity;Events / 1", 5, 0., 5.);
   h_goodJets_pt_ = fs_->make<TH1D>("GoodJetsPt",";p_{T}(jet) (GeV);Events / (2 GeV)", 90, 20., 200.);
   h_goodJets_phi_ = fs_->make<TH1D>("GoodJetsPhi",";#phi(jet);Events / 0.1", 60, -3., 3.);
   h_goodJets_eta_ = fs_->make<TH1D>("GoodJetsEta",";#eta(jet);Events / 0.1", 100, -5., 5.);
   h_goodJets_disc_ = fs_->make<TH1D>("GoodJetsDisc",";b-tagging discriminant;Events / 0.02", 50, 0., 1.);
-  if (pileup_ == 200) h_goodLJets_n_ = fs_->make<TH1D>("GoodLightJetsN",";Jet multiplicity;Events / 1", 20, 0., 200.);
-  else h_goodLJets_n_ = fs_->make<TH1D>("GoodLightJetsN",";Jet multiplicity;Events / 1", 12, 0., 12.);
+  h_goodLJets_n_ = fs_->make<TH1D>("GoodLightJetsN",";Jet multiplicity;Events / 1", 12, 0., 12.);
   h_goodLJets_nb_ = fs_->make<TH1D>("GoodLightJetsNb",";b jet multiplicity;Events / 1", 5, 0., 5.);
   h_goodLJets_pt_ = fs_->make<TH1D>("GoodLightJetsPt",";p_{T}(jet) (GeV);Events / (2 GeV)", 90, 20., 200.);
   h_goodLJets_phi_ = fs_->make<TH1D>("GoodLightJetsPhi",";#phi(jet);Events / 0.1", 60, -3., 3.);

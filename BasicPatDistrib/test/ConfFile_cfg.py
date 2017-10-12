@@ -69,8 +69,6 @@ if options.updateJEC:
                         jetCorrections = ('AK4PFPuppi', ['L1FastJet','L2Relative','L3Absolute'], 'None')
                         )
     process.myana.jets = "updatedPatJetsUpdatedJECAK4PFPuppi"
-else:
-    process.myana.jets = "slimmedJets"
 
 process.TFileService = cms.Service("TFileService",
         fileName = cms.string('histos.root') 
