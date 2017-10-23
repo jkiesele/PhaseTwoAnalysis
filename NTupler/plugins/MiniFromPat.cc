@@ -53,6 +53,7 @@ Implementation:
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/JetReco/interface/GenJet.h"
+#include "DataFormats/PatCandidates/interface/Photon.h"
 
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
@@ -138,11 +139,12 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
     edm::EDGetTokenT<std::vector<pat::MET>> metsToken_;
     edm::EDGetTokenT<std::vector<reco::GenJet>> genJetsToken_;
     edm::EDGetTokenT<std::vector<pat::PackedGenParticle>> genPartsToken_;
+    edm::EDGetTokenT<std::vector<pat::Photon>> photonsToken_;
     const ME0Geometry* ME0Geometry_; 
     double mvaThres_[3];
     double deepThres_[3];
 
-    TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_looseElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_puppiJets_, *t_puppiMET_;
+    TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_genPhotons_, *t_looseElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_puppiJets_, *t_puppiMET_, *t_loosePhotons_;
 
     MiniEvent_t ev_;
 };
@@ -170,7 +172,8 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
   jetIDTight_(PFJetIDSelectionFunctor::FIRSTDATA, PFJetIDSelectionFunctor::TIGHT), 
   metsToken_(consumes<std::vector<pat::MET>>(iConfig.getParameter<edm::InputTag>("mets"))),
   genJetsToken_(consumes<std::vector<reco::GenJet>>(iConfig.getParameter<edm::InputTag>("genJets"))),
-  genPartsToken_(consumes<std::vector<pat::PackedGenParticle>>(iConfig.getParameter<edm::InputTag>("genParts")))
+  genPartsToken_(consumes<std::vector<pat::PackedGenParticle>>(iConfig.getParameter<edm::InputTag>("genParts"))),
+  photonsToken_(consumes<std::vector<pat::Photon>>(iConfig.getParameter<edm::InputTag>("photons")))
 {
   //now do what ever initialization is needed
   if (pileup_ == 0) {
@@ -207,6 +210,7 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
 
   t_event_      = fs_->make<TTree>("Event","Event");
   t_genParts_   = fs_->make<TTree>("Particle","Particle");
+  t_genPhotons_ = fs_->make<TTree>("GenPhoton","GenPhoton"); 
   t_vertices_   = fs_->make<TTree>("Vertex","Vertex");
   t_genJets_    = fs_->make<TTree>("GenJet","GenJet");
   t_looseElecs_ = fs_->make<TTree>("ElectronLoose","ElectronLoose");
@@ -215,7 +219,8 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
   t_tightMuons_ = fs_->make<TTree>("MuonTight","MuonTight");
   t_puppiJets_  = fs_->make<TTree>("JetPUPPI","JetPUPPI");
   t_puppiMET_   = fs_->make<TTree>("PuppiMissingET","PuppiMissingET");
-  createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_looseElecs_, t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_, ev_);
+  t_loosePhotons_ = fs_->make<TTree>("PhotonLoose","PhotonLoose");
+  createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_genPhotons_, t_looseElecs_, t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_, t_loosePhotons_, ev_);
 
 }
 
@@ -302,6 +307,39 @@ MiniFromPat::genAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetup
     ev_.gl_relIso[ev_.ngl] = genIso; 
     ev_.ngl++;
   }
+
+  // Photons
+  ev_.ngp = 0;
+  for (size_t i = 0; i < genParts->size(); i++) {
+    if (abs(genParts->at(i).pdgId()) != 22) continue;
+//    if (genParts->at(i).pt() < 10.) continue;
+//    if (fabs(genParts->at(i).eta()) > 3.) continue;
+//    double genIso = 0.;
+//    for (size_t j = 0; j < jGenJets.size(); j++) {
+//      if (ROOT::Math::VectorUtil::DeltaR(genParts->at(i).p4(),genJets->at(jGenJets[j]).p4()) > 0.7) continue; 
+//      std::vector<const reco::Candidate *> jconst = genJets->at(jGenJets[j]).getJetConstituentsQuick();
+//      for (size_t k = 0; k < jconst.size(); k++) {
+//        double deltaR = ROOT::Math::VectorUtil::DeltaR(genParts->at(i).p4(),jconst[k]->p4());
+//        if (deltaR < 0.01 || deltaR > 0.4) continue;
+//        genIso = genIso + jconst[k]->pt();
+//      }
+//    }
+//    genIso = genIso / genParts->at(i).pt();
+//    ev_.gp_pid[ev_.ngl]    = genParts->at(i).pdgId();
+//    ev_.gp_ch[ev_.ngl]     = genParts->at(i).charge();
+    ev_.gp_st[ev_.ngp]     = genParts->at(i).status();
+    ev_.gp_p[ev_.ngp]      = genParts->at(i).p();
+    ev_.gp_px[ev_.ngp]     = genParts->at(i).px();
+    ev_.gp_py[ev_.ngp]     = genParts->at(i).py();
+    ev_.gp_pz[ev_.ngp]     = genParts->at(i).pz();
+    ev_.gp_nrj[ev_.ngp]    = genParts->at(i).energy();
+    ev_.gp_pt[ev_.ngp]     = genParts->at(i).pt();
+    ev_.gp_phi[ev_.ngp]    = genParts->at(i).phi();
+    ev_.gp_eta[ev_.ngp]    = genParts->at(i).eta();
+//    ev_.gp_mass[ev_.ngl]   = genParts->at(i).mass();
+//    ev_.gl_relIso[ev_.ngl] = genIso; 
+    ev_.ngp++;
+  }
 }
 
 // ------------ method to fill reco level pat -------------
@@ -330,6 +368,9 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
   Handle<std::vector<pat::Jet>> jets;
   iEvent.getByToken(jetsToken_, jets);
 
+  Handle<std::vector<pat::Photon>> photons;
+  iEvent.getByToken(photonsToken_, photons);
+   
   // Vertices
   int prVtx = -1;
   ev_.nvtx = 0;
@@ -517,6 +558,50 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.nmet++;
   }
 
+  // Photons
+
+  ev_.nlp = 0;
+
+  for (size_t i = 0; i < photons->size(); i++) {
+//    if (elecs->at(i).pt() < 10.) continue;
+//    if (fabs(elecs->at(i).eta()) > 3.) continue;
+
+//    bool isLoose = isLooseElec(elecs->at(i),conversions,beamspot);    
+
+//    if (!isLoose) continue;
+
+//    ev_.le_ch[ev_.nle]     = elecs->at(i).charge();
+    ev_.lp_pt[ev_.nlp]     = photons->at(i).pt();
+    ev_.lp_phi[ev_.nlp]    = photons->at(i).phi();
+    ev_.lp_eta[ev_.nlp]    = photons->at(i).eta();
+    ev_.lp_nrj[ev_.nlp]    = photons->at(i).energy();
+//    ev_.le_mass[ev_.nle]   = elecs->at(i).mass();
+//    ev_.le_relIso[ev_.nle] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
+    ev_.lp_g[ev_.nlp] = -1;
+    for (int ig = 0; ig < ev_.ngp; ig++) {
+//      if (abs(ev_.gl_pid[ig]) != 11) continue;
+      if (reco::deltaR(ev_.gp_eta[ig],ev_.gp_phi[ig],ev_.lp_eta[ev_.nlp],ev_.lp_phi[ev_.nlp]) > 0.4) continue;
+      ev_.lp_g[ev_.nlp]    = ig;
+    }
+    ev_.nlp++;
+
+//    if (!isTight) continue;
+
+//    ev_.te_ch[ev_.nte]     = elecs->at(i).charge();
+//    ev_.te_pt[ev_.nte]     = elecs->at(i).pt();
+//    ev_.te_phi[ev_.nte]    = elecs->at(i).phi();
+//    ev_.te_eta[ev_.nte]    = elecs->at(i).eta();
+//    ev_.te_mass[ev_.nte]   = elecs->at(i).mass();
+//    ev_.te_relIso[ev_.nte] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
+//    ev_.te_g[ev_.nte] = -1;
+//    for (int ig = 0; ig < ev_.ngl; ig++) {
+//      if (abs(ev_.gl_pid[ig]) != 11) continue;
+//      if (reco::deltaR(ev_.gl_eta[ig],ev_.gl_phi[ig],ev_.te_eta[ev_.nte],ev_.te_phi[ev_.nte]) > 0.4) continue;
+//      ev_.te_g[ev_.nte]    = ig;
+//    }
+//    ev_.nte++;
+  }
+   
 }
 
 // ------------ method called for each event  ------------
@@ -534,6 +619,7 @@ MiniFromPat::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ev_.event   = iEvent.id().event(); 
   t_event_->Fill();
   t_genParts_->Fill();
+  t_genPhotons_->Fill();
   t_vertices_->Fill();
   t_genJets_->Fill();
   t_looseElecs_->Fill();
@@ -542,6 +628,7 @@ MiniFromPat::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   t_tightMuons_->Fill();
   t_puppiJets_->Fill();
   t_puppiMET_->Fill();
+  t_loosePhotons_->Fill();
 
 }
 

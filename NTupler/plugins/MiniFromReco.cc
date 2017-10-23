@@ -138,7 +138,7 @@ class MiniFromReco : public edm::one::EDAnalyzer<edm::one::SharedResources, edm:
     edm::EDGetTokenT<std::vector<reco::Vertex>> verticesToken_;
     const ME0Geometry* ME0Geometry_; 
 
-    TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_looseElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_puppiJets_, *t_puppiMET_;
+    TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_genPhotons_, *t_looseElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_loosePhotons_, *t_puppiJets_, *t_puppiMET_;
     MiniEvent_t ev_;
 
 };
@@ -200,17 +200,19 @@ MiniFromReco::MiniFromReco(const edm::ParameterSet& iConfig):
 
   tmvaReader_.BookMVA("PhaseIIEndcapHGCal","TMVAClassification_BDT.weights.xml");
 
-  t_event_      = fs_->make<TTree>("Event","Event");
-  t_genParts_   = fs_->make<TTree>("Particle","Particle");
-  t_vertices_   = fs_->make<TTree>("Vertex","Vertex");
-  t_genJets_    = fs_->make<TTree>("GenJet","GenJet");
-  t_looseElecs_ = fs_->make<TTree>("ElectronLoose","ElectronLoose");
-  t_tightElecs_ = fs_->make<TTree>("ElectronTight","ElectronTight");
-  t_looseMuons_ = fs_->make<TTree>("MuonLoose","MuonLoose");
-  t_tightMuons_ = fs_->make<TTree>("MuonTight","MuonTight");
-  t_puppiJets_  = fs_->make<TTree>("JetPUPPI","JetPUPPI");
-  t_puppiMET_   = fs_->make<TTree>("PuppiMissingET","PuppiMissingET");
-  createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_looseElecs_, t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_, ev_);
+  t_event_        = fs_->make<TTree>("Event","Event");
+  t_genParts_     = fs_->make<TTree>("Particle","Particle");
+  t_genPhotons_   = fs_->make<TTree>("GenPhoton","GenPhoton");
+  t_vertices_     = fs_->make<TTree>("Vertex","Vertex");
+  t_genJets_      = fs_->make<TTree>("GenJet","GenJet");
+  t_looseElecs_   = fs_->make<TTree>("ElectronLoose","ElectronLoose");
+  t_tightElecs_   = fs_->make<TTree>("ElectronTight","ElectronTight");
+  t_looseMuons_   = fs_->make<TTree>("MuonLoose","MuonLoose");
+  t_tightMuons_   = fs_->make<TTree>("MuonTight","MuonTight");
+  t_puppiJets_    = fs_->make<TTree>("JetPUPPI","JetPUPPI");
+  t_puppiMET_     = fs_->make<TTree>("PuppiMissingET","PuppiMissingET");
+  t_loosePhotons_ = fs_->make<TTree>("PhotonLoose","PhotonLoose");
+  createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_genPhotons_, t_looseElecs_, t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_, t_loosePhotons_, ev_);
 }
 
 
@@ -556,6 +558,7 @@ MiniFromReco::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ev_.event   = iEvent.id().event(); 
   t_event_->Fill();
   t_genParts_->Fill();
+  t_genPhotons_->Fill();
   t_vertices_->Fill();
   t_genJets_->Fill();
   t_looseElecs_->Fill();
@@ -564,6 +567,7 @@ MiniFromReco::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   t_tightMuons_->Fill();
   t_puppiJets_->Fill();
   t_puppiMET_->Fill();
+  t_loosePhotons_->Fill();
 
 }
 
