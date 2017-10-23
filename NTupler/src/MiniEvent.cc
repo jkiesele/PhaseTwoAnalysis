@@ -1,6 +1,6 @@
 #include "PhaseTwoAnalysis/NTupler/interface/MiniEvent.h"
 
-void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_looseElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_,MiniEvent_t &ev)
+void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, MiniEvent_t &ev)
 {
   //event header
   t_event_->Branch("Run",               &ev.run,        "Run/I");
@@ -29,6 +29,17 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_genJets_->Branch("Phi",             ev.gj_phi,      "Phi[GenJet_size]/F");
   t_genJets_->Branch("Mass",            ev.gj_mass,     "Mass[GenJet_size]/F");
 
+  t_genPhotons_->Branch("GenPhoton_size",  &ev.ngp,        "GenPhoton_size/I");
+  t_genPhotons_->Branch("Status",          ev.gp_st,       "Status[GenPhoton_size]/I");
+  t_genPhotons_->Branch("P",               ev.gp_p,        "P[GenPhoton_size]/F");
+  t_genPhotons_->Branch("Px",              ev.gp_px,       "Px[GenPhoton_size]/F");
+  t_genPhotons_->Branch("Py",              ev.gp_py,       "Py[GenPhoton_size]/F");
+  t_genPhotons_->Branch("Pz",              ev.gp_pz,       "Pz[GenPhoton_size]/F");
+  t_genPhotons_->Branch("E",               ev.gp_nrj,      "E[GenPhoton_size]/F");
+  t_genPhotons_->Branch("PT",              ev.gp_pt,       "PT[GenPhoton_size]/F");
+  t_genPhotons_->Branch("Eta",             ev.gp_eta,      "Eta[GenPhoton_size]/F");
+  t_genPhotons_->Branch("Phi",             ev.gp_phi,      "Phi[GenPhoton_size]/F");
+   
   //reco level event
   t_vertices_->Branch("Vertex_size",    &ev.nvtx,       "Vertex_size/I");
   t_vertices_->Branch("SumPT2",         &ev.v_pt2,      "SumPT2[Vertex_size]/F");
@@ -86,5 +97,12 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_puppiMET_->Branch("MET",            ev.met_pt,      "MET[PuppiMissingET_size]/F");
   t_puppiMET_->Branch("Phi",            ev.met_phi,     "Phi[PuppiMissingET_size]/F");
   t_puppiMET_->Branch("Eta",            ev.met_eta,     "Eta[PuppiMissingET_size]/F");
+
+  t_loosePhotons_->Branch("PhotonLoose_size", &ev.nlp,  "PhotonLoose_size/I");
+  t_loosePhotons_->Branch("Particle",     ev.lp_g,        "Particle[PhotonLoose_size]/I");
+  t_loosePhotons_->Branch("PT",           ev.lp_pt,       "PT[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("Eta",          ev.lp_eta,      "Eta[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("Phi",          ev.lp_phi,      "Phi[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("E",            ev.lp_nrj,      "E[PhotonLoose_size]/F");
 }
 
