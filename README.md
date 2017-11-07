@@ -27,7 +27,7 @@ git clone git@github.com:jkiesele/PhaseTwoAnalysis.git
 scram b -j 8
 ```
 
-As the global tag contains Run-2 JEC, you might want to download an SQLite file to rerun JEC. See the [TWiki](https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Jet_Energy_Corrections_JEC) for more details.
+As the global tag contains Run-2 JEC, you might want to download an SQLite file to rerun JEC. See the [TWiki](https://twiki.cern.ch/twiki/bin/view/CMS/Phase2HGCRecipes) for more details.
 
 How to run PAT on RECO datasets
 ----------------
