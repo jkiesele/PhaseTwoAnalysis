@@ -21,9 +21,9 @@ cmsenv
 git cms-init
 git cms-merge-topic -u nsmith-:EgammaFromMultiCl_932
 mkdir -p RecoEgamma && pushd RecoEgamma
-git clone -b integrated git@github.com:nsmith-/Phase2InterimID.git
+git clone -b integrated https://github.com/nsmith-/Phase2InterimID.git
 popd
-git clone git@github.com:jkiesele/PhaseTwoAnalysis.git
+git clone https://github.com/jkiesele/PhaseTwoAnalysis.git
 scram b -j 8
 ```
 
