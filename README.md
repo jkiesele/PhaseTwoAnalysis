@@ -15,16 +15,16 @@ Installation
 --------------
 
 ```bash
-cmsrel CMSSW_9_1_1_patch3
-cd CMSSW_9_1_1_patch3/src
+cmsrel CMSSW_9_3_2
+cd CMSSW_9_3_2/src
 cmsenv
-git cms-addpkg RecoEgamma/EgammaIsolationAlgos
-cd RecoEgamma
-git clone git@github.com:nsmith-/Phase2InterimID.git
-cd ..
+git cms-init
+git cms-merge-topic -u nsmith-:EgammaFromMultiCl_932
+mkdir -p RecoEgamma && pushd RecoEgamma
+git clone -b integrated git@github.com:nsmith-/Phase2InterimID.git
+popd
 git clone git@github.com:jkiesele/PhaseTwoAnalysis.git
-cp PhaseTwoAnalysis/RecoEgammaFix/* RecoEgamma/EgammaIsolationAlgos/plugins/
-scram b -j8
+scram b -j 8
 ```
 
 As the global tag contains Run-2 JEC, you might want to download an SQLite file to rerun JEC. See the [TWiki](https://twiki.cern.ch/twiki/bin/viewauth/CMS/Phase2MuonBarrelRecipes#Jet_Energy_Corrections_JEC) for more details.
