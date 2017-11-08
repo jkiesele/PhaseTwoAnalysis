@@ -37,7 +37,7 @@ Implementation:
 #include "EgammaAnalysis/ElectronTools/interface/ElectronEffectiveArea.h"
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 #include "DataFormats/Common/interface/ValueMap.h"
-#include "RecoEgamma/Phase2InterimID/interface/HGCalIDTool.h"
+//#include "RecoEgamma/Phase2InterimID/interface/HGCalIDTool.h"
 #include "DataFormats/Common/interface/Ptr.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
@@ -74,7 +74,7 @@ class RecoElectronFilter : public edm::stream::EDProducer<> {
     bool isTightElec(const reco::GsfElectron & recoEl, edm::Handle<reco::ConversionCollection> conversions, const reco::BeamSpot beamspot, double MVAVal);
     int matchToTruth(const reco::GsfElectron & recoEl, const edm::Handle<std::vector<reco::GenParticle>> & genParticles);
     void findFirstNonElectronMother(const reco::Candidate *particle, int &ancestorPID, int &ancestorStatus);
-    float evalMVAElec(const reco::GsfElectron & recoEl, const reco::Vertex & recoVtx, edm::Handle<reco::ConversionCollection> conversions, const reco::BeamSpot beamspot, const edm::Handle<std::vector<reco::GenParticle>> & genParticles, double isoEl, int vertexSize);
+//    float evalMVAElec(const reco::GsfElectron & recoEl, const reco::Vertex & recoVtx, edm::Handle<reco::ConversionCollection> conversions, const reco::BeamSpot beamspot, const edm::Handle<std::vector<reco::GenParticle>> & genParticles, double isoEl, int vertexSize);
 
     //virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
     //virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
@@ -82,9 +82,9 @@ class RecoElectronFilter : public edm::stream::EDProducer<> {
     //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
 
     // ----------member data ---------------------------
-    std::unique_ptr<HGCalIDTool> hgcEmId_; 
-    TMVA::Reader tmvaReader_;
-    float hgcId_startPosition, hgcId_lengthCompatibility, hgcId_sigmaietaieta, hgcId_deltaEtaStartPosition, hgcId_deltaPhiStartPosition, hOverE_hgcalSafe, hgcId_cosTrackShowerAngle, trackIsoR04jurassic_D_pt, ooEmooP, d0, dz, pt, etaSC, phiSC, nPV, expectedMissingInnerHits, passConversionVeto, isTrue;
+//    std::unique_ptr<HGCalIDTool> hgcEmId_; 
+//    TMVA::Reader tmvaReader_;
+//    float hgcId_startPosition, hgcId_lengthCompatibility, hgcId_sigmaietaieta, hgcId_deltaEtaStartPosition, hgcId_deltaPhiStartPosition, hOverE_hgcalSafe, hgcId_cosTrackShowerAngle, trackIsoR04jurassic_D_pt, ooEmooP, d0, dz, pt, etaSC, phiSC, nPV, expectedMissingInnerHits, passConversionVeto, isTrue;
 
     edm::EDGetTokenT<std::vector<reco::GsfElectron>> elecsToken_;
     edm::EDGetTokenT<reco::BeamSpot> bsToken_;
@@ -124,11 +124,11 @@ RecoElectronFilter::RecoElectronFilter(const edm::ParameterSet& iConfig):
   produces<std::vector<reco::GsfElectron>>("TightElectrons");
   produces<std::vector<double>>("TightElectronRelIso");
 
-  const edm::ParameterSet& hgcIdCfg = iConfig.getParameterSet("HGCalIDToolConfig");
-  auto cc = consumesCollector();
-  hgcEmId_.reset( new HGCalIDTool(hgcIdCfg, cc) );
+//  const edm::ParameterSet& hgcIdCfg = iConfig.getParameterSet("HGCalIDToolConfig");
+//  auto cc = consumesCollector();
+//  hgcEmId_.reset( new HGCalIDTool(hgcIdCfg, cc) );
 
-  tmvaReader_.SetOptions("!Color:Silent:!Error");
+/*  tmvaReader_.SetOptions("!Color:Silent:!Error");
   tmvaReader_.AddVariable("hgcId_startPosition", &hgcId_startPosition);
   tmvaReader_.AddVariable("hgcId_lengthCompatibility", &hgcId_lengthCompatibility);
   tmvaReader_.AddVariable("hgcId_sigmaietaieta", &hgcId_sigmaietaieta);
@@ -149,7 +149,7 @@ RecoElectronFilter::RecoElectronFilter(const edm::ParameterSet& iConfig):
   tmvaReader_.AddSpectator("passConversionVeto", &passConversionVeto);
 
   tmvaReader_.BookMVA("PhaseIIEndcapHGCal","TMVAClassification_BDT.weights.xml");  
-
+*/
 }
 
 
@@ -172,8 +172,8 @@ RecoElectronFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
 
-  hgcEmId_->getEventSetup(iSetup);
-  hgcEmId_->getEvent(iEvent);  
+//  hgcEmId_->getEventSetup(iSetup);
+//  hgcEmId_->getEvent(iEvent);  
 
   Handle<std::vector<reco::Vertex>> vertices;
   iEvent.getByToken(verticesToken_, vertices);
@@ -191,7 +191,7 @@ RecoElectronFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(convToken_, conversions);
   Handle<reco::BeamSpot> bsHandle;
   iEvent.getByToken(bsToken_, bsHandle);
-  const reco::BeamSpot &beamspot = *bsHandle.product();
+//  const reco::BeamSpot &beamspot = *bsHandle.product();
   Handle<ValueMap<double>> trackIsoValueMap;
   iEvent.getByToken(trackIsoValueMapToken_, trackIsoValueMap);
   Handle<std::vector<reco::PFCandidate>> pfCandsNoLep;
@@ -224,24 +224,24 @@ RecoElectronFilter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     else relIso = -1.;
 
     Ptr<const reco::GsfElectron> el4iso(elecs,i);
-    double eljurassicIso = (*trackIsoValueMap)[el4iso];
-    double elpt = elecs->at(i).pt();
-    double elMVAVal = -1.;
-    if (prVtx > -0.5 && hgcEmId_->setElectronPtr(&(elecs->at(i)))) 
-      elMVAVal = (double)evalMVAElec(elecs->at(i),vertices->at(prVtx),conversions,beamspot,genParts,eljurassicIso/elpt,vertices->size());
-    bool isLoose  = isLooseElec(elecs->at(i),conversions,beamspot,elMVAVal);    
-    bool isMedium = isMediumElec(elecs->at(i),conversions,beamspot,elMVAVal);    
-    bool isTight  = isTightElec(elecs->at(i),conversions,beamspot,elMVAVal);    
+//    double eljurassicIso = (*trackIsoValueMap)[el4iso];
+//    double elpt = elecs->at(i).pt();
+//    double elMVAVal = -1.;
+//    if (prVtx > -0.5 && hgcEmId_->setElectronPtr(&(elecs->at(i)))) 
+//      elMVAVal = (double)evalMVAElec(elecs->at(i),vertices->at(prVtx),conversions,beamspot,genParts,eljurassicIso/elpt,vertices->size());
+//    bool isLoose  = isLooseElec(elecs->at(i),conversions,beamspot,elMVAVal);    
+//    bool isMedium = isMediumElec(elecs->at(i),conversions,beamspot,elMVAVal);    
+//    bool isTight  = isTightElec(elecs->at(i),conversions,beamspot,elMVAVal);    
 
-    if (!isLoose) continue;
+//    if (!isLoose) continue;
     looseVec.push_back(elecs->at(i));
     looseIsoVec.push_back(relIso);
 
-    if (!isMedium) continue;
+//    if (!isMedium) continue;
     mediumVec.push_back(elecs->at(i));
     mediumIsoVec.push_back(relIso);
 
-    if (!isTight) continue;
+//    if (!isTight) continue;
     tightVec.push_back(elecs->at(i));
     tightIsoVec.push_back(relIso);
 
@@ -410,7 +410,7 @@ RecoElectronFilter::findFirstNonElectronMother(const reco::Candidate *particle,
 }
 
 // ------------ tight HGCal electron ID --------------
-float 
+/*float 
 RecoElectronFilter::evalMVAElec(const reco::GsfElectron & recoEl, const reco::Vertex & recoVtx, edm::Handle<reco::ConversionCollection> conversions, const reco::BeamSpot beamspot, const edm::Handle<std::vector<reco::GenParticle>> & genParticles, double isoEl, int vertexSize) {
 
   if (fabs(recoEl.superCluster()->eta()) < 1.556) return -1.;
@@ -451,7 +451,7 @@ RecoElectronFilter::evalMVAElec(const reco::GsfElectron & recoEl, const reco::Ve
   else passConversionVeto = 0.;
 
   return (isHGCal ? tmvaReader_.EvaluateMVA("PhaseIIEndcapHGCal") : -1.);
-}
+}*/
 
 // ------------ method called when starting to processes a run  ------------
 /*

@@ -61,7 +61,7 @@ Implementation:
 #include "FWCore/Framework/interface/ESHandle.h"
 
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
-#include "RecoEgamma/Phase2InterimID/interface/HGCalIDTool.h"
+//#include "RecoEgamma/Phase2InterimID/interface/HGCalIDTool.h"
 #include "DataFormats/Common/interface/Ptr.h"
 
 #include "PhaseTwoAnalysis/NTupler/interface/MiniEvent.h"
@@ -113,14 +113,14 @@ class MiniFromReco : public edm::one::EDAnalyzer<edm::one::SharedResources, edm:
     bool isTightElec(const reco::GsfElectron & recoEl, edm::Handle<reco::ConversionCollection> conversions, const reco::BeamSpot beamspot, double MVAVal);
     int matchToTruth(const reco::GsfElectron & recoEl, const edm::Handle<std::vector<reco::GenParticle>> & genParticles);
     void findFirstNonElectronMother(const reco::Candidate *particle, int &ancestorPID, int &ancestorStatus);
-    float evalMVAElec(const reco::GsfElectron & recoEl, const reco::Vertex & recoVtx, edm::Handle<reco::ConversionCollection> conversions, const reco::BeamSpot beamspot, const edm::Handle<std::vector<reco::GenParticle>> & genParticles, double isoEl, int vertexSize);
+//    float evalMVAElec(const reco::GsfElectron & recoEl, const reco::Vertex & recoVtx, edm::Handle<reco::ConversionCollection> conversions, const reco::BeamSpot beamspot, const edm::Handle<std::vector<reco::GenParticle>> & genParticles, double isoEl, int vertexSize);
 
     // ----------member data ---------------------------
     edm::Service<TFileService> fs_;
 
-    std::unique_ptr<HGCalIDTool> hgcEmId_; 
-    TMVA::Reader tmvaReader_;
-    float hgcId_startPosition, hgcId_lengthCompatibility, hgcId_sigmaietaieta, hgcId_deltaEtaStartPosition, hgcId_deltaPhiStartPosition, hOverE_hgcalSafe, hgcId_cosTrackShowerAngle, trackIsoR04jurassic_D_pt, ooEmooP, d0, dz, pt, etaSC, phiSC, nPV, expectedMissingInnerHits, passConversionVeto, isTrue;
+//    std::unique_ptr<HGCalIDTool> hgcEmId_; 
+//    TMVA::Reader tmvaReader_;
+//    float hgcId_startPosition, hgcId_lengthCompatibility, hgcId_sigmaietaieta, hgcId_deltaEtaStartPosition, hgcId_deltaPhiStartPosition, hOverE_hgcalSafe, hgcId_cosTrackShowerAngle, trackIsoR04jurassic_D_pt, ooEmooP, d0, dz, pt, etaSC, phiSC, nPV, expectedMissingInnerHits, passConversionVeto, isTrue;
 
     edm::EDGetTokenT<std::vector<reco::GsfElectron>> elecsToken_;
     edm::EDGetTokenT<reco::BeamSpot> bsToken_;
@@ -174,11 +174,11 @@ MiniFromReco::MiniFromReco(const edm::ParameterSet& iConfig):
 
   usesResource("TFileService");
 
-  const edm::ParameterSet& hgcIdCfg = iConfig.getParameterSet("HGCalIDToolConfig");
-  auto cc = consumesCollector();
-  hgcEmId_.reset( new HGCalIDTool(hgcIdCfg, cc) );
+//  const edm::ParameterSet& hgcIdCfg = iConfig.getParameterSet("HGCalIDToolConfig");
+//  auto cc = consumesCollector();
+//  hgcEmId_.reset( new HGCalIDTool(hgcIdCfg, cc) );
 
-  tmvaReader_.SetOptions("!Color:Silent:!Error");
+/*  tmvaReader_.SetOptions("!Color:Silent:!Error");
   tmvaReader_.AddVariable("hgcId_startPosition", &hgcId_startPosition);
   tmvaReader_.AddVariable("hgcId_lengthCompatibility", &hgcId_lengthCompatibility);
   tmvaReader_.AddVariable("hgcId_sigmaietaieta", &hgcId_sigmaietaieta);
@@ -199,7 +199,7 @@ MiniFromReco::MiniFromReco(const edm::ParameterSet& iConfig):
   tmvaReader_.AddSpectator("passConversionVeto", &passConversionVeto);
 
   tmvaReader_.BookMVA("PhaseIIEndcapHGCal","TMVAClassification_BDT.weights.xml");
-
+*/
   t_event_        = fs_->make<TTree>("Event","Event");
   t_genParts_     = fs_->make<TTree>("Particle","Particle");
   t_genPhotons_   = fs_->make<TTree>("GenPhoton","GenPhoton");
@@ -309,8 +309,8 @@ MiniFromReco::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSet
 {
   using namespace edm;
 
-  hgcEmId_->getEventSetup(iSetup);
-  hgcEmId_->getEvent(iEvent);
+//  hgcEmId_->getEventSetup(iSetup);
+//  hgcEmId_->getEvent(iEvent);
 
   Handle<std::vector<reco::GsfElectron>> elecs;
   iEvent.getByToken(elecsToken_, elecs);
@@ -318,7 +318,7 @@ MiniFromReco::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(convToken_, conversions);
   Handle<reco::BeamSpot> bsHandle;
   iEvent.getByToken(bsToken_, bsHandle);
-  const reco::BeamSpot &beamspot = *bsHandle.product();
+//  const reco::BeamSpot &beamspot = *bsHandle.product();
   Handle<ValueMap<double>> trackIsoValueMap;
   iEvent.getByToken(trackIsoValueMapToken_, trackIsoValueMap);
 
@@ -447,16 +447,16 @@ MiniFromReco::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSet
     else isoEl = -1.;
 
     Ptr<const reco::GsfElectron> el4iso(elecs,i);
-    double eljurassicIso = (*trackIsoValueMap)[el4iso];
-    double elpt = elecs->at(i).pt();
-    double elMVAVal = -1.;
-    if (hgcEmId_->setElectronPtr(&(elecs->at(i)))) 
-      elMVAVal = (double)evalMVAElec(elecs->at(i),vertices->at(prVtx),conversions,beamspot,genParts,eljurassicIso/elpt,vertices->size());
-    bool isLoose  = isLooseElec(elecs->at(i),conversions,beamspot,elMVAVal);    
+//    double eljurassicIso = (*trackIsoValueMap)[el4iso];
+//    double elpt = elecs->at(i).pt();
+//    double elMVAVal = -1.;
+//    if (hgcEmId_->setElectronPtr(&(elecs->at(i)))) 
+//      elMVAVal = (double)evalMVAElec(elecs->at(i),vertices->at(prVtx),conversions,beamspot,genParts,eljurassicIso/elpt,vertices->size());
+//    bool isLoose  = isLooseElec(elecs->at(i),conversions,beamspot,elMVAVal);    
     // bool isMedium = isMediumElec(elecs->at(i),conversions,beamspot,elMVAVal);    
-    bool isTight  = isTightElec(elecs->at(i),conversions,beamspot,elMVAVal);    
+//    bool isTight  = isTightElec(elecs->at(i),conversions,beamspot,elMVAVal);    
 
-    if (!isLoose) continue;
+//    if (!isLoose) continue;
 
     ev_.le_ch[ev_.nle]     = elecs->at(i).charge();
     ev_.le_pt[ev_.nle]     = elecs->at(i).pt();
@@ -472,7 +472,7 @@ MiniFromReco::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSet
     }
     ev_.nle++;
 
-    if (!isTight) continue;
+//    if (!isTight) continue;
 
     ev_.te_ch[ev_.nte]     = elecs->at(i).charge();
     ev_.te_pt[ev_.nte]     = elecs->at(i).pt();
@@ -803,7 +803,7 @@ MiniFromReco::findFirstNonElectronMother(const reco::Candidate *particle,
 }
 
 // ------------ tight HGCal electron ID --------------
-float 
+/*float 
 MiniFromReco::evalMVAElec(const reco::GsfElectron & recoEl, const reco::Vertex & recoVtx, edm::Handle<reco::ConversionCollection> conversions, const reco::BeamSpot beamspot, const edm::Handle<std::vector<reco::GenParticle>> & genParticles, double isoEl, int vertexSize) {
 
   if (fabs(recoEl.superCluster()->eta()) < 1.556) return -1.;
@@ -844,7 +844,7 @@ MiniFromReco::evalMVAElec(const reco::GsfElectron & recoEl, const reco::Vertex &
   else passConversionVeto = 0.;
 
   return (isHGCal ? tmvaReader_.EvaluateMVA("PhaseIIEndcapHGCal") : -1.);
-}
+}*/
 
 
 // ------------ method called once each job just before starting event loop  ------------
