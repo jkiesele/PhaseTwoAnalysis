@@ -52,14 +52,22 @@ process.MessageLogger.cerr.INFO = cms.untracked.PSet(
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) ) 
 
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring(*(
-        '/store/mc/PhaseIITDRSpring17MiniAOD/TTToSemiLepton_TuneCUETP8M1_14TeV-powheg-pythia8/MINIAODSIM/PU200_91X_upgrade2023_realistic_v3-v1/120000/008BFDF2-285E-E711-8055-001E674FC887.root',
-    ))
+    fileNames = cms.untracked.vstring(
+        'root://cms-xrd-global.cern.ch//store/mc/PhaseIITDRFall17MiniAOD/DiPhotonJetsBox_MGG-80toInf_14TeV-Sherpa/MINIAODSIM/PU200_93X_upgrade2023_realistic_v2-v1/150000/E01EFC0F-13B7-E711-A90B-FA163E4C681C.root'
+    ),
+    secondaryFileNames = cms.untracked.vstring('root://cms-xrd-global.cern.ch//store/mc/PhaseIITDRFall17DR/DiPhotonJetsBox_MGG-80toInf_14TeV-Sherpa/GEN-SIM-RECO/PU200_93X_upgrade2023_realistic_v2-v1/150000/24BB7BB2-A9B4-E711-9DC9-FA163E7FFB3C.root')
 )
 if (options.inputFormat.lower() == "reco"):
     process.source.fileNames = cms.untracked.vstring(*(
         '/store/mc/PhaseIITDRSpring17DR/TTToSemiLepton_TuneCUETP8M1_14TeV-powheg-pythia8/AODSIM/PU200_91X_upgrade2023_realistic_v3-v1/120000/000CD008-7A58-E711-82DB-1CB72C0A3A61.root',
     ))
+
+# HGCAL Photon ID
+process.load("RecoEgamma.Phase2InterimID.phase2EgammaPAT_cff")
+process.options   = cms.untracked.PSet(
+    wantSummary = cms.untracked.bool(False),
+    allowUnscheduled = cms.untracked.bool(True)
+)
 
 # Get new JEC from an SQLite file rather than a GT
 if options.updateJEC:
@@ -82,6 +90,9 @@ process.weightCounter = cms.EDAnalyzer('WeightCounter')
 # Skim filter
 muonLabel = "slimmedMuons"
 elecLabel = "slimmedElectrons"
+photLabel = "phase2Photons"
+if (options.inputFormat.lower() == "reco"):
+    photLabel = "slimmedPhotons"
 if options.updateJEC:
     jetLabel = "updatedPatJetsUpdatedJECAK4PFPuppi"
 else:    
@@ -101,6 +112,10 @@ process.selectedElectrons = cms.EDFilter("CandPtrSelector",
                                          src = cms.InputTag(elecLabel),
                                          cut = cms.string("pt>10 && abs(eta)<3")
                                          )
+process.selectedPhotons = cms.EDFilter("CandPtrSelector",
+                                         src = cms.InputTag(photLabel),
+                                         cut = cms.string("pt>10 && abs(eta)<3")
+                                         )
 process.selectedJets = cms.EDFilter("CandPtrSelector",
                                     src = cms.InputTag(jetLabel),
                                     cut = cms.string("pt>20 && abs(eta)<5")
@@ -115,11 +130,15 @@ process.countLeps = cms.EDFilter("CandViewCountFilter",
                                  src = cms.InputTag("allLeps"),
                                  minNumber = cms.uint32(1)
                                  )
+process.countPhotons = cms.EDFilter("CandViewCountFilter",
+                                 src = cms.InputTag("selectedPhotons"),
+                                 minNumber = cms.uint32(0)
+                                 )
 process.countJets = cms.EDFilter("CandViewCountFilter",
                                  src = cms.InputTag("selectedJets"),
                                  minNumber = cms.uint32(2)
                                  )
-process.preYieldFilter = cms.Sequence(process.selectedMuons+process.selectedElectrons+process.allLeps+process.countLeps+process.selectedJets+process.countJets)
+process.preYieldFilter = cms.Sequence(process.selectedMuons+process.selectedElectrons+process.allLeps+process.countLeps+process.selectedPhotons+process.countPhotons+process.selectedJets+process.countJets)
 
 
 # run Puppi 
@@ -199,22 +218,22 @@ if (options.inputFormat.lower() == "reco"):
 if options.skim:
     if (options.inputFormat.lower() == "reco"):
         if options.updateJEC:
-            process.p = cms.Path(process.weightCounter * process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.preYieldFilter * process.ntuple)
+            process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.preYieldFilter * process.ntuple)
         else:
-            process.p = cms.Path(process.weightCounter * process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.preYieldFilter * process.ntuple)
+            process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.preYieldFilter * process.ntuple)
     else:
         if options.updateJEC:
-            process.p = cms.Path(process.weightCounter*process.preYieldFilter*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.ntuple)
+            process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.preYieldFilter*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.ntuple)
         else:
-            process.p = cms.Path(process.weightCounter*process.preYieldFilter*process.ntuple)
+            process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.preYieldFilter*process.ntuple)
 else:
     if (options.inputFormat.lower() == "reco"):
         if options.updateJEC:
-            process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.ntuple)
+            process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.phase2Egamma * process.ntuple)
         else:
-            process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.ntuple)
+            process.p = cms.Path(process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.phase2Egamma * process.ntuple)
     else:
         if options.updateJEC:
-            process.p = cms.Path(process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.ntuple)
+            process.p = cms.Path(process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.phase2Egamma * process.ntuple)
 	else:    
-            process.p = cms.Path(process.ntuple)
+            process.p = cms.Path(process.phase2Egamma*process.ntuple)

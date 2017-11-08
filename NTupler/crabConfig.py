@@ -23,6 +23,8 @@ config.Data.unitsPerJob = 5
 config.Data.outLFNDirBase = <'dirBase'>  
 config.Data.publication = False
 
+config.Data.useParent = True # need to run on GEN-SIM-RECO to apply photon ID
+
 config.section_("Site")
 config.Site.storageSite = 'T2_CH_CERN'
 config.Site.ignoreGlobalBlacklist = True

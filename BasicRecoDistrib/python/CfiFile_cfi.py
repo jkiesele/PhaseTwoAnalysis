@@ -17,16 +17,6 @@ myana = cms.EDAnalyzer('BasicRecoDistrib',
         genParts     = cms.InputTag("genParticles"),
         genJets      = cms.InputTag("ak4GenJets"),
         vertices     = cms.InputTag("offlinePrimaryVertices"),
-        HGCalIDToolConfig = cms.PSet(
-            HGCBHInput = cms.InputTag("HGCalRecHit","HGCHEBRecHits"),
-            HGCEEInput = cms.InputTag("HGCalRecHit","HGCEERecHits"),
-            HGCFHInput = cms.InputTag("HGCalRecHit","HGCHEFRecHits"),
-            HGCPFRecHits = cms.InputTag("particleFlowRecHitHGC::MyAna"),
-            withPileup = cms.bool(True),
-            debug = cms.bool(False),
-        ),
-        
-
 )
 
 IsoConeDefinitions = cms.VPSet(

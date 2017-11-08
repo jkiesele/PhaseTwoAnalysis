@@ -13,7 +13,7 @@ struct MiniEvent_t
   MiniEvent_t()
   {
     ngl=0; ngj=0; ngp=0;
-    nle=0; nte = 0; nlm=0; ntm=0; nj=0; nmet=0; nlp=0;
+    nle=0; nte = 0; nlm=0; ntm=0; nj=0; nmet=0; nlp=0; ntp=0;
   }
 
   Int_t run,event,lumi;
@@ -30,7 +30,7 @@ struct MiniEvent_t
   //reco level event
   Int_t nvtx;
   Float_t v_pt2[200];
-  Int_t nle, nte, nlm, ntm, nj, nmet, nlp;
+  Int_t nle, nte, nlm, ntm, nj, nmet, nlp, ntp;
   Int_t le_ch[50], le_g[50];
   Float_t le_pt[50], le_eta[50], le_phi[50], le_mass[50], le_relIso[50];
   Int_t te_ch[50], te_g[50];
@@ -42,11 +42,12 @@ struct MiniEvent_t
   Int_t j_id[200], j_g[200], j_mvav2[200], j_deepcsv[200], j_flav[200], j_hadflav[200], j_pid[200];
   Float_t j_pt[200], j_eta[200], j_phi[200], j_mass[200];
   Float_t met_pt[10], met_eta[10], met_phi[10];
-  Int_t lp_g[50];
+  Int_t lp_g[50], tp_g[50];
   Float_t lp_pt[50], lp_eta[50], lp_phi[50], lp_nrj[50];
+  Float_t tp_pt[50], tp_eta[50], tp_phi[50], tp_nrj[50];
 
 };
 
-void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, MiniEvent_t &ev);
+void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev);
 
 #endif
