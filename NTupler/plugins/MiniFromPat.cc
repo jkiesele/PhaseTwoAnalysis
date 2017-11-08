@@ -144,7 +144,7 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
     double mvaThres_[3];
     double deepThres_[3];
 
-    TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_genPhotons_, *t_looseElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_puppiJets_, *t_puppiMET_, *t_loosePhotons_;
+    TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_genPhotons_, *t_looseElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_puppiJets_, *t_puppiMET_, *t_loosePhotons_, *t_tightPhotons_;
 
     MiniEvent_t ev_;
 };
@@ -220,7 +220,8 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
   t_puppiJets_  = fs_->make<TTree>("JetPUPPI","JetPUPPI");
   t_puppiMET_   = fs_->make<TTree>("PuppiMissingET","PuppiMissingET");
   t_loosePhotons_ = fs_->make<TTree>("PhotonLoose","PhotonLoose");
-  createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_genPhotons_, t_looseElecs_, t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_, t_loosePhotons_, ev_);
+  t_tightPhotons_ = fs_->make<TTree>("PhotonTight","PhotonTight");
+  createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_genPhotons_, t_looseElecs_, t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_, t_loosePhotons_, t_tightPhotons_, ev_);
 
 }
 
@@ -312,21 +313,9 @@ MiniFromPat::genAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetup
   ev_.ngp = 0;
   for (size_t i = 0; i < genParts->size(); i++) {
     if (abs(genParts->at(i).pdgId()) != 22) continue;
-//    if (genParts->at(i).pt() < 10.) continue;
-//    if (fabs(genParts->at(i).eta()) > 3.) continue;
-//    double genIso = 0.;
-//    for (size_t j = 0; j < jGenJets.size(); j++) {
-//      if (ROOT::Math::VectorUtil::DeltaR(genParts->at(i).p4(),genJets->at(jGenJets[j]).p4()) > 0.7) continue; 
-//      std::vector<const reco::Candidate *> jconst = genJets->at(jGenJets[j]).getJetConstituentsQuick();
-//      for (size_t k = 0; k < jconst.size(); k++) {
-//        double deltaR = ROOT::Math::VectorUtil::DeltaR(genParts->at(i).p4(),jconst[k]->p4());
-//        if (deltaR < 0.01 || deltaR > 0.4) continue;
-//        genIso = genIso + jconst[k]->pt();
-//      }
-//    }
-//    genIso = genIso / genParts->at(i).pt();
-//    ev_.gp_pid[ev_.ngl]    = genParts->at(i).pdgId();
-//    ev_.gp_ch[ev_.ngl]     = genParts->at(i).charge();
+    if (genParts->at(i).pt() < 10.) continue;
+    if (fabs(genParts->at(i).eta()) > 3.) continue;
+
     ev_.gp_st[ev_.ngp]     = genParts->at(i).status();
     ev_.gp_p[ev_.ngp]      = genParts->at(i).p();
     ev_.gp_px[ev_.ngp]     = genParts->at(i).px();
@@ -336,8 +325,6 @@ MiniFromPat::genAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetup
     ev_.gp_pt[ev_.ngp]     = genParts->at(i).pt();
     ev_.gp_phi[ev_.ngp]    = genParts->at(i).phi();
     ev_.gp_eta[ev_.ngp]    = genParts->at(i).eta();
-//    ev_.gp_mass[ev_.ngl]   = genParts->at(i).mass();
-//    ev_.gl_relIso[ev_.ngl] = genIso; 
     ev_.ngp++;
   }
 }
@@ -561,45 +548,54 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
   // Photons
 
   ev_.nlp = 0;
+  ev_.ntp = 0;
 
   for (size_t i = 0; i < photons->size(); i++) {
-//    if (elecs->at(i).pt() < 10.) continue;
-//    if (fabs(elecs->at(i).eta()) > 3.) continue;
+    if (photons->at(i).pt() < 10.) continue;
+    if (fabs(photons->at(i).eta()) > 3.) continue;
 
-//    bool isLoose = isLooseElec(elecs->at(i),conversions,beamspot);    
+    float mvaValue = photons->at(i).userFloat("mvaValue");
+    bool isEB = photons->at(i).isEB();
+     
+    bool isLoose = 0;
+    bool isTight = 0;
 
-//    if (!isLoose) continue;
+    if( isEB )
+      {
+	 isLoose = (mvaValue > 0.00);
+	 isTight = (mvaValue > 0.56);
+      }     
+     else
+      {
+	 isLoose = (mvaValue > 0.20);
+	 isTight = (mvaValue > 0.68);
+      }          
 
-//    ev_.le_ch[ev_.nle]     = elecs->at(i).charge();
+    if (!isLoose) continue;
+
     ev_.lp_pt[ev_.nlp]     = photons->at(i).pt();
     ev_.lp_phi[ev_.nlp]    = photons->at(i).phi();
     ev_.lp_eta[ev_.nlp]    = photons->at(i).eta();
     ev_.lp_nrj[ev_.nlp]    = photons->at(i).energy();
-//    ev_.le_mass[ev_.nle]   = elecs->at(i).mass();
-//    ev_.le_relIso[ev_.nle] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
     ev_.lp_g[ev_.nlp] = -1;
     for (int ig = 0; ig < ev_.ngp; ig++) {
-//      if (abs(ev_.gl_pid[ig]) != 11) continue;
       if (reco::deltaR(ev_.gp_eta[ig],ev_.gp_phi[ig],ev_.lp_eta[ev_.nlp],ev_.lp_phi[ev_.nlp]) > 0.4) continue;
       ev_.lp_g[ev_.nlp]    = ig;
     }
     ev_.nlp++;
 
-//    if (!isTight) continue;
+    if (!isTight) continue;
 
-//    ev_.te_ch[ev_.nte]     = elecs->at(i).charge();
-//    ev_.te_pt[ev_.nte]     = elecs->at(i).pt();
-//    ev_.te_phi[ev_.nte]    = elecs->at(i).phi();
-//    ev_.te_eta[ev_.nte]    = elecs->at(i).eta();
-//    ev_.te_mass[ev_.nte]   = elecs->at(i).mass();
-//    ev_.te_relIso[ev_.nte] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
-//    ev_.te_g[ev_.nte] = -1;
-//    for (int ig = 0; ig < ev_.ngl; ig++) {
-//      if (abs(ev_.gl_pid[ig]) != 11) continue;
-//      if (reco::deltaR(ev_.gl_eta[ig],ev_.gl_phi[ig],ev_.te_eta[ev_.nte],ev_.te_phi[ev_.nte]) > 0.4) continue;
-//      ev_.te_g[ev_.nte]    = ig;
-//    }
-//    ev_.nte++;
+    ev_.tp_pt[ev_.ntp]     = photons->at(i).pt();
+    ev_.tp_phi[ev_.ntp]    = photons->at(i).phi();
+    ev_.tp_eta[ev_.ntp]    = photons->at(i).eta();
+    ev_.tp_nrj[ev_.ntp]    = photons->at(i).energy();
+    ev_.tp_g[ev_.ntp] = -1;
+    for (int ig = 0; ig < ev_.ngp; ig++) {
+      if (reco::deltaR(ev_.gp_eta[ig],ev_.gp_phi[ig],ev_.tp_eta[ev_.ntp],ev_.tp_phi[ev_.ntp]) > 0.4) continue;
+      ev_.tp_g[ev_.ntp]    = ig;
+    }
+    ev_.ntp++;
   }
    
 }

@@ -1,6 +1,6 @@
 #include "PhaseTwoAnalysis/NTupler/interface/MiniEvent.h"
 
-void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, MiniEvent_t &ev)
+void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev)
 {
   //event header
   t_event_->Branch("Run",               &ev.run,        "Run/I");
@@ -104,5 +104,12 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_loosePhotons_->Branch("Eta",          ev.lp_eta,      "Eta[PhotonLoose_size]/F");
   t_loosePhotons_->Branch("Phi",          ev.lp_phi,      "Phi[PhotonLoose_size]/F");
   t_loosePhotons_->Branch("E",            ev.lp_nrj,      "E[PhotonLoose_size]/F");
+
+  t_tightPhotons_->Branch("PhotonTight_size", &ev.ntp,  "PhotonTight_size/I");
+  t_tightPhotons_->Branch("Particle",     ev.tp_g,        "Particle[PhotonTight_size]/I");
+  t_tightPhotons_->Branch("PT",           ev.tp_pt,       "PT[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("Eta",          ev.tp_eta,      "Eta[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("Phi",          ev.tp_phi,      "Phi[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("E",            ev.tp_nrj,      "E[PhotonTight_size]/F");
 }
 
