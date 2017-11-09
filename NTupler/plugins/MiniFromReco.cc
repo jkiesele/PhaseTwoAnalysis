@@ -61,7 +61,6 @@ Implementation:
 #include "FWCore/Framework/interface/ESHandle.h"
 
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
-//#include "RecoEgamma/Phase2InterimID/interface/HGCalIDTool.h"
 #include "DataFormats/Common/interface/Ptr.h"
 
 #include "PhaseTwoAnalysis/NTupler/interface/MiniEvent.h"
@@ -120,7 +119,6 @@ class MiniFromReco : public edm::one::EDAnalyzer<edm::one::SharedResources, edm:
     edm::EDGetTokenT<std::vector<reco::GsfElectron>> elecsToken_;
     edm::EDGetTokenT<reco::BeamSpot> bsToken_;
     edm::EDGetTokenT<std::vector<reco::Conversion>> convToken_;
-    edm::EDGetTokenT<edm::ValueMap<double>> trackIsoValueMapToken_;
     edm::EDGetTokenT<std::vector<reco::Muon>> muonsToken_;
     edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_charged_hadrons_;
     edm::EDGetTokenT<edm::ValueMap<float> > PUPPINoLeptonsIsolation_neutral_hadrons_;
@@ -131,6 +129,10 @@ class MiniFromReco : public edm::one::EDAnalyzer<edm::one::SharedResources, edm:
     edm::EDGetTokenT<std::vector<reco::GenParticle>> genPartsToken_;
     edm::EDGetTokenT<std::vector<reco::GenJet>> genJetsToken_;
     edm::EDGetTokenT<std::vector<reco::Vertex>> verticesToken_;
+    edm::EDGetTokenT<reco::PhotonCollection> barrelPhotonToken_;
+    edm::EDGetTokenT<edm::ValueMap<float>> barrelPhotonIDToken_;
+    edm::EDGetTokenT<reco::PhotonCollection> endcapPhotonToken_;
+    edm::EDGetTokenT<edm::ValueMap<float>> endcapPhotonIDToken_;
     const ME0Geometry* ME0Geometry_; 
 
     TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_genPhotons_, *t_looseElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_loosePhotons_, *t_tightPhotons_, *t_puppiJets_, *t_puppiMET_;
@@ -153,14 +155,17 @@ MiniFromReco::MiniFromReco(const edm::ParameterSet& iConfig):
   elecsToken_(consumes<std::vector<reco::GsfElectron>>(iConfig.getParameter<edm::InputTag>("electrons"))),
   bsToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamspot"))),
   convToken_(consumes<std::vector<reco::Conversion>>(iConfig.getParameter<edm::InputTag>("conversions"))),
-  trackIsoValueMapToken_(consumes<edm::ValueMap<double>>(iConfig.getParameter<edm::InputTag>("trackIsoValueMap"))),
   muonsToken_(consumes<std::vector<reco::Muon>>(iConfig.getParameter<edm::InputTag>("muons"))),
   pfCandsNoLepToken_(consumes<std::vector<reco::PFCandidate>>(iConfig.getParameter<edm::InputTag>("pfCandsNoLep"))),
   jetsToken_(consumes<std::vector<reco::PFJet>>(iConfig.getParameter<edm::InputTag>("jets"))),
   metToken_(consumes<std::vector<reco::PFMET>>(iConfig.getParameter<edm::InputTag>("met"))),
   genPartsToken_(consumes<std::vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>("genParts"))),
   genJetsToken_(consumes<std::vector<reco::GenJet>>(iConfig.getParameter<edm::InputTag>("genJets"))),
-  verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices")))
+  verticesToken_(consumes<std::vector<reco::Vertex>>(iConfig.getParameter<edm::InputTag>("vertices"))),
+  barrelPhotonToken_(consumes<reco::PhotonCollection>(iConfig.getParameter<edm::InputTag>("photonsBarrel"))),
+  barrelPhotonIDToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("phoBarrelMva"))),
+  endcapPhotonToken_(consumes<reco::PhotonCollection>(iConfig.getParameter<edm::InputTag>("photonsEndcap"))),
+  endcapPhotonIDToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("phoEndcapMva")))
 {
   //now do what ever initialization is needed
   PUPPINoLeptonsIsolation_charged_hadrons_ = consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("puppiNoLepIsolationChargedHadrons"));
@@ -181,7 +186,7 @@ MiniFromReco::MiniFromReco(const edm::ParameterSet& iConfig):
   t_puppiJets_    = fs_->make<TTree>("JetPUPPI","JetPUPPI");
   t_puppiMET_     = fs_->make<TTree>("PuppiMissingET","PuppiMissingET");
   t_loosePhotons_ = fs_->make<TTree>("PhotonLoose","PhotonLoose");
-  t_loosePhotons_ = fs_->make<TTree>("PhotonTight","PhotonTight");
+  t_tightPhotons_ = fs_->make<TTree>("PhotonTight","PhotonTight");
   createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_genPhotons_, t_looseElecs_, t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_, t_loosePhotons_, t_tightPhotons_, ev_);
 }
 
@@ -285,8 +290,6 @@ MiniFromReco::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(convToken_, conversions);
   Handle<reco::BeamSpot> bsHandle;
   iEvent.getByToken(bsToken_, bsHandle);
-  Handle<ValueMap<double>> trackIsoValueMap;
-  iEvent.getByToken(trackIsoValueMapToken_, trackIsoValueMap);
 
   Handle<std::vector<reco::Muon>> muons;
   iEvent.getByToken(muonsToken_, muons);
@@ -314,6 +317,18 @@ MiniFromReco::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   Handle<std::vector<reco::Vertex>> vertices;
   iEvent.getByToken(verticesToken_, vertices);
+
+  Handle<reco::PhotonCollection> barrelPhotonHandle;
+  iEvent.getByToken(barrelPhotonToken_, barrelPhotonHandle);
+
+  Handle<ValueMap<float>> barrelPhotonIDHandle;
+  iEvent.getByToken(barrelPhotonIDToken_, barrelPhotonIDHandle);
+
+  Handle<reco::PhotonCollection> endcapPhotonHandle;
+  iEvent.getByToken(endcapPhotonToken_, endcapPhotonHandle);
+
+  Handle<ValueMap<float>> endcapPhotonIDHandle;
+  iEvent.getByToken(endcapPhotonIDToken_, endcapPhotonIDHandle);
 
   int prVtx = -1;
   ev_.nvtx = 0;
@@ -499,6 +514,61 @@ MiniFromReco::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSet
     ev_.nmet++;
   }
   
+  // Photons
+
+  ev_.nlp = 0;
+  ev_.ntp = 0;
+
+  for (size_t i = 0; i < barrelPhotonHandle->size() + endcapPhotonHandle->size(); i++) {
+    const auto& photon = ( i < barrelPhotonHandle->size() ) ? barrelPhotonHandle->at(i) : endcapPhotonHandle->at(i-barrelPhotonHandle->size());
+
+    if (photon.pt() < 10.) continue;
+    if (fabs(photon.eta()) > 3.) continue;
+
+    const float mvaValue = ( i < barrelPhotonHandle->size() ) ? barrelPhotonIDHandle->get(barrelPhotonHandle.id(), i) : endcapPhotonIDHandle->get(endcapPhotonHandle.id(), i-barrelPhotonHandle->size());
+    bool isEB = photon.isEB();
+     
+    bool isLoose = 0;
+    bool isTight = 0;
+
+    if( isEB )
+      {
+	 isLoose = (mvaValue > 0.00);
+	 isTight = (mvaValue > 0.56);
+      }     
+     else
+      {
+	 isLoose = (mvaValue > 0.20);
+	 isTight = (mvaValue > 0.68);
+      }          
+
+    if (!isLoose) continue;
+
+    ev_.lp_pt[ev_.nlp]     = photon.pt();
+    ev_.lp_phi[ev_.nlp]    = photon.phi();
+    ev_.lp_eta[ev_.nlp]    = photon.eta();
+    ev_.lp_nrj[ev_.nlp]    = photon.energy();
+    ev_.lp_g[ev_.nlp] = -1;
+    for (int ig = 0; ig < ev_.ngp; ig++) {
+      if (reco::deltaR(ev_.gp_eta[ig],ev_.gp_phi[ig],ev_.lp_eta[ev_.nlp],ev_.lp_phi[ev_.nlp]) > 0.4) continue;
+      ev_.lp_g[ev_.nlp]    = ig;
+    }
+    ev_.nlp++;
+
+    if (!isTight) continue;
+
+    ev_.tp_pt[ev_.ntp]     = photon.pt();
+    ev_.tp_phi[ev_.ntp]    = photon.phi();
+    ev_.tp_eta[ev_.ntp]    = photon.eta();
+    ev_.tp_nrj[ev_.ntp]    = photon.energy();
+    ev_.tp_g[ev_.ntp] = -1;
+    for (int ig = 0; ig < ev_.ngp; ig++) {
+      if (reco::deltaR(ev_.gp_eta[ig],ev_.gp_phi[ig],ev_.tp_eta[ev_.ntp],ev_.tp_phi[ev_.ntp]) > 0.4) continue;
+      ev_.tp_g[ev_.ntp]    = ig;
+    }
+    ev_.ntp++;
+  }
+
 }
 
 // ------------ method called for each event  ------------
