@@ -625,6 +625,7 @@ MiniFromPat::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   t_puppiJets_->Fill();
   t_puppiMET_->Fill();
   t_loosePhotons_->Fill();
+  t_tightPhotons_->Fill();
 
 }
 

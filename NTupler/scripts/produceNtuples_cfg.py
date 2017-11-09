@@ -229,11 +229,11 @@ if options.skim:
 else:
     if (options.inputFormat.lower() == "reco"):
         if options.updateJEC:
-            process.p = cms.Path(process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.phase2Egamma * process.ntuple)
+            process.p = cms.Path(process.weightCounter * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.phase2Egamma * process.ntuple)
         else:
-            process.p = cms.Path(process.puSequence * process.phase2Egamma * process.ntuple)
+            process.p = cms.Path(process.weightCounter * process.puSequence * process.phase2Egamma * process.ntuple)
     else:
         if options.updateJEC:
-            process.p = cms.Path(process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.phase2Egamma * process.ntuple)
+            process.p = cms.Path(process.weightCounter*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.phase2Egamma * process.ntuple)
 	else:    
-            process.p = cms.Path(process.phase2Egamma*process.ntuple)
+            process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.ntuple)
