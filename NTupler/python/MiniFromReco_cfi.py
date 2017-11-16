@@ -1,10 +1,10 @@
 import FWCore.ParameterSet.Config as cms
 
 ntuple = cms.EDAnalyzer('MiniFromReco',
-        electrons    = cms.InputTag("ecalDrivenGsfElectrons"),
+        # TODO: implement barrel and endcap collections
+        electrons    = cms.InputTag("cleanedEcalDrivenGsfElectronsFromMultiCl"),
         beamspot     = cms.InputTag("offlineBeamSpot"),
         conversions  = cms.InputTag("particleFlowEGamma"),
-        trackIsoValueMap = cms.InputTag("electronTrackIsolationLcone"),
         muons        = cms.InputTag("muons"),
         puppiNoLepIsolationChargedHadrons = cms.InputTag("muonIsolationPUPPINoLep","h+-DR040-ThresholdVeto000-ConeVeto000"),
         puppiNoLepIsolationNeutralHadrons = cms.InputTag("muonIsolationPUPPINoLep","h0-DR040-ThresholdVeto000-ConeVeto001"),
@@ -15,16 +15,10 @@ ntuple = cms.EDAnalyzer('MiniFromReco',
         genParts     = cms.InputTag("genParticles"),
         genJets      = cms.InputTag("ak4GenJets"),
         vertices     = cms.InputTag("offlinePrimaryVertices"),
-        HGCalIDToolConfig = cms.PSet(
-            HGCBHInput = cms.InputTag("HGCalRecHit","HGCHEBRecHits"),
-            HGCEEInput = cms.InputTag("HGCalRecHit","HGCEERecHits"),
-            HGCFHInput = cms.InputTag("HGCalRecHit","HGCHEFRecHits"),
-            HGCPFRecHits = cms.InputTag("particleFlowRecHitHGC::MiniAnalysis"),
-            withPileup = cms.bool(True),
-            debug = cms.bool(False),
-        ),
-        
-
+        photonsBarrel= cms.InputTag("gedPhotons"),
+        phoBarrelMva = cms.InputTag("hgcPhotonMVAbarrel"),
+        photonsEndcap= cms.InputTag("photonsFromMultiCl"),
+        phoEndcapMva = cms.InputTag("hgcPhotonMVAendcap"),
 )
 
 IsoConeDefinitions = cms.VPSet(

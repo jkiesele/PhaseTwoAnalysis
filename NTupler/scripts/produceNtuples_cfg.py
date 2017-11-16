@@ -42,14 +42,14 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '91X_upgrade2023_realistic_v3',
 # Log settings
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
-process.MessageLogger.cerr.threshold = 'INFO'
+#process.MessageLogger.cerr.threshold = 'INFO'
 process.MessageLogger.categories.append('MyAna')
 process.MessageLogger.cerr.INFO = cms.untracked.PSet(
-        limit = cms.untracked.int32(-1)
+        limit = cms.untracked.int32(0)
 )
 
 # Input
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) ) 
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5) ) 
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
@@ -59,13 +59,17 @@ process.source = cms.Source("PoolSource",
 )
 if (options.inputFormat.lower() == "reco"):
     process.source.fileNames = cms.untracked.vstring(*(
-        '/store/mc/PhaseIITDRSpring17DR/TTToSemiLepton_TuneCUETP8M1_14TeV-powheg-pythia8/AODSIM/PU200_91X_upgrade2023_realistic_v3-v1/120000/000CD008-7A58-E711-82DB-1CB72C0A3A61.root',
+        'root://cms-xrd-global.cern.ch//store/mc/PhaseIITDRFall17DR/DiPhotonJetsBox_MGG-80toInf_14TeV-Sherpa/GEN-SIM-RECO/PU200_93X_upgrade2023_realistic_v2-v1/150000/24BB7BB2-A9B4-E711-9DC9-FA163E7FFB3C.root',
     ))
 
-# HGCAL Photon ID
-process.load("RecoEgamma.Phase2InterimID.phase2EgammaPAT_cff")
+# HGCAL EGamma ID
+if (options.inputFormat.lower() == "reco"):
+    process.load("RecoEgamma.Phase2InterimID.phase2EgammaRECO_cff")
+else:
+    process.load("RecoEgamma.Phase2InterimID.phase2EgammaPAT_cff")
+
 process.options   = cms.untracked.PSet(
-    wantSummary = cms.untracked.bool(False),
+    wantSummary = cms.untracked.bool(True),
     allowUnscheduled = cms.untracked.bool(True)
 )
 
@@ -89,17 +93,29 @@ process.weightCounter = cms.EDAnalyzer('WeightCounter')
 
 # Skim filter
 muonLabel = "slimmedMuons"
-elecLabel = "slimmedElectrons"
+elecLabel = "phase2Electrons"
 photLabel = "phase2Photons"
 if (options.inputFormat.lower() == "reco"):
-    photLabel = "slimmedPhotons"
+    process.phoForYield = cms.EDProducer("CandViewMerger",
+        src = cms.VInputTag(
+            cms.InputTag("gedPhotons"),
+            cms.InputTag("photonsFromMultiCl")
+            )
+        )
+    photLabel = "phoForYield"
+    process.eleForYield = cms.EDProducer("CandViewMerger",
+        src = cms.VInputTag(
+            cms.InputTag("gedGsfElectrons"),
+            cms.InputTag("cleanedEcalDrivenGsfElectronsFromMultiCl")
+            )
+        )
+    elecLabel = "eleForYield"
 if options.updateJEC:
     jetLabel = "updatedPatJetsUpdatedJECAK4PFPuppi"
 else:    
     jetLabel = "slimmedJets"
 if (options.inputFormat.lower() == "reco"):
     muonLabel = "muons"
-    elecLabel = "ecalDrivenGsfElectrons"
     if options.updateJEC:
         jetLabel = "ak4PUPPIJetsL1FastL2L3"
     else:    
@@ -166,16 +182,6 @@ process.load('RecoMET.METProducers.PFMET_cfi')
 process.puppiMet = process.pfMet.clone()
 process.puppiMet.src = cms.InputTag('puppi')
 
-# PF cluster producer for HFCal ID
-process.load("RecoParticleFlow.PFClusterProducer.particleFlowRecHitHGC_cff")
-
-# jurassic track isolation
-# https://indico.cern.ch/event/27568/contributions/1618615/attachments/499629/690192/080421.Isolation.Update.RecHits.pdf
-process.load("RecoEgamma.EgammaIsolationAlgos.electronTrackIsolationLcone_cfi")
-process.electronTrackIsolationLcone.electronProducer = cms.InputTag("ecalDrivenGsfElectrons")
-process.electronTrackIsolationLcone.intRadiusBarrel = 0.04
-process.electronTrackIsolationLcone.intRadiusEndcap = 0.04
-
 # analysis
 moduleName = "MiniFromPat"    
 if (options.inputFormat.lower() == "reco"):
@@ -218,9 +224,9 @@ if (options.inputFormat.lower() == "reco"):
 if options.skim:
     if (options.inputFormat.lower() == "reco"):
         if options.updateJEC:
-            process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.preYieldFilter * process.ntuple)
+            process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.preYieldFilter * process.ntuple)
         else:
-            process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.preYieldFilter * process.ntuple)
+            process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.puSequence * process.preYieldFilter * process.ntuple)
     else:
         if options.updateJEC:
             process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.preYieldFilter*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.ntuple)
@@ -229,9 +235,9 @@ if options.skim:
 else:
     if (options.inputFormat.lower() == "reco"):
         if options.updateJEC:
-            process.p = cms.Path(process.weightCounter*process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.phase2Egamma * process.ntuple)
+            process.p = cms.Path(process.weightCounter * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.phase2Egamma * process.ntuple)
         else:
-            process.p = cms.Path(process.weightCounter*process.electronTrackIsolationLcone * process.particleFlowRecHitHGCSeq * process.puSequence * process.phase2Egamma * process.ntuple)
+            process.p = cms.Path(process.weightCounter * process.puSequence * process.phase2Egamma * process.ntuple)
     else:
         if options.updateJEC:
             process.p = cms.Path(process.weightCounter*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.phase2Egamma * process.ntuple)
