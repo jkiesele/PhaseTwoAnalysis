@@ -1,7 +1,8 @@
 import FWCore.ParameterSet.Config as cms
 
 ntuple = cms.EDAnalyzer('MiniFromReco',
-        electrons    = cms.InputTag("ecalDrivenGsfElectrons"),
+        # TODO: implement barrel and endcap collections
+        electrons    = cms.InputTag("cleanedEcalDrivenGsfElectronsFromMultiCl"),
         beamspot     = cms.InputTag("offlineBeamSpot"),
         conversions  = cms.InputTag("particleFlowEGamma"),
         muons        = cms.InputTag("muons"),

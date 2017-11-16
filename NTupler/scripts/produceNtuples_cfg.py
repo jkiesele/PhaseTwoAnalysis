@@ -62,7 +62,7 @@ if (options.inputFormat.lower() == "reco"):
         'root://cms-xrd-global.cern.ch//store/mc/PhaseIITDRFall17DR/DiPhotonJetsBox_MGG-80toInf_14TeV-Sherpa/GEN-SIM-RECO/PU200_93X_upgrade2023_realistic_v2-v1/150000/24BB7BB2-A9B4-E711-9DC9-FA163E7FFB3C.root',
     ))
 
-# HGCAL Photon ID
+# HGCAL EGamma ID
 if (options.inputFormat.lower() == "reco"):
     process.load("RecoEgamma.Phase2InterimID.phase2EgammaRECO_cff")
 else:
@@ -93,7 +93,7 @@ process.weightCounter = cms.EDAnalyzer('WeightCounter')
 
 # Skim filter
 muonLabel = "slimmedMuons"
-elecLabel = "slimmedElectrons"
+elecLabel = "phase2Electrons"
 photLabel = "phase2Photons"
 if (options.inputFormat.lower() == "reco"):
     process.phoForYield = cms.EDProducer("CandViewMerger",
@@ -103,13 +103,19 @@ if (options.inputFormat.lower() == "reco"):
             )
         )
     photLabel = "phoForYield"
+    process.eleForYield = cms.EDProducer("CandViewMerger",
+        src = cms.VInputTag(
+            cms.InputTag("gedGsfElectrons"),
+            cms.InputTag("cleanedEcalDrivenGsfElectronsFromMultiCl")
+            )
+        )
+    elecLabel = "eleForYield"
 if options.updateJEC:
     jetLabel = "updatedPatJetsUpdatedJECAK4PFPuppi"
 else:    
     jetLabel = "slimmedJets"
 if (options.inputFormat.lower() == "reco"):
     muonLabel = "muons"
-    elecLabel = "ecalDrivenGsfElectrons"
     if options.updateJEC:
         jetLabel = "ak4PUPPIJetsL1FastL2L3"
     else:    
