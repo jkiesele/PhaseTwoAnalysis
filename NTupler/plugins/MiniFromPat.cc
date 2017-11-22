@@ -440,9 +440,37 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (elecs->at(i).pt() < 10.) continue;
     if (fabs(elecs->at(i).eta()) > 3.) continue;
 
-    bool isLoose = isLooseElec(elecs->at(i),conversions,beamspot);    
-    // bool isMedium = isMediumElec(elecs->at(i),conversions,beamspot);    
-    bool isTight = isTightElec(elecs->at(i),conversions,beamspot);    
+    float mvaValue = elecs->at(i).userFloat("mvaValue");
+    bool isEB = elecs->at(i).isEB();
+     
+    bool isLoose = 0;
+    bool isTight = 0;
+
+    if( isEB ) {
+      if (elecs->at(i).pt() < 20.) {
+        isLoose = (mvaValue > -0.661);
+        isTight = (mvaValue > 0.986);
+      }
+      else {
+        isLoose = (mvaValue > -0.797);
+        isTight = (mvaValue > 0.988);
+      }
+    }
+    else {
+      if (not (elecs->at(i).userFloat("hgcElectronID:ecEnergy") > 0)) continue;
+      if (not (elecs->at(i).userFloat("hgcElectronID:sigmaUU") > 0)) continue;
+      if (not (elecs->at(i).fbrem() > -1)) continue;
+      if (not (elecs->at(i).userFloat("hgcElectronID:measuredDepth") < 40)) continue;
+      if (not (elecs->at(i).userFloat("hgcElectronID:nLayers") > 20)) continue;
+      if (elecs->at(i).pt() < 20.) {
+        isLoose = (mvaValue > -0.320);
+        isTight = (mvaValue > 0.969);
+      }
+      else {
+        isLoose = (mvaValue > -0.919);
+        isTight = (mvaValue > 0.983);
+      }
+    }
 
     if (!isLoose) continue;
 
@@ -451,7 +479,10 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.le_phi[ev_.nle]    = elecs->at(i).phi();
     ev_.le_eta[ev_.nle]    = elecs->at(i).eta();
     ev_.le_mass[ev_.nle]   = elecs->at(i).mass();
-    ev_.le_relIso[ev_.nle] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
+    if( isEB )
+      ev_.le_relIso[ev_.nle] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
+    else
+      ev_.le_relIso[ev_.nle] = (elecs->at(i).userFloat("hgcElectronID:caloIsoRing1") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing2") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing3") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing4")) / elecs->at(i).energy();
     ev_.le_g[ev_.nle] = -1;
     for (int ig = 0; ig < ev_.ngl; ig++) {
       if (abs(ev_.gl_pid[ig]) != 11) continue;
@@ -467,7 +498,10 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.te_phi[ev_.nte]    = elecs->at(i).phi();
     ev_.te_eta[ev_.nte]    = elecs->at(i).eta();
     ev_.te_mass[ev_.nte]   = elecs->at(i).mass();
-    ev_.te_relIso[ev_.nte] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
+    if( isEB )
+      ev_.te_relIso[ev_.nte] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
+    else
+      ev_.le_relIso[ev_.nle] = (elecs->at(i).userFloat("hgcElectronID:caloIsoRing1") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing2") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing3") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing4")) / elecs->at(i).energy();
     ev_.te_g[ev_.nte] = -1;
     for (int ig = 0; ig < ev_.ngl; ig++) {
       if (abs(ev_.gl_pid[ig]) != 11) continue;
