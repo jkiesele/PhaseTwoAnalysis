@@ -440,9 +440,37 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (elecs->at(i).pt() < 10.) continue;
     if (fabs(elecs->at(i).eta()) > 3.) continue;
 
-    bool isLoose = isLooseElec(elecs->at(i),conversions,beamspot);    
-    // bool isMedium = isMediumElec(elecs->at(i),conversions,beamspot);    
-    bool isTight = isTightElec(elecs->at(i),conversions,beamspot);    
+    float mvaValue = elecs->at(i).userFloat("mvaValue");
+    bool isEB = elecs->at(i).isEB();
+     
+    bool isLoose = 0;
+    bool isTight = 0;
+
+    if( isEB ) {
+      if (elecs->at(i).pt() < 20.) {
+        isLoose = (mvaValue > -0.661);
+        isTight = (mvaValue > 0.986);
+      }
+      else {
+        isLoose = (mvaValue > -0.797);
+        isTight = (mvaValue > 0.988);
+      }
+    }
+    else {
+      if (not (elecs->at(i).userFloat("hgcElectronID:ecEnergy") > 0)) continue;
+      if (not (elecs->at(i).userFloat("hgcElectronID:sigmaUU") > 0)) continue;
+      if (not (elecs->at(i).fbrem() > -1)) continue;
+      if (not (elecs->at(i).userFloat("hgcElectronID:measuredDepth") < 40)) continue;
+      if (not (elecs->at(i).userFloat("hgcElectronID:nLayers") > 20)) continue;
+      if (elecs->at(i).pt() < 20.) {
+        isLoose = (mvaValue > -0.320);
+        isTight = (mvaValue > 0.969);
+      }
+      else {
+        isLoose = (mvaValue > -0.919);
+        isTight = (mvaValue > 0.983);
+      }
+    }
 
     if (!isLoose) continue;
 
