@@ -479,7 +479,10 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.le_phi[ev_.nle]    = elecs->at(i).phi();
     ev_.le_eta[ev_.nle]    = elecs->at(i).eta();
     ev_.le_mass[ev_.nle]   = elecs->at(i).mass();
-    ev_.le_relIso[ev_.nle] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
+    if( isEB )
+      ev_.le_relIso[ev_.nle] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
+    else
+      ev_.le_relIso[ev_.nle] = (elecs->at(i).userFloat("hgcElectronID:caloIsoRing1") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing2") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing3") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing4")) / elecs->at(i).energy();
     ev_.le_g[ev_.nle] = -1;
     for (int ig = 0; ig < ev_.ngl; ig++) {
       if (abs(ev_.gl_pid[ig]) != 11) continue;
@@ -495,7 +498,10 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.te_phi[ev_.nte]    = elecs->at(i).phi();
     ev_.te_eta[ev_.nte]    = elecs->at(i).eta();
     ev_.te_mass[ev_.nte]   = elecs->at(i).mass();
-    ev_.te_relIso[ev_.nte] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
+    if( isEB )
+      ev_.te_relIso[ev_.nte] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
+    else
+      ev_.le_relIso[ev_.nle] = (elecs->at(i).userFloat("hgcElectronID:caloIsoRing1") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing2") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing3") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing4")) / elecs->at(i).energy();
     ev_.te_g[ev_.nte] = -1;
     for (int ig = 0; ig < ev_.ngl; ig++) {
       if (abs(ev_.gl_pid[ig]) != 11) continue;
