@@ -722,7 +722,7 @@ MiniFromPat::isME0MuonSelNew(const reco::Muon& muon, double dEtaCut, double dPhi
     double deltaPhiBend = 999;
 
     if(!ME0Geometry_)
-    	throw std::runtime_error("MiniFromPat::isME0MuonSelNew: muon geometry not loaded");
+    	return false;
 
     const std::vector<reco::MuonChamberMatch>& chambers = muon.matches();
     for( std::vector<reco::MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){

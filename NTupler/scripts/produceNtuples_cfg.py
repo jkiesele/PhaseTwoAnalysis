@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 from FWCore.ParameterSet.VarParsing import VarParsing
+
 options = VarParsing ('python')
 options.register('outFilename', 'MiniEvents.root',
                  VarParsing.multiplicity.singleton,
@@ -23,6 +24,14 @@ options.register('updateJEC', '',
                  "Name of the SQLite file (with path and extension) used to update the jet collection to the latest JEC and the era of the new JEC"
                 )
 options.parseArguments()
+
+if len(options.updateJEC)==0:
+    import os
+    cmsswbase=os.environ["CMSSW_BASE"]
+    standardjec=cmsswbase+'/src/PhaseTwoAnalysis/NTupler/data/PhaseIIFall17_V3_MC.db'
+    standardjec_tag='PhaseIIFall17_V3_MC'
+    options.updateJEC=[standardjec,standardjec_tag]
+    
 
 process = cms.Process("MiniAnalysis")
 
@@ -49,7 +58,7 @@ process.MessageLogger.cerr.INFO = cms.untracked.PSet(
 )
 
 # Input
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5) ) 
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(50) ) 
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
@@ -229,7 +238,7 @@ if options.skim:
             process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.puSequence * process.preYieldFilter * process.ntuple)
     else:
         if options.updateJEC:
-            process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.preYieldFilter*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.ntuple)
+            process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi *process.preYieldFilter* process.ntuple)
         else:
             process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.preYieldFilter*process.ntuple)
 else:
