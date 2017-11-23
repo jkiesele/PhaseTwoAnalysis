@@ -15,36 +15,39 @@ struct MiniEvent_t
     ngl=0; ngj=0; ngp=0;
     nle=0; nte = 0; nlm=0; ntm=0; nj=0; nmet=0; nlp=0; ntp=0;
   }
+  static constexpr int maxpart=50;
+  static constexpr int maxjets=200;
+  static constexpr int maxweights=500;
 
   Int_t run,event,lumi;
 
   //gen level event
   Int_t ng,ngj,ngl,ngp,g_nw;
-  Float_t g_w[500];
-  Float_t gl_p[50], gl_px[50], gl_py[50], gl_pz[50], gl_nrj[50], gl_pt[50], gl_eta[50], gl_phi[50], gl_mass[50], gl_relIso[50];
-  Int_t gl_pid[50], gl_ch[50], gl_st[50];
-  Float_t gj_pt[200], gj_eta[200], gj_phi[200], gj_mass[200];
-  Float_t gp_p[50], gp_px[50], gp_py[50], gp_pz[50], gp_nrj[50], gp_pt[50], gp_eta[50], gp_phi[50];
-  Int_t gp_st[50];
+  Float_t g_w[maxweights];
+  Float_t gl_p[maxpart], gl_px[maxpart], gl_py[maxpart], gl_pz[maxpart], gl_nrj[maxpart], gl_pt[maxpart], gl_eta[maxpart], gl_phi[maxpart], gl_mass[maxpart], gl_relIso[maxpart];
+  Int_t gl_pid[maxpart], gl_ch[maxpart], gl_st[maxpart];
+  Float_t gj_pt[maxjets], gj_eta[maxjets], gj_phi[maxjets], gj_mass[maxjets];
+  Float_t gp_p[maxpart], gp_px[maxpart], gp_py[maxpart], gp_pz[maxpart], gp_nrj[maxpart], gp_pt[maxpart], gp_eta[maxpart], gp_phi[maxpart];
+  Int_t gp_st[maxpart];
 
   //reco level event
   Int_t nvtx;
-  Float_t v_pt2[200];
+  Float_t v_pt2[maxjets];
   Int_t nle, nte, nlm, ntm, nj, nmet, nlp, ntp;
-  Int_t le_ch[50], le_g[50];
-  Float_t le_pt[50], le_eta[50], le_phi[50], le_mass[50], le_relIso[50];
-  Int_t te_ch[50], te_g[50];
-  Float_t te_pt[50], te_eta[50], te_phi[50], te_mass[50], te_relIso[50];
-  Int_t lm_ch[50], lm_g[50];
-  Float_t lm_pt[50], lm_eta[50], lm_phi[50], lm_mass[50], lm_relIso[50];
-  Int_t tm_ch[50], tm_g[50];
-  Float_t tm_pt[50], tm_eta[50], tm_phi[50], tm_mass[50], tm_relIso[50];
-  Int_t j_id[200], j_g[200], j_mvav2[200], j_deepcsv[200], j_flav[200], j_hadflav[200], j_pid[200];
-  Float_t j_pt[200], j_eta[200], j_phi[200], j_mass[200];
-  Float_t met_pt[10], met_eta[10], met_phi[10];
-  Int_t lp_g[50], tp_g[50];
-  Float_t lp_pt[50], lp_eta[50], lp_phi[50], lp_nrj[50];
-  Float_t tp_pt[50], tp_eta[50], tp_phi[50], tp_nrj[50];
+  Int_t le_ch[maxpart], le_g[maxpart];
+  Float_t le_pt[maxpart], le_eta[maxpart], le_phi[maxpart], le_mass[maxpart], le_relIso[maxpart];
+  Int_t te_ch[maxpart], te_g[maxpart];
+  Float_t te_pt[maxpart], te_eta[maxpart], te_phi[maxpart], te_mass[maxpart], te_relIso[maxpart];
+  Int_t lm_ch[maxpart], lm_g[maxpart];
+  Float_t lm_pt[maxpart], lm_eta[maxpart], lm_phi[maxpart], lm_mass[maxpart], lm_relIso[maxpart];
+  Int_t tm_ch[maxpart], tm_g[maxpart];
+  Float_t tm_pt[maxpart], tm_eta[maxpart], tm_phi[maxpart], tm_mass[maxpart], tm_relIso[maxpart];
+  Int_t j_id[maxjets], j_g[maxjets], j_mvav2[maxjets], j_deepcsv[maxjets], j_flav[maxjets], j_hadflav[maxjets], j_pid[maxjets];
+  Float_t j_pt[maxjets], j_eta[maxjets], j_phi[maxjets], j_mass[maxjets];
+  Float_t met_pt[maxpart], met_eta[maxpart], met_phi[maxpart];
+  Int_t lp_g[maxpart], tp_g[maxpart];
+  Float_t lp_pt[maxpart], lp_eta[maxpart], lp_phi[maxpart], lp_nrj[maxpart];
+  Float_t tp_pt[maxpart], tp_eta[maxpart], tp_phi[maxpart], tp_nrj[maxpart];
 
 };
 
