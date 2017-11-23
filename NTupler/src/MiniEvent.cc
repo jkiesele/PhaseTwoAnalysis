@@ -8,6 +8,9 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_event_->Branch("Lumi",              &ev.lumi,       "Lumi/I");
 
   //gen level event
+  t_event_->Branch("Weight_size",       &ev.g_nw,       "Weight_size/I");
+  t_event_->Branch("Weight",            ev.g_w,         "Weight[Weight_size]/F");
+
   t_genParts_->Branch("Particle_size",  &ev.ngl,        "Particle_size/I");
   t_genParts_->Branch("PID",            ev.gl_pid,      "PID[Particle_size]/I");
   t_genParts_->Branch("Charge",         ev.gl_ch,       "Charge[Particle_size]/I");
