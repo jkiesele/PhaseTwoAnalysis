@@ -53,6 +53,8 @@ Implementation:
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/JetReco/interface/GenJet.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
 
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
@@ -139,6 +141,8 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
     edm::EDGetTokenT<std::vector<pat::MET>> metsToken_;
     edm::EDGetTokenT<std::vector<reco::GenJet>> genJetsToken_;
     edm::EDGetTokenT<std::vector<pat::PackedGenParticle>> genPartsToken_;
+    edm::EDGetTokenT<GenEventInfoProduct> generatorToken_;
+    edm::EDGetTokenT<LHEEventProduct> generatorlheToken_;
     edm::EDGetTokenT<std::vector<pat::Photon>> photonsToken_;
     const ME0Geometry* ME0Geometry_; 
     double mvaThres_[3];
@@ -173,6 +177,8 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
   metsToken_(consumes<std::vector<pat::MET>>(iConfig.getParameter<edm::InputTag>("mets"))),
   genJetsToken_(consumes<std::vector<reco::GenJet>>(iConfig.getParameter<edm::InputTag>("genJets"))),
   genPartsToken_(consumes<std::vector<pat::PackedGenParticle>>(iConfig.getParameter<edm::InputTag>("genParts"))),
+  generatorToken_(consumes<GenEventInfoProduct>(edm::InputTag("generator"))),
+  generatorlheToken_(consumes<LHEEventProduct>(edm::InputTag("externalLHEProducer",""))),
   photonsToken_(consumes<std::vector<pat::Photon>>(iConfig.getParameter<edm::InputTag>("photons")))
 {
   //now do what ever initialization is needed
@@ -326,6 +332,30 @@ MiniFromPat::genAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetup
     ev_.gp_phi[ev_.ngp]    = genParts->at(i).phi();
     ev_.gp_eta[ev_.ngp]    = genParts->at(i).eta();
     ev_.ngp++;
+  }
+  
+  // Generator weights
+  ev_.g_nw = 0; ev_.g_w[0] = 1.0;
+  edm::Handle<GenEventInfoProduct> evt;
+  iEvent.getByToken( generatorToken_,evt);
+  if(evt.isValid()) {
+    ev_.g_w[0] = evt->weight();
+    ev_.g_nw++;
+    for (unsigned int i = 1; i<evt->weights().size(); i++) {
+      ev_.g_w[ev_.g_nw]=evt->weights()[i];
+      ev_.g_nw++;
+    }
+  }
+  // LHE weights
+  edm::Handle<LHEEventProduct> evet;
+  iEvent.getByToken(generatorlheToken_, evet);
+  if(evet.isValid()) {
+    double asdd=evet->originalXWGTUP();
+    for(unsigned int i=0  ; i<evet->weights().size();i++) {
+      double asdde=evet->weights()[i].wgt;
+      ev_.g_w[ev_.g_nw]=ev_.g_w[0]*asdde/asdd;
+      ev_.g_nw++;
+    }
   }
 }
 

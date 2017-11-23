@@ -18,9 +18,9 @@ struct MiniEvent_t
 
   Int_t run,event,lumi;
 
-
   //gen level event
-  Int_t ng,ngj,ngl,ngp;
+  Int_t ng,ngj,ngl,ngp,g_nw;
+  Float_t g_w[500];
   Float_t gl_p[50], gl_px[50], gl_py[50], gl_pz[50], gl_nrj[50], gl_pt[50], gl_eta[50], gl_phi[50], gl_mass[50], gl_relIso[50];
   Int_t gl_pid[50], gl_ch[50], gl_st[50];
   Float_t gj_pt[200], gj_eta[200], gj_phi[200], gj_mass[200];
