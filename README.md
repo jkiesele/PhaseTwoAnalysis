@@ -64,4 +64,5 @@ To adjust the input parameters of `scripts/produceNtuples_cfg.py`, the three fol
    * `config.JobType.inputFiles`
    * `config.JobType.outputFiles`
 
-
+If you experience problems with multicrab, please consult the following link:
+https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3FAQ#Multiple_submission_fails_with_a
