@@ -45,9 +45,9 @@ struct MiniEvent_t
   Int_t j_id[maxjets], j_g[maxjets], j_mvav2[maxjets], j_deepcsv[maxjets], j_flav[maxjets], j_hadflav[maxjets], j_pid[maxjets];
   Float_t j_pt[maxjets], j_eta[maxjets], j_phi[maxjets], j_mass[maxjets];
   Float_t met_pt[maxpart], met_eta[maxpart], met_phi[maxpart];
-  Int_t lp_g[maxpart], tp_g[maxpart];
-  Float_t lp_pt[maxpart], lp_eta[maxpart], lp_phi[maxpart], lp_nrj[maxpart];
-  Float_t tp_pt[maxpart], tp_eta[maxpart], tp_phi[maxpart], tp_nrj[maxpart];
+  Int_t lp_g[maxpart], tp_g[maxpart], lp_isEB[maxpart], tp_isEB[maxpart];
+  Float_t lp_pt[maxpart], lp_eta[maxpart], lp_phi[maxpart], lp_nrj[maxpart], lp_pt_multi[maxpart], lp_eta_multi[maxpart], lp_phi_multi[maxpart], lp_nrj_multi[maxpart];
+  Float_t tp_pt[maxpart], tp_eta[maxpart], tp_phi[maxpart], tp_nrj[maxpart], tp_pt_multi[maxpart], tp_eta_multi[maxpart], tp_phi_multi[maxpart], tp_nrj_multi[maxpart];
 
 };
 

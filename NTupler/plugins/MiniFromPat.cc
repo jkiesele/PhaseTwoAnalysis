@@ -648,11 +648,26 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (!isLoose) continue;
     if (ev_.nlp<MiniEvent_t::maxpart){
 
+       ev_.lp_isEB[ev_.nlp]   = isEB ? 1 : 0;
        ev_.lp_pt[ev_.nlp]     = photons->at(i).pt();
        ev_.lp_phi[ev_.nlp]    = photons->at(i).phi();
        ev_.lp_eta[ev_.nlp]    = photons->at(i).eta();
        ev_.lp_nrj[ev_.nlp]    = photons->at(i).energy();
        ev_.lp_g[ev_.nlp] = -1;
+       // add multicluster quantities too
+       // for endcap it's seed multi, otherwise just use supercluster
+       if (isEB) {
+         ev_.lp_pt_multi[ev_.nlp]     = photons->at(i).superCluster()->energy() / cosh(photons->at(i).superCluster()->seed()->eta());
+         ev_.lp_phi_multi[ev_.nlp]    = photons->at(i).superCluster()->phi();
+         ev_.lp_eta_multi[ev_.nlp]    = photons->at(i).superCluster()->eta();
+         ev_.lp_nrj_multi[ev_.nlp]    = photons->at(i).superCluster()->energy();
+       }
+       else {
+         ev_.lp_pt_multi[ev_.nlp]     = photons->at(i).superCluster()->seed()->energy() / cosh(photons->at(i).superCluster()->seed()->eta());
+         ev_.lp_phi_multi[ev_.nlp]    = photons->at(i).superCluster()->seed()->phi();
+         ev_.lp_eta_multi[ev_.nlp]    = photons->at(i).superCluster()->seed()->eta();
+         ev_.lp_nrj_multi[ev_.nlp]    = photons->at(i).superCluster()->seed()->energy();
+       }
        for (int ig = 0; ig < ev_.ngp; ig++) {
          if (reco::deltaR(ev_.gp_eta[ig],ev_.gp_phi[ig],ev_.lp_eta[ev_.nlp],ev_.lp_phi[ev_.nlp]) > 0.4) continue;
          ev_.lp_g[ev_.nlp]    = ig;
@@ -663,11 +678,26 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (!isTight) continue;
     if (ev_.ntp>=MiniEvent_t::maxpart) break;
 
+    ev_.tp_isEB[ev_.ntp]   = isEB ? 1 : 0;
     ev_.tp_pt[ev_.ntp]     = photons->at(i).pt();
     ev_.tp_phi[ev_.ntp]    = photons->at(i).phi();
     ev_.tp_eta[ev_.ntp]    = photons->at(i).eta();
     ev_.tp_nrj[ev_.ntp]    = photons->at(i).energy();
     ev_.tp_g[ev_.ntp] = -1;
+    // add multicluster quantities too
+    // for endcap it's seed multi, otherwise just use supercluster
+    if (isEB) {
+      ev_.tp_pt_multi[ev_.ntp]     = photons->at(i).superCluster()->energy() / cosh(photons->at(i).superCluster()->seed()->eta());
+      ev_.tp_phi_multi[ev_.ntp]    = photons->at(i).superCluster()->phi();
+      ev_.tp_eta_multi[ev_.ntp]    = photons->at(i).superCluster()->eta();
+      ev_.tp_nrj_multi[ev_.ntp]    = photons->at(i).superCluster()->energy();
+    }
+    else {
+      ev_.tp_pt_multi[ev_.ntp]     = photons->at(i).superCluster()->seed()->energy() / cosh(photons->at(i).superCluster()->seed()->eta());
+      ev_.tp_phi_multi[ev_.ntp]    = photons->at(i).superCluster()->seed()->phi();
+      ev_.tp_eta_multi[ev_.ntp]    = photons->at(i).superCluster()->seed()->eta();
+      ev_.tp_nrj_multi[ev_.ntp]    = photons->at(i).superCluster()->seed()->energy();
+    }
     for (int ig = 0; ig < ev_.ngp; ig++) {
       if (reco::deltaR(ev_.gp_eta[ig],ev_.gp_phi[ig],ev_.tp_eta[ev_.ntp],ev_.tp_phi[ev_.ntp]) > 0.4) continue;
       ev_.tp_g[ev_.ntp]    = ig;
