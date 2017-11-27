@@ -120,7 +120,7 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
     virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
     virtual void endJob() override;
 
-    bool isME0MuonSelNew(const reco::Muon&, double, double, double);
+    bool isME0MuonSelNew(const reco::Muon&, double, double, double, edm::EventSetup const& );
 
     // ----------member data ---------------------------
     edm::Service<TFileService> fs_;
@@ -413,7 +413,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     // Loose ID
     double dPhiCut = std::min(std::max(1.2/muons->at(i).p(),1.2/100),0.056);
     double dPhiBendCut = std::min(std::max(0.2/muons->at(i).p(),0.2/100),0.0096);    
-    bool isLoose = (fabs(muons->at(i).eta()) < 2.4 && muon::isLooseMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.077, dPhiCut, dPhiBendCut));
+    bool isLoose = (fabs(muons->at(i).eta()) < 2.4 && muon::isLooseMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.077, dPhiCut, dPhiBendCut,iSetup));
 
     // Medium ID -- needs to be updated
     bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
@@ -428,7 +428,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     // Tight ID
     dPhiCut = std::min(std::max(1.2/muons->at(i).p(),1.2/100),0.032);
     dPhiBendCut = std::min(std::max(0.2/muons->at(i).p(),0.2/100),0.0041);
-    bool isTight = (fabs(muons->at(i).eta()) < 2.4 && vertices->size() > 0 && muon::isTightMuon(muons->at(i),vertices->at(prVtx))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.048, dPhiCut, dPhiBendCut) && ipxy && ipz && validPxlHit && highPurity);
+    bool isTight = (fabs(muons->at(i).eta()) < 2.4 && vertices->size() > 0 && muon::isTightMuon(muons->at(i),vertices->at(prVtx))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.048, dPhiCut, dPhiBendCut,iSetup) && ipxy && ipz && validPxlHit && highPurity);
 
     if (!isLoose) continue;
     if (ev_.nlm<MiniEvent_t::maxpart){
@@ -739,7 +739,7 @@ MiniFromPat::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 bool 
-MiniFromPat::isME0MuonSelNew(const reco::Muon& muon, double dEtaCut, double dPhiCut, double dPhiBendCut)
+MiniFromPat::isME0MuonSelNew(const reco::Muon& muon, double dEtaCut, double dPhiCut, double dPhiBendCut, edm::EventSetup const& iSetup)
 {
 
   bool result = false;
@@ -751,8 +751,13 @@ MiniFromPat::isME0MuonSelNew(const reco::Muon& muon, double dEtaCut, double dPhi
     double deltaPhi = 999;
     double deltaPhiBend = 999;
 
-    if(!ME0Geometry_)
-    	return false;
+    if(!ME0Geometry_){
+    	edm::ESHandle<ME0Geometry> hGeom;
+    	iSetup.get<MuonGeometryRecord>().get(hGeom);
+    	ME0Geometry_ =( &*hGeom);
+    	if(!ME0Geometry_)
+    		return false;
+    }
 
     const std::vector<reco::MuonChamberMatch>& chambers = muon.matches();
     for( std::vector<reco::MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){
