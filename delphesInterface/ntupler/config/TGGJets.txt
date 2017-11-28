@@ -54,7 +54,7 @@ $ then this switch can be set to true. The default is "false"
 
 [inputfiles-begin]
 
-TOP-PhaseIISummer17wmLHEGENOnly-00027_200PU/TOP-PhaseIISummer17wmLHEGENOnly-00027_200PU_1.root  , TGJets,   1, 56, auto, 2
+TOP-PhaseIISummer17wmLHEGENOnly-00027_200PU/  , TGJets,   1, 56, auto, 2
 
 TOP-PhaseIISummer17wmLHEGENOnly-00021_200PU/TOP-PhaseIISummer17wmLHEGENOnly-00021_200PU.root  , TGGJets,       1, 23, auto, 1
 
