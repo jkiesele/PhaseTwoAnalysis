@@ -1,0 +1,28 @@
+[config-begin]
+
+    Outputdir  = output
+    Outputfile = testoutput.root
+    Lumi       = 3000
+    Testmode   = false
+    Maxchilds  = 6
+
+    Samplesdir = /afs/cern.ch/user/j/jkiesele/public/testsamples/
+ 
+    $Samplesdir = root://cmseos.fnal.gov//store/user/snowmass/DelphesFromLHE_2016June/
+
+
+[config-end]
+
+
+[inputfiles-begin]
+
+/    , signal,                633,	 1,  auto    ,     1, true
+/	 , background,                433,   2,   auto    ,    2
+/	 , background2,                431,   4,   auto   ,     2
+/	 , background3,                432,   40,    auto  ,     2
+
+$B-4p-0-1-v1510_14TEV_200PU/	 , background,                433,   2,          2
+$delphes_framework/ , background,                433,   2,          2
+
+
+[inputfiles-end]

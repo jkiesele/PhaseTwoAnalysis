@@ -1,0 +1,11 @@
+This directory contains the code to produce an ntuple in the same format as
+from the NTupler in this repository based on Delphes output for simple
+mixing of FullSim and Delphes samples.
+
+For setup please run setup.sh (having set up the CMS environment 'cmsenv')
+after that (having set up the CMS environment 'cmsenv')
+'source env.sh'
+
+The developing ntupler is in 'ntupler'.
+
+This part is under development!

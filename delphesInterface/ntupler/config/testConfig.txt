@@ -1,0 +1,84 @@
+
+$ This is a test configuration for the DAnalysis analyser/skimmer
+$ Comments can be added following a "$"
+$
+$ The first part described the general configuration of the analyser
+$ The output directory will be created in the directory the analyser is
+$ run from
+$ The output file will be created within the output directory and will
+$ contain any histogram that was initialised (see skelton analyser sourcecode)
+$ It is also possible to create a flat ntuple or a skim. In this case,
+$ each sample will result in a unique output file containing the ntuple or skim.
+$ In addition, a new configuration file (like this) will be created that allows 
+$ to run over the new skim/ntuple with the DAnalysis framework, too, taking
+$ care of proper normalisation etc.
+$
+
+
+[config-begin]
+
+    Outputdir  = output
+    Outputfile = outputfile.root
+    
+$ The luminosity is to be given to match the cross section values listed in the section "inputfiles"
+$ In this example, the cross sections are given in fb.
+$ In other cases that may be pb and the luminosity value here needs to be multplied by 1000.
+
+    Lumi       = 3000
+    
+$ If the testmode is activated, only a fraction of the events will be processed.
+$ This mode is meant to test histogram ranges etc. The scaling does not necessarily
+$ correspond to the relative cross sections of the processes
+    
+    Testmode   = false
+
+$ Maximum number of child processes that are spawned simultaneously, each running on a
+$ different input file.
+    
+    Maxchilds  = 6
+
+$ This Samplesdir can be a local directory or refer to off-site locations via xrootd 
+    
+    Samplesdir = /afs/cern.ch/user/j/jkiesele/public/testsamples
+ 
+$ The analyser will have a postProcess() function. This function should be used to
+$ extract parameters from the filled histograms, do additional calculations, etc.
+$ If only this post process function should be run (the histograms are already created)
+$ then this switch can be set to true. The default is "false"
+
+    RunOnOutputOnly = false
+
+[config-end]
+
+
+
+[inputfiles-begin]
+
+$ The input files are defined here. The syntax is the following (separated by ","):
+$ 
+$ 1) File name relative to Samplesdir
+$    This can also be a directory relative to Samplesdir. In this case, all *.root files
+$    in it will be considered.
+$ 2) Legend name (can contain "#" for root-latex)
+$ 3) Color of the contribution (in root definition)
+$ 4) Cross section of the process
+$ 5) Number of events that were generated. Can be set to "auto" or 0 for automatic determination
+$    Automatic determination emplies that there are no preselection cuts!
+$    In case, a full directory is defined as input (see bullet 1), the total number of events
+$    in all files is considered.
+$ 6) Legend order: The order the samples will appear in a stack plot if the "stackPlotter"
+$    from the DAnalysis framework is used. Numbers don't need to follow one another 
+$    (see last line)
+$ 7) Optional signal indicator. In case the signal has to be treated differently in the event loop
+$    this can be indicated here and later checked in the loop.
+$ 8) Optional other options (not used for now)
+
+
+delphes_testsample.root  , signal,       630, 23, auto, 1, true
+delphes_testsample.root  , background,   420, 56, auto, 2
+delphes_testsample.root  , background2,  432, 65, auto, 3
+/  ,                       background3,  431, 12, auto, 5
+
+$ The last entry is an example for running over all input files in a directory
+
+[inputfiles-end]

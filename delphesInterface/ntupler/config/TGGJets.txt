@@ -1,0 +1,63 @@
+
+$ This is a test configuration for the DAnalysis analyser/skimmer
+$ Comments can be added following a "$"
+$
+$ The first part described the general configuration of the analyser
+$ The output directory will be created in the directory the analyser is
+$ run from
+$ The output file will be created within the output directory and will
+$ contain any histogram that was initialised (see skelton analyser sourcecode)
+$ It is also possible to create a flat ntuple or a skim. In this case,
+$ each sample will result in a unique output file containing the ntuple or skim.
+$ In addition, a new configuration file (like this) will be created that allows 
+$ to run over the new skim/ntuple with the DAnalysis framework, too, taking
+$ care of proper normalisation etc.
+$
+
+
+[config-begin]
+
+    Outputdir  = output
+    Outputfile = outputfile.root
+    
+$ The luminosity is to be given to match the cross section values listed in the section "inputfiles"
+$ In this example, the cross sections are given in fb.
+$ In other cases that may be pb and the luminosity value here needs to be multplied by 1000.
+
+    Lumi       = 3000
+    
+$ If the testmode is activated, only a fraction of the events will be processed.
+$ This mode is meant to test histogram ranges etc. The scaling does not necessarily
+$ correspond to the relative cross sections of the processes
+    
+    Testmode   = false
+
+$ Maximum number of child processes that are spawned simultaneously, each running on a
+$ different input file.
+    
+    Maxchilds  = 6
+
+$ This Samplesdir can be a local directory or refer to off-site locations via xrootd 
+    
+    Samplesdir = /afs/cern.ch/user/j/jkiesele/eos_upgrade/delphes_output/LHEGEN_SMbackgrounds/Delphes342pre07_hadd/
+ 
+$ The analyser will have a postProcess() function. This function should be used to
+$ extract parameters from the filled histograms, do additional calculations, etc.
+$ If only this post process function should be run (the histograms are already created)
+$ then this switch can be set to true. The default is "false"
+
+    RunOnOutputOnly = false
+
+[config-end]
+
+
+
+[inputfiles-begin]
+
+TOP-PhaseIISummer17wmLHEGENOnly-00027_200PU/TOP-PhaseIISummer17wmLHEGENOnly-00027_200PU_1.root  , TGJets,   1, 56, auto, 2
+
+TOP-PhaseIISummer17wmLHEGENOnly-00021_200PU/TOP-PhaseIISummer17wmLHEGENOnly-00021_200PU.root  , TGGJets,       1, 23, auto, 1
+
+$ The last entry is an example for running over all input files in a directory
+
+[inputfiles-end]

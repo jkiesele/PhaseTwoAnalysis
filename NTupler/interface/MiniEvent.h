@@ -13,6 +13,7 @@ struct MiniEvent_t
   MiniEvent_t()
   {
     ngl=0; ngj=0; ngp=0;
+    g_nw=0;ng=0;
     nle=0; nte = 0; nlm=0; ntm=0; nj=0; nmet=0; nlp=0; ntp=0;
   }
   static constexpr int maxpart=50;
