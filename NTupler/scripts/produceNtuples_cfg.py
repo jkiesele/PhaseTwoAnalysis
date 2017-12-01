@@ -56,7 +56,7 @@ process.MessageLogger.cerr.INFO = cms.untracked.PSet(
 )
 
 # Input
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(50) ) 
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(200) ) 
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(

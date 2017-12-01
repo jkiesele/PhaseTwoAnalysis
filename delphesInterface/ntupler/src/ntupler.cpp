@@ -45,6 +45,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 	TTree * t_vertices_     = new TTree("Vertex","Vertex");
 	TTree * t_genJets_      = new TTree("GenJet","GenJet");
 	TTree * t_looseElecs_   = new TTree("ElectronLoose","ElectronLoose");
+	TTree * t_mediumElecs_   = new TTree("ElectronMedium","ElectronMedium");
 	TTree * t_tightElecs_   = new TTree("ElectronTight","ElectronTight");
 	TTree * t_looseMuons_   = new TTree("MuonLoose","MuonLoose");
 	TTree * t_tightMuons_   = new TTree("MuonTight","MuonTight");
@@ -53,7 +54,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 	TTree * t_loosePhotons_ = new TTree("PhotonLoose","PhotonLoose");
 	TTree * t_tightPhotons_ = new TTree("PhotonTight","PhotonTight");
 	createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_genPhotons_, t_looseElecs_,
-			t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_, t_loosePhotons_,
+			t_mediumElecs_,t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_, t_loosePhotons_,
 			t_tightPhotons_, ev_);
 
 
@@ -197,6 +198,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 	t_vertices_     ->Write();
 	t_genJets_      ->Write();
 	t_looseElecs_   ->Write();
+	t_mediumElecs_   ->Write();
 	t_tightElecs_   ->Write();
 	t_looseMuons_   ->Write();
 	t_tightMuons_   ->Write();

@@ -1,6 +1,7 @@
 #include "PhaseTwoAnalysis/NTupler/interface/MiniEvent.h"
 
-void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev)
+void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_,
+		TTree *t_looseElecs_, TTree *t_mediumElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev)
 {
   //event header
   t_event_->Branch("Run",               &ev.run,        "Run/I");
@@ -55,6 +56,15 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_looseElecs_->Branch("Phi",          ev.le_phi,      "Phi[ElectronLoose_size]/F");
   t_looseElecs_->Branch("Mass",         ev.le_mass,     "Mass[ElectronLoose_size]/F");
   t_looseElecs_->Branch("IsolationVar", ev.le_relIso,   "IsolationVar[ElectronLoose_size]/F");
+
+  t_mediumElecs_->Branch("ElectronMedium_size", &ev.nme,  "ElectronMedium_size/I");
+  t_mediumElecs_->Branch("Charge",               ev.me_ch,       "Charge[ElectronMedium_size]/I");
+  t_mediumElecs_->Branch("Particle",             ev.me_g,        "Particle[ElectronMedium_size]/I");
+  t_mediumElecs_->Branch("PT",                   ev.me_pt,       "PT[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("Eta",                  ev.me_eta,      "Eta[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("Phi",                  ev.me_phi,      "Phi[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("Mass",                 ev.me_mass,     "Mass[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("IsolationVar",         ev.me_relIso,   "IsolationVar[ElectronMedium_size]/F");
 
   t_tightElecs_->Branch("ElectronTight_size", &ev.nte,  "ElectronTight_size/I");
   t_tightElecs_->Branch("Charge",       ev.te_ch,       "Charge[ElectronTight_size]/I");
