@@ -56,6 +56,8 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_looseElecs_->Branch("Phi",          ev.le_phi,      "Phi[ElectronLoose_size]/F");
   t_looseElecs_->Branch("Mass",         ev.le_mass,     "Mass[ElectronLoose_size]/F");
   t_looseElecs_->Branch("IsolationVar", ev.le_relIso,   "IsolationVar[ElectronLoose_size]/F");
+  t_looseElecs_->Branch("BDTScore",     ev.le_bdt,      "BDTScore[ElectronLoose_size]/F");
+
 
   t_mediumElecs_->Branch("ElectronMedium_size", &ev.nme,  "ElectronMedium_size/I");
   t_mediumElecs_->Branch("Charge",               ev.me_ch,       "Charge[ElectronMedium_size]/I");
@@ -65,6 +67,7 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_mediumElecs_->Branch("Phi",                  ev.me_phi,      "Phi[ElectronMedium_size]/F");
   t_mediumElecs_->Branch("Mass",                 ev.me_mass,     "Mass[ElectronMedium_size]/F");
   t_mediumElecs_->Branch("IsolationVar",         ev.me_relIso,   "IsolationVar[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("BDTScore",     ev.me_bdt,      "BDTScore[ElectronMedium_size]/F");
 
   t_tightElecs_->Branch("ElectronTight_size", &ev.nte,  "ElectronTight_size/I");
   t_tightElecs_->Branch("Charge",       ev.te_ch,       "Charge[ElectronTight_size]/I");
@@ -74,6 +77,7 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_tightElecs_->Branch("Phi",          ev.te_phi,      "Phi[ElectronTight_size]/F");
   t_tightElecs_->Branch("Mass",         ev.te_mass,     "Mass[ElectronTight_size]/F");
   t_tightElecs_->Branch("IsolationVar", ev.te_relIso,   "IsolationVar[ElectronTight_size]/F");
+  t_tightElecs_->Branch("BDTScore",     ev.te_bdt,      "BDTScore[ElectronTight_size]/F");
 
   t_looseMuons_->Branch("MuonLoose_size", &ev.nlm,      "MuonLoose_size/I");
   t_looseMuons_->Branch("Charge",       ev.lm_ch,       "Charge[MuonLoose_size]/I");
@@ -122,6 +126,7 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_loosePhotons_->Branch("Eta_multi",    ev.lp_eta_multi, "Eta_multi[PhotonLoose_size]/F");
   t_loosePhotons_->Branch("Phi_multi",    ev.lp_phi_multi, "Phi_multi[PhotonLoose_size]/F");
   t_loosePhotons_->Branch("E_multi",      ev.lp_nrj_multi, "E_multi[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("BDTScore",     ev.lp_bdt,       "BDTScore[PhotonLoose_size]/F");
 
   t_tightPhotons_->Branch("PhotonTight_size", &ev.ntp,     "PhotonTight_size/I");
   t_tightPhotons_->Branch("Particle",     ev.tp_g,         "Particle[PhotonTight_size]/I");
@@ -134,5 +139,6 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_tightPhotons_->Branch("Eta_multi",    ev.tp_eta_multi, "Eta_multi[PhotonTight_size]/F");
   t_tightPhotons_->Branch("Phi_multi",    ev.tp_phi_multi, "Phi_multi[PhotonTight_size]/F");
   t_tightPhotons_->Branch("E_multi",      ev.tp_nrj_multi, "E_multi[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("BDTScore",     ev.tp_bdt,       "BDTScore[PhotonTight_size]/F");
 }
 

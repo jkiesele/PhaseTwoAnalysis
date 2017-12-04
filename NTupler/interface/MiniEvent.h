@@ -40,11 +40,11 @@ struct MiniEvent_t
   Float_t v_pt2[maxjets];
   Int_t nle, nme, nte, nlm, ntm, nj, nmet, nlp, ntp;
   Int_t le_ch[maxpart], le_g[maxpart];
-  Float_t le_pt[maxpart], le_eta[maxpart], le_phi[maxpart], le_mass[maxpart], le_relIso[maxpart];
+  Float_t le_pt[maxpart], le_eta[maxpart], le_phi[maxpart], le_mass[maxpart], le_relIso[maxpart], le_bdt[maxpart];
   Int_t me_ch[maxpart], me_g[maxpart];
-  Float_t me_pt[maxpart], me_eta[maxpart], me_phi[maxpart], me_mass[maxpart], me_relIso[maxpart];
+  Float_t me_pt[maxpart], me_eta[maxpart], me_phi[maxpart], me_mass[maxpart], me_relIso[maxpart], me_bdt[maxpart];
   Int_t te_ch[maxpart], te_g[maxpart];
-  Float_t te_pt[maxpart], te_eta[maxpart], te_phi[maxpart], te_mass[maxpart], te_relIso[maxpart];
+  Float_t te_pt[maxpart], te_eta[maxpart], te_phi[maxpart], te_mass[maxpart], te_relIso[maxpart], te_bdt[maxpart];
   Int_t lm_ch[maxpart], lm_g[maxpart];
   Float_t lm_pt[maxpart], lm_eta[maxpart], lm_phi[maxpart], lm_mass[maxpart], lm_relIso[maxpart];
   Int_t tm_ch[maxpart], tm_g[maxpart];
@@ -53,8 +53,8 @@ struct MiniEvent_t
   Float_t j_pt[maxjets], j_eta[maxjets], j_phi[maxjets], j_mass[maxjets];
   Float_t met_pt[maxpart], met_eta[maxpart], met_phi[maxpart];
   Int_t lp_g[maxpart], tp_g[maxpart], lp_isEB[maxpart], tp_isEB[maxpart];
-  Float_t lp_pt[maxpart], lp_eta[maxpart], lp_phi[maxpart], lp_nrj[maxpart], lp_pt_multi[maxpart], lp_eta_multi[maxpart], lp_phi_multi[maxpart], lp_nrj_multi[maxpart];
-  Float_t tp_pt[maxpart], tp_eta[maxpart], tp_phi[maxpart], tp_nrj[maxpart], tp_pt_multi[maxpart], tp_eta_multi[maxpart], tp_phi_multi[maxpart], tp_nrj_multi[maxpart];
+  Float_t lp_pt[maxpart], lp_eta[maxpart], lp_phi[maxpart], lp_nrj[maxpart], lp_pt_multi[maxpart], lp_eta_multi[maxpart], lp_phi_multi[maxpart], lp_nrj_multi[maxpart], lp_bdt[maxpart];
+  Float_t tp_pt[maxpart], tp_eta[maxpart], tp_phi[maxpart], tp_nrj[maxpart], tp_pt_multi[maxpart], tp_eta_multi[maxpart], tp_phi_multi[maxpart], tp_nrj_multi[maxpart], tp_bdt[maxpart];
 
 };
 
