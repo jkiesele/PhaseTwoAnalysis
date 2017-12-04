@@ -1,0 +1,53 @@
+Submission of Delphes jobs on lxbatch
+======================================
+
+
+
+
+Setup environment: DOES NOT APPLY TO prepareDelphesSubmission.py
+------------------
+
+```
+cmsrel CMSSW_8_0_4
+cd CMSSW_8_0_4/src
+cmsenv
+eosmount eos
+sh eos/cms/store/group/upgrade/delphes_framework/delphes/DelphesEnv.sh
+cp -r eos/cms/store/group/upgrade/delphes_framework/delphes/* .
+```
+
+Prepare files for the submission:
+---------------------------------
+
+From an LHE file:
+
+```
+python prepareDelphesSubmission.py --inputLHE=(LHE file with the events to simulate) --ouputDir=(location of the directory where the output files will be stored) --submissionDir=(name of the directory in your local area where the intermediary files needed for the submission will be stored) --nTotalEvents=(number of events to simulate) --nJobs=(number of jobs to be submitted to lxbatch) --scenario=(scenario for the simulation, 0PU or 200PU)
+```
+
+For example:
+
+```
+python prepareDelphesSubmission.py --submissionDir="submitTest" --inputLHE=examples/Pythia8/events.lhe --outputDir=/afs/cern.ch/work/c/ccaillol/Delphes_test/CMSSW_8_0_4/src/outputFiles --nTotalEvents=50 --nJobs=2 --scenario="200PU"
+```
+
+From a root file:
+
+```
+python prepareDelphesSubmissionCMSFWLite.py --inputFile=(input ROOT file) --ouputDir=(location of the directory where the output files will be stored) --scenario=(scenario for the simulation, 0PU or 200PU)
+```
+
+Submit to lxbatch:
+------------------
+
+```
+sh SubmitDelphes.sh
+```
+
+Unmount eos:
+------------
+
+```
+eosumount eos
+```
+

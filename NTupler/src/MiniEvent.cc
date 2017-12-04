@@ -1,6 +1,7 @@
 #include "PhaseTwoAnalysis/NTupler/interface/MiniEvent.h"
 
-void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev)
+void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_,
+		TTree *t_looseElecs_, TTree *t_mediumElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev)
 {
   //event header
   t_event_->Branch("Run",               &ev.run,        "Run/I");
@@ -56,6 +57,15 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_looseElecs_->Branch("Mass",         ev.le_mass,     "Mass[ElectronLoose_size]/F");
   t_looseElecs_->Branch("IsolationVar", ev.le_relIso,   "IsolationVar[ElectronLoose_size]/F");
 
+  t_mediumElecs_->Branch("ElectronMedium_size", &ev.nme,  "ElectronMedium_size/I");
+  t_mediumElecs_->Branch("Charge",               ev.me_ch,       "Charge[ElectronMedium_size]/I");
+  t_mediumElecs_->Branch("Particle",             ev.me_g,        "Particle[ElectronMedium_size]/I");
+  t_mediumElecs_->Branch("PT",                   ev.me_pt,       "PT[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("Eta",                  ev.me_eta,      "Eta[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("Phi",                  ev.me_phi,      "Phi[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("Mass",                 ev.me_mass,     "Mass[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("IsolationVar",         ev.me_relIso,   "IsolationVar[ElectronMedium_size]/F");
+
   t_tightElecs_->Branch("ElectronTight_size", &ev.nte,  "ElectronTight_size/I");
   t_tightElecs_->Branch("Charge",       ev.te_ch,       "Charge[ElectronTight_size]/I");
   t_tightElecs_->Branch("Particle",     ev.te_g,        "Particle[ElectronTight_size]/I");
@@ -101,19 +111,29 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_puppiMET_->Branch("Phi",            ev.met_phi,     "Phi[PuppiMissingET_size]/F");
   t_puppiMET_->Branch("Eta",            ev.met_eta,     "Eta[PuppiMissingET_size]/F");
 
-  t_loosePhotons_->Branch("PhotonLoose_size", &ev.nlp,  "PhotonLoose_size/I");
-  t_loosePhotons_->Branch("Particle",     ev.lp_g,        "Particle[PhotonLoose_size]/I");
-  t_loosePhotons_->Branch("PT",           ev.lp_pt,       "PT[PhotonLoose_size]/F");
-  t_loosePhotons_->Branch("Eta",          ev.lp_eta,      "Eta[PhotonLoose_size]/F");
-  t_loosePhotons_->Branch("Phi",          ev.lp_phi,      "Phi[PhotonLoose_size]/F");
-  t_loosePhotons_->Branch("E",            ev.lp_nrj,      "E[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("PhotonLoose_size", &ev.nlp,     "PhotonLoose_size/I");
+  t_loosePhotons_->Branch("Particle",     ev.lp_g,         "Particle[PhotonLoose_size]/I");
+  t_loosePhotons_->Branch("IsEB",         ev.lp_isEB,      "IsEB[PhotonLoose_size]/I");
+  t_loosePhotons_->Branch("PT",           ev.lp_pt,        "PT[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("Eta",          ev.lp_eta,       "Eta[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("Phi",          ev.lp_phi,       "Phi[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("E",            ev.lp_nrj,       "E[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("PT_multi",     ev.lp_pt_multi,  "PT_multi[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("Eta_multi",    ev.lp_eta_multi, "Eta_multi[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("Phi_multi",    ev.lp_phi_multi, "Phi_multi[PhotonLoose_size]/F");
+  t_loosePhotons_->Branch("E_multi",      ev.lp_nrj_multi, "E_multi[PhotonLoose_size]/F");
 
-  t_tightPhotons_->Branch("PhotonTight_size", &ev.ntp,  "PhotonTight_size/I");
-  t_tightPhotons_->Branch("Particle",     ev.tp_g,        "Particle[PhotonTight_size]/I");
-  t_tightPhotons_->Branch("PT",           ev.tp_pt,       "PT[PhotonTight_size]/F");
-  t_tightPhotons_->Branch("Eta",          ev.tp_eta,      "Eta[PhotonTight_size]/F");
-  t_tightPhotons_->Branch("Phi",          ev.tp_phi,      "Phi[PhotonTight_size]/F");
-  t_tightPhotons_->Branch("E",            ev.tp_nrj,      "E[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("PhotonTight_size", &ev.ntp,     "PhotonTight_size/I");
+  t_tightPhotons_->Branch("Particle",     ev.tp_g,         "Particle[PhotonTight_size]/I");
+  t_tightPhotons_->Branch("IsEB",         ev.tp_isEB,      "IsEB[PhotonTight_size]/I");
+  t_tightPhotons_->Branch("PT",           ev.tp_pt,        "PT[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("Eta",          ev.tp_eta,       "Eta[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("Phi",          ev.tp_phi,       "Phi[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("E",            ev.tp_nrj,       "E[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("PT_multi",     ev.tp_pt_multi,  "PT_multi[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("Eta_multi",    ev.tp_eta_multi, "Eta_multi[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("Phi_multi",    ev.tp_phi_multi, "Phi_multi[PhotonTight_size]/F");
+  t_tightPhotons_->Branch("E_multi",      ev.tp_nrj_multi, "E_multi[PhotonTight_size]/F");
 }
 
 void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev)
@@ -180,6 +200,15 @@ void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertice
   t_tightElecs_->SetBranchAddress("Phi",          ev.te_phi);
   t_tightElecs_->SetBranchAddress("Mass",         ev.te_mass);
   t_tightElecs_->SetBranchAddress("IsolationVar", ev.te_relIso);
+  
+  t_mediumElecs_->SetBranchAddress("ElectronMedium_size", &ev.nme);
+  t_mediumElecs_->SetBranchAddress("Charge",               ev.me_ch);
+  t_mediumElecs_->SetBranchAddress("Particle",             ev.me_g);
+  t_mediumElecs_->SetBranchAddress("PT",                   ev.me_pt);
+  t_mediumElecs_->SetBranchAddress("Eta",                  ev.me_eta);
+  t_mediumElecs_->SetBranchAddress("Phi",                  ev.me_phi);
+  t_mediumElecs_->SetBranchAddress("Mass",                 ev.me_mass);
+  t_mediumElecs_->SetBranchAddress("IsolationVar",         ev.me_relIso);
 
   t_looseMuons_->SetBranchAddress("MuonLoose_size", &ev.nlm);
   t_looseMuons_->SetBranchAddress("Charge",       ev.lm_ch);
@@ -219,15 +248,25 @@ void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertice
 
   t_loosePhotons_->SetBranchAddress("PhotonLoose_size", &ev.nlp);
   t_loosePhotons_->SetBranchAddress("Particle",     ev.lp_g);
+  t_loosePhotons_->SetBranchAddress("IsEB",         ev.lp_isEB);
   t_loosePhotons_->SetBranchAddress("PT",           ev.lp_pt);
   t_loosePhotons_->SetBranchAddress("Eta",          ev.lp_eta);
   t_loosePhotons_->SetBranchAddress("Phi",          ev.lp_phi);
   t_loosePhotons_->SetBranchAddress("E",            ev.lp_nrj);
+  t_loosePhotons_->SetBranchAddress("PT_multi",     ev.lp_pt_multi);
+  t_loosePhotons_->SetBranchAddress("Eta_multi",    ev.lp_eta_multi);
+  t_loosePhotons_->SetBranchAddress("Phi_multi",    ev.lp_phi_multi);
+  t_loosePhotons_->SetBranchAddress("E_multi",      ev.lp_nrj_multi);
 
   t_tightPhotons_->SetBranchAddress("PhotonTight_size", &ev.ntp);
   t_tightPhotons_->SetBranchAddress("Particle",     ev.tp_g);
+  t_tightPhotons_->SetBranchAddress("IsEB",         ev.tp_isEB);
   t_tightPhotons_->SetBranchAddress("PT",           ev.tp_pt);
   t_tightPhotons_->SetBranchAddress("Eta",          ev.tp_eta);
   t_tightPhotons_->SetBranchAddress("Phi",          ev.tp_phi);
   t_tightPhotons_->SetBranchAddress("E",            ev.tp_nrj);
+  t_tightPhotons_->SetBranchAddress("PT_multi",     ev.tp_pt_multi);
+  t_tightPhotons_->SetBranchAddress("Eta_multi",    ev.tp_eta_multi);
+  t_tightPhotons_->SetBranchAddress("Phi_multi",    ev.tp_phi_multi);
+  t_tightPhotons_->SetBranchAddress("E_multi",      ev.tp_nrj_multi);
 }

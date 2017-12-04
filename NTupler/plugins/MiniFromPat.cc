@@ -120,7 +120,7 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
     virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
     virtual void endJob() override;
 
-    bool isME0MuonSelNew(const reco::Muon&, double, double, double);
+    bool isME0MuonSelNew(const reco::Muon&, double, double, double, edm::EventSetup const& );
 
     // ----------member data ---------------------------
     edm::Service<TFileService> fs_;
@@ -144,7 +144,7 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
     double mvaThres_[3];
     double deepThres_[3];
 
-    TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_genPhotons_, *t_looseElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_puppiJets_, *t_puppiMET_, *t_loosePhotons_, *t_tightPhotons_;
+    TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_genPhotons_, *t_looseElecs_, *t_mediumElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_puppiJets_, *t_puppiMET_, *t_loosePhotons_, *t_tightPhotons_;
 
     MiniEvent_t ev_;
 };
@@ -217,6 +217,7 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
   t_vertices_   = fs_->make<TTree>("Vertex","Vertex");
   t_genJets_    = fs_->make<TTree>("GenJet","GenJet");
   t_looseElecs_ = fs_->make<TTree>("ElectronLoose","ElectronLoose");
+  t_mediumElecs_ = fs_->make<TTree>("ElectronMedium","ElectronMedium");
   t_tightElecs_ = fs_->make<TTree>("ElectronTight","ElectronTight");
   t_looseMuons_ = fs_->make<TTree>("MuonLoose","MuonLoose");
   t_tightMuons_ = fs_->make<TTree>("MuonTight","MuonTight");
@@ -224,7 +225,9 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
   t_puppiMET_   = fs_->make<TTree>("PuppiMissingET","PuppiMissingET");
   t_loosePhotons_ = fs_->make<TTree>("PhotonLoose","PhotonLoose");
   t_tightPhotons_ = fs_->make<TTree>("PhotonTight","PhotonTight");
-  createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_genPhotons_, t_looseElecs_, t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_, t_loosePhotons_, t_tightPhotons_, ev_);
+  createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_genPhotons_, t_looseElecs_,
+		  t_mediumElecs_,t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_,
+		  t_loosePhotons_, t_tightPhotons_, ev_);
 
 }
 
@@ -413,7 +416,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     // Loose ID
     double dPhiCut = std::min(std::max(1.2/muons->at(i).p(),1.2/100),0.056);
     double dPhiBendCut = std::min(std::max(0.2/muons->at(i).p(),0.2/100),0.0096);    
-    bool isLoose = (fabs(muons->at(i).eta()) < 2.4 && muon::isLooseMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.077, dPhiCut, dPhiBendCut));
+    bool isLoose = (fabs(muons->at(i).eta()) < 2.4 && muon::isLooseMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.077, dPhiCut, dPhiBendCut,iSetup));
 
     // Medium ID -- needs to be updated
     bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
@@ -428,7 +431,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     // Tight ID
     dPhiCut = std::min(std::max(1.2/muons->at(i).p(),1.2/100),0.032);
     dPhiBendCut = std::min(std::max(0.2/muons->at(i).p(),0.2/100),0.0041);
-    bool isTight = (fabs(muons->at(i).eta()) < 2.4 && vertices->size() > 0 && muon::isTightMuon(muons->at(i),vertices->at(prVtx))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.048, dPhiCut, dPhiBendCut) && ipxy && ipz && validPxlHit && highPurity);
+    bool isTight = (fabs(muons->at(i).eta()) < 2.4 && vertices->size() > 0 && muon::isTightMuon(muons->at(i),vertices->at(prVtx))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.048, dPhiCut, dPhiBendCut,iSetup) && ipxy && ipz && validPxlHit && highPurity);
 
     if (!isLoose) continue;
     if (ev_.nlm<MiniEvent_t::maxpart){
@@ -480,15 +483,18 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     bool isEB = elecs->at(i).isEB();
      
     bool isLoose = 0;
+    bool isMedium = 0;
     bool isTight = 0;
 
     if( isEB ) {
       if (elecs->at(i).pt() < 20.) {
         isLoose = (mvaValue > -0.661);
+        isMedium = mvaValue > 0.855;
         isTight = (mvaValue > 0.986);
       }
       else {
         isLoose = (mvaValue > -0.797);
+        isMedium = mvaValue > 0.723;
         isTight = (mvaValue > 0.988);
       }
     }
@@ -500,10 +506,12 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
       if (not (elecs->at(i).userFloat("hgcElectronID:nLayers") > 20)) continue;
       if (elecs->at(i).pt() < 20.) {
         isLoose = (mvaValue > -0.320);
+        isMedium = mvaValue > 0.777;
         isTight = (mvaValue > 0.969);
       }
       else {
         isLoose = (mvaValue > -0.919);
+        isMedium = mvaValue > 0.591;
         isTight = (mvaValue > 0.983);
       }
     }
@@ -529,6 +537,26 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
        ev_.nle++;
     }
 
+    if (!isMedium) continue;
+    if (ev_.nme<MiniEvent_t::maxpart){
+
+    	ev_.me_ch[ev_.nme]     = elecs->at(i).charge();
+    	ev_.me_pt[ev_.nme]     = elecs->at(i).pt();
+    	ev_.me_phi[ev_.nme]    = elecs->at(i).phi();
+    	ev_.me_eta[ev_.nme]    = elecs->at(i).eta();
+    	ev_.me_mass[ev_.nme]   = elecs->at(i).mass();
+    	if( isEB )
+    		ev_.me_relIso[ev_.nme] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
+    	else
+    		ev_.me_relIso[ev_.nme] = (elecs->at(i).userFloat("hgcElectronID:caloIsoRing1") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing2") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing3") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing4")) / elecs->at(i).energy();
+    	ev_.me_g[ev_.nme] = -1;
+    	for (int ig = 0; ig < ev_.ngl; ig++) {
+    		if (abs(ev_.gl_pid[ig]) != 11) continue;
+    		if (reco::deltaR(ev_.gl_eta[ig],ev_.gl_phi[ig],ev_.me_eta[ev_.nme],ev_.me_phi[ev_.nme]) > 0.4) continue;
+    		ev_.me_g[ev_.nme]    = ig;
+    	}
+    	ev_.nme++;
+    }
     if (!isTight) continue;
     if (ev_.nte>=MiniEvent_t::maxpart) break;
 
@@ -648,11 +676,26 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (!isLoose) continue;
     if (ev_.nlp<MiniEvent_t::maxpart){
 
+       ev_.lp_isEB[ev_.nlp]   = isEB ? 1 : 0;
        ev_.lp_pt[ev_.nlp]     = photons->at(i).pt();
        ev_.lp_phi[ev_.nlp]    = photons->at(i).phi();
        ev_.lp_eta[ev_.nlp]    = photons->at(i).eta();
        ev_.lp_nrj[ev_.nlp]    = photons->at(i).energy();
        ev_.lp_g[ev_.nlp] = -1;
+       // add multicluster quantities too
+       // for endcap it's seed multi, otherwise just use supercluster
+       if (isEB) {
+         ev_.lp_pt_multi[ev_.nlp]     = photons->at(i).superCluster()->energy() / cosh(photons->at(i).superCluster()->seed()->eta());
+         ev_.lp_phi_multi[ev_.nlp]    = photons->at(i).superCluster()->phi();
+         ev_.lp_eta_multi[ev_.nlp]    = photons->at(i).superCluster()->eta();
+         ev_.lp_nrj_multi[ev_.nlp]    = photons->at(i).superCluster()->energy();
+       }
+       else {
+         ev_.lp_pt_multi[ev_.nlp]     = photons->at(i).superCluster()->seed()->energy() / cosh(photons->at(i).superCluster()->seed()->eta());
+         ev_.lp_phi_multi[ev_.nlp]    = photons->at(i).superCluster()->seed()->phi();
+         ev_.lp_eta_multi[ev_.nlp]    = photons->at(i).superCluster()->seed()->eta();
+         ev_.lp_nrj_multi[ev_.nlp]    = photons->at(i).superCluster()->seed()->energy();
+       }
        for (int ig = 0; ig < ev_.ngp; ig++) {
          if (reco::deltaR(ev_.gp_eta[ig],ev_.gp_phi[ig],ev_.lp_eta[ev_.nlp],ev_.lp_phi[ev_.nlp]) > 0.4) continue;
          ev_.lp_g[ev_.nlp]    = ig;
@@ -663,11 +706,26 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (!isTight) continue;
     if (ev_.ntp>=MiniEvent_t::maxpart) break;
 
+    ev_.tp_isEB[ev_.ntp]   = isEB ? 1 : 0;
     ev_.tp_pt[ev_.ntp]     = photons->at(i).pt();
     ev_.tp_phi[ev_.ntp]    = photons->at(i).phi();
     ev_.tp_eta[ev_.ntp]    = photons->at(i).eta();
     ev_.tp_nrj[ev_.ntp]    = photons->at(i).energy();
     ev_.tp_g[ev_.ntp] = -1;
+    // add multicluster quantities too
+    // for endcap it's seed multi, otherwise just use supercluster
+    if (isEB) {
+      ev_.tp_pt_multi[ev_.ntp]     = photons->at(i).superCluster()->energy() / cosh(photons->at(i).superCluster()->seed()->eta());
+      ev_.tp_phi_multi[ev_.ntp]    = photons->at(i).superCluster()->phi();
+      ev_.tp_eta_multi[ev_.ntp]    = photons->at(i).superCluster()->eta();
+      ev_.tp_nrj_multi[ev_.ntp]    = photons->at(i).superCluster()->energy();
+    }
+    else {
+      ev_.tp_pt_multi[ev_.ntp]     = photons->at(i).superCluster()->seed()->energy() / cosh(photons->at(i).superCluster()->seed()->eta());
+      ev_.tp_phi_multi[ev_.ntp]    = photons->at(i).superCluster()->seed()->phi();
+      ev_.tp_eta_multi[ev_.ntp]    = photons->at(i).superCluster()->seed()->eta();
+      ev_.tp_nrj_multi[ev_.ntp]    = photons->at(i).superCluster()->seed()->energy();
+    }
     for (int ig = 0; ig < ev_.ngp; ig++) {
       if (reco::deltaR(ev_.gp_eta[ig],ev_.gp_phi[ig],ev_.tp_eta[ev_.ntp],ev_.tp_phi[ev_.ntp]) > 0.4) continue;
       ev_.tp_g[ev_.ntp]    = ig;
@@ -696,6 +754,7 @@ MiniFromPat::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   t_vertices_->Fill();
   t_genJets_->Fill();
   t_looseElecs_->Fill();
+  t_mediumElecs_->Fill();
   t_tightElecs_->Fill();
   t_looseMuons_->Fill();
   t_tightMuons_->Fill();
@@ -709,7 +768,7 @@ MiniFromPat::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 bool 
-MiniFromPat::isME0MuonSelNew(const reco::Muon& muon, double dEtaCut, double dPhiCut, double dPhiBendCut)
+MiniFromPat::isME0MuonSelNew(const reco::Muon& muon, double dEtaCut, double dPhiCut, double dPhiBendCut, edm::EventSetup const& iSetup)
 {
 
   bool result = false;
@@ -721,8 +780,13 @@ MiniFromPat::isME0MuonSelNew(const reco::Muon& muon, double dEtaCut, double dPhi
     double deltaPhi = 999;
     double deltaPhiBend = 999;
 
-    if(!ME0Geometry_)
-    	return false;
+    if(!ME0Geometry_){
+    	edm::ESHandle<ME0Geometry> hGeom;
+    	iSetup.get<MuonGeometryRecord>().get(hGeom);
+    	ME0Geometry_ =( &*hGeom);
+    	if(!ME0Geometry_)
+    		return false;
+    }
 
     const std::vector<reco::MuonChamberMatch>& chambers = muon.matches();
     for( std::vector<reco::MuonChamberMatch>::const_iterator chamber = chambers.begin(); chamber != chambers.end(); ++chamber ){

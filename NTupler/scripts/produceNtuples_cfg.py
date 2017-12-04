@@ -26,9 +26,7 @@ options.register('updateJEC', '',
 options.parseArguments()
 
 if len(options.updateJEC)==0:
-    import os
-    cmsswbase=os.environ["CMSSW_BASE"]
-    standardjec=cmsswbase+'/src/PhaseTwoAnalysis/NTupler/data/PhaseIIFall17_V3_MC.db'
+    standardjec='PhaseTwoAnalysis/NTupler/data/PhaseIIFall17_V3_MC.db'
     standardjec_tag='PhaseIIFall17_V3_MC'
     options.updateJEC=[standardjec,standardjec_tag]
     
@@ -58,7 +56,7 @@ process.MessageLogger.cerr.INFO = cms.untracked.PSet(
 )
 
 # Input
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(50) ) 
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(200) ) 
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
@@ -86,7 +84,7 @@ process.options   = cms.untracked.PSet(
 if options.updateJEC:
     from CondCore.DBCommon.CondDBSetup_cfi import *
     process.jec = cms.ESSource("PoolDBESSource",CondDBSetup,
-                               connect = cms.string('sqlite_file:'+options.updateJEC[0]),
+                               connect = cms.string('sqlite_fip:'+options.updateJEC[0]),
                                toGet =  cms.VPSet(
             cms.PSet(record = cms.string("JetCorrectionsRecord"),
                      tag = cms.string("JetCorrectorParametersCollection_"+options.updateJEC[1]+"_AK4PFPuppi"),
