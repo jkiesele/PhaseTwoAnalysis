@@ -142,3 +142,137 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_tightPhotons_->Branch("BDTScore",     ev.tp_bdt,       "BDTScore[PhotonTight_size]/F");
 }
 
+void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_mediumElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev)
+{
+  //event header
+  t_event_->SetBranchAddress("Run",               &ev.run);
+  t_event_->SetBranchAddress("Event",             &ev.event);
+  t_event_->SetBranchAddress("Lumi",              &ev.lumi);
+
+  //gen level event
+  t_event_->SetBranchAddress("Weight_size",       &ev.g_nw);
+  t_event_->SetBranchAddress("Weight",            ev.g_w);
+
+  t_genParts_->SetBranchAddress("Particle_size",  &ev.ngl);
+  t_genParts_->SetBranchAddress("PID",            ev.gl_pid);
+  t_genParts_->SetBranchAddress("Charge",         ev.gl_ch);
+  t_genParts_->SetBranchAddress("Status",         ev.gl_st);
+  t_genParts_->SetBranchAddress("P",              ev.gl_p);
+  t_genParts_->SetBranchAddress("Px",             ev.gl_px);
+  t_genParts_->SetBranchAddress("Py",             ev.gl_py);
+  t_genParts_->SetBranchAddress("Pz",             ev.gl_pz);
+  t_genParts_->SetBranchAddress("E",              ev.gl_nrj);
+  t_genParts_->SetBranchAddress("PT",             ev.gl_pt);
+  t_genParts_->SetBranchAddress("Eta",            ev.gl_eta);
+  t_genParts_->SetBranchAddress("Phi",            ev.gl_phi);
+  t_genParts_->SetBranchAddress("Mass",           ev.gl_mass);
+  t_genParts_->SetBranchAddress("IsolationVar",   ev.gl_relIso);
+
+  t_genJets_->SetBranchAddress("GenJet_size",     &ev.ngj);
+  t_genJets_->SetBranchAddress("PT",              ev.gj_pt);
+  t_genJets_->SetBranchAddress("Eta",             ev.gj_eta);
+  t_genJets_->SetBranchAddress("Phi",             ev.gj_phi);
+  t_genJets_->SetBranchAddress("Mass",            ev.gj_mass);
+
+  t_genPhotons_->SetBranchAddress("GenPhoton_size",  &ev.ngp);
+  t_genPhotons_->SetBranchAddress("Status",          ev.gp_st);
+  t_genPhotons_->SetBranchAddress("P",               ev.gp_p);
+  t_genPhotons_->SetBranchAddress("Px",              ev.gp_px);
+  t_genPhotons_->SetBranchAddress("Py",              ev.gp_py);
+  t_genPhotons_->SetBranchAddress("Pz",              ev.gp_pz);
+  t_genPhotons_->SetBranchAddress("E",               ev.gp_nrj);
+  t_genPhotons_->SetBranchAddress("PT",              ev.gp_pt);
+  t_genPhotons_->SetBranchAddress("Eta",             ev.gp_eta);
+  t_genPhotons_->SetBranchAddress("Phi",             ev.gp_phi);
+   
+  //reco level event
+  t_vertices_->SetBranchAddress("Vertex_size",    &ev.nvtx);
+  t_vertices_->SetBranchAddress("SumPT2",         &ev.v_pt2);
+
+  t_looseElecs_->SetBranchAddress("ElectronLoose_size", &ev.nle);
+  t_looseElecs_->SetBranchAddress("Charge",       ev.le_ch);
+  t_looseElecs_->SetBranchAddress("Particle",     ev.le_g);
+  t_looseElecs_->SetBranchAddress("PT",           ev.le_pt);
+  t_looseElecs_->SetBranchAddress("Eta",          ev.le_eta);
+  t_looseElecs_->SetBranchAddress("Phi",          ev.le_phi);
+  t_looseElecs_->SetBranchAddress("Mass",         ev.le_mass);
+  t_looseElecs_->SetBranchAddress("IsolationVar", ev.le_relIso);
+
+  t_tightElecs_->SetBranchAddress("ElectronTight_size", &ev.nte);
+  t_tightElecs_->SetBranchAddress("Charge",       ev.te_ch);
+  t_tightElecs_->SetBranchAddress("Particle",     ev.te_g);
+  t_tightElecs_->SetBranchAddress("PT",           ev.te_pt);
+  t_tightElecs_->SetBranchAddress("Eta",          ev.te_eta);
+  t_tightElecs_->SetBranchAddress("Phi",          ev.te_phi);
+  t_tightElecs_->SetBranchAddress("Mass",         ev.te_mass);
+  t_tightElecs_->SetBranchAddress("IsolationVar", ev.te_relIso);
+  
+  t_mediumElecs_->SetBranchAddress("ElectronMedium_size", &ev.nme);
+  t_mediumElecs_->SetBranchAddress("Charge",               ev.me_ch);
+  t_mediumElecs_->SetBranchAddress("Particle",             ev.me_g);
+  t_mediumElecs_->SetBranchAddress("PT",                   ev.me_pt);
+  t_mediumElecs_->SetBranchAddress("Eta",                  ev.me_eta);
+  t_mediumElecs_->SetBranchAddress("Phi",                  ev.me_phi);
+  t_mediumElecs_->SetBranchAddress("Mass",                 ev.me_mass);
+  t_mediumElecs_->SetBranchAddress("IsolationVar",         ev.me_relIso);
+
+  t_looseMuons_->SetBranchAddress("MuonLoose_size", &ev.nlm);
+  t_looseMuons_->SetBranchAddress("Charge",       ev.lm_ch);
+  t_looseMuons_->SetBranchAddress("Particle",     ev.lm_g);
+  t_looseMuons_->SetBranchAddress("PT",           ev.lm_pt);
+  t_looseMuons_->SetBranchAddress("Eta",          ev.lm_eta);
+  t_looseMuons_->SetBranchAddress("Phi",          ev.lm_phi);
+  t_looseMuons_->SetBranchAddress("Mass",         ev.lm_mass);
+  t_looseMuons_->SetBranchAddress("IsolationVar", ev.lm_relIso);
+
+  t_tightMuons_->SetBranchAddress("MuonTight_size", &ev.ntm);
+  t_tightMuons_->SetBranchAddress("Charge",       ev.tm_ch);
+  t_tightMuons_->SetBranchAddress("Particle",     ev.tm_g);
+  t_tightMuons_->SetBranchAddress("PT",           ev.tm_pt);
+  t_tightMuons_->SetBranchAddress("Eta",          ev.tm_eta);
+  t_tightMuons_->SetBranchAddress("Phi",          ev.tm_phi);
+  t_tightMuons_->SetBranchAddress("Mass",         ev.tm_mass);
+  t_tightMuons_->SetBranchAddress("IsolationVar", ev.tm_relIso);
+
+  t_puppiJets_->SetBranchAddress("JetPUPPI_size", &ev.nj);
+  t_puppiJets_->SetBranchAddress("ID",            ev.j_id);
+  t_puppiJets_->SetBranchAddress("GenJet",        ev.j_g);
+  t_puppiJets_->SetBranchAddress("PT",            ev.j_pt);
+  t_puppiJets_->SetBranchAddress("Eta",           ev.j_eta);
+  t_puppiJets_->SetBranchAddress("Phi",           ev.j_phi);
+  t_puppiJets_->SetBranchAddress("Mass",          ev.j_mass);
+  t_puppiJets_->SetBranchAddress("MVAv2",         ev.j_mvav2);
+  t_puppiJets_->SetBranchAddress("DeepCSV",       ev.j_deepcsv);
+  t_puppiJets_->SetBranchAddress("PartonFlavor",  ev.j_flav);
+  t_puppiJets_->SetBranchAddress("HadronFlavor",  ev.j_hadflav);
+  t_puppiJets_->SetBranchAddress("GenPartonPID",  ev.j_pid);
+
+  t_puppiMET_->SetBranchAddress("PuppiMissingET_size", &ev.nmet);
+  t_puppiMET_->SetBranchAddress("MET",            ev.met_pt);
+  t_puppiMET_->SetBranchAddress("Phi",            ev.met_phi);
+  t_puppiMET_->SetBranchAddress("Eta",            ev.met_eta);
+
+  t_loosePhotons_->SetBranchAddress("PhotonLoose_size", &ev.nlp);
+  t_loosePhotons_->SetBranchAddress("Particle",     ev.lp_g);
+  t_loosePhotons_->SetBranchAddress("IsEB",         ev.lp_isEB);
+  t_loosePhotons_->SetBranchAddress("PT",           ev.lp_pt);
+  t_loosePhotons_->SetBranchAddress("Eta",          ev.lp_eta);
+  t_loosePhotons_->SetBranchAddress("Phi",          ev.lp_phi);
+  t_loosePhotons_->SetBranchAddress("E",            ev.lp_nrj);
+  t_loosePhotons_->SetBranchAddress("PT_multi",     ev.lp_pt_multi);
+  t_loosePhotons_->SetBranchAddress("Eta_multi",    ev.lp_eta_multi);
+  t_loosePhotons_->SetBranchAddress("Phi_multi",    ev.lp_phi_multi);
+  t_loosePhotons_->SetBranchAddress("E_multi",      ev.lp_nrj_multi);
+
+  t_tightPhotons_->SetBranchAddress("PhotonTight_size", &ev.ntp);
+  t_tightPhotons_->SetBranchAddress("Particle",     ev.tp_g);
+  t_tightPhotons_->SetBranchAddress("IsEB",         ev.tp_isEB);
+  t_tightPhotons_->SetBranchAddress("PT",           ev.tp_pt);
+  t_tightPhotons_->SetBranchAddress("Eta",          ev.tp_eta);
+  t_tightPhotons_->SetBranchAddress("Phi",          ev.tp_phi);
+  t_tightPhotons_->SetBranchAddress("E",            ev.tp_nrj);
+  t_tightPhotons_->SetBranchAddress("PT_multi",     ev.tp_pt_multi);
+  t_tightPhotons_->SetBranchAddress("Eta_multi",    ev.tp_eta_multi);
+  t_tightPhotons_->SetBranchAddress("Phi_multi",    ev.tp_phi_multi);
+  t_tightPhotons_->SetBranchAddress("E_multi",      ev.tp_nrj_multi);
+}
