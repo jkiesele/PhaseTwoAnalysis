@@ -416,7 +416,8 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     // Loose ID
     double dPhiCut = std::min(std::max(1.2/muons->at(i).p(),1.2/100),0.056);
     double dPhiBendCut = std::min(std::max(0.2/muons->at(i).p(),0.2/100),0.0096);    
-    bool isLoose = (fabs(muons->at(i).eta()) < 2.4 && muon::isLooseMuon(muons->at(i))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.077, dPhiCut, dPhiBendCut,iSetup));
+    bool isLoose = (fabs(muons->at(i).eta()) < 2.4 && muon::isLooseMuon(muons->at(i)))
+    		|| (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.077, dPhiCut, dPhiBendCut,iSetup));
 
     // Medium ID -- needs to be updated
     bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
@@ -431,7 +432,8 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     // Tight ID
     dPhiCut = std::min(std::max(1.2/muons->at(i).p(),1.2/100),0.032);
     dPhiBendCut = std::min(std::max(0.2/muons->at(i).p(),0.2/100),0.0041);
-    bool isTight = (fabs(muons->at(i).eta()) < 2.4 && vertices->size() > 0 && muon::isTightMuon(muons->at(i),vertices->at(prVtx))) || (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.048, dPhiCut, dPhiBendCut,iSetup) && ipxy && ipz && validPxlHit && highPurity);
+    bool isTight = (fabs(muons->at(i).eta()) < 2.4 && vertices->size() > 0 && muon::isTightMuon(muons->at(i),vertices->at(prVtx)))
+    		|| (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.048, dPhiCut, dPhiBendCut,iSetup) && ipxy && ipz && validPxlHit && highPurity);
 
     if (!isLoose) continue;
     if (ev_.nlm<MiniEvent_t::maxpart){
