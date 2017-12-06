@@ -70,11 +70,11 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 	TString basepath=getenv("CMSSW_BASE");
 	basepath+="/src/PhaseTwoAnalysis/delphesInterface/ntupler/data/";
 
-	//tightelecsf.loadTH2D  (cmsswbase+"bla.root","histo");
-	//medelecsf.loadTH2D    (cmsswbase+"bla.root","histo");
+	tightelecsf.loadTH2D  (basepath+"ElectronTight_PTEta.root","FullSimOverDelphes");
+	medelecsf.loadTH2D    (basepath+"ElectronMedium_PTEta.root","FullSimOverDelphes");
 	//looseelecsf.loadTH2D  (cmsswbase+"bla.root","histo");
     //
-	//tightmuonsf.loadTH2D  (cmsswbase+"bla.root","histo");
+	tightmuonsf.loadTH2D  (basepath+"MuonTight_PTEta.root","FullSimOverDelphes");
 	//loosemuonsf.loadTH2D  (cmsswbase+"bla.root","histo");
     //
 	//jetsf.loadTH2D        (cmsswbase+"bla.root","histo");
@@ -104,7 +104,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 
 		std::vector<Photon*>selectedphotons;
 		for(size_t i=0;i<photon.size();i++){
-			if(photon.at(i)->PT<10)continue;
+			if(photon.at(i)->PT<20)continue;
 			if(photon.at(i)->IsolationVarRhoCorr / photon.at(i)->E > 0.25)
 				continue;
 			selectedphotons.push_back(photon.at(i));
@@ -112,13 +112,13 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 		if(selectedphotons.size()<1)continue;
 		std::vector<Electron*>selectedelectrons;
 		for(size_t i=0;i<elecs.size();i++){
-			if(elecs.at(i)->PT<10)continue;
+			if(elecs.at(i)->PT<15)continue;
 			selectedelectrons.push_back(elecs.at(i));
 		}
 		if(muontight.size()+selectedelectrons.size()<1)continue;
 		std::vector<Jet*>selectedjets;
 		for(size_t i=0;i<jet.size();i++){
-			if(jet.at(i)->PT<10)continue;
+			if(jet.at(i)->PT<20)continue;
 			selectedjets.push_back(jet.at(i));
 		}
 		if(selectedjets.size()<1)continue;
