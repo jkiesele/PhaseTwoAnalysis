@@ -1,2 +1,3 @@
 delphes/*
 ntupler/ntupler
+!ntupler/data/*.root
