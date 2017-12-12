@@ -92,49 +92,37 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 		reportStatus(eventno,nevents);
 		tree()->setEntry(eventno);
 
-		if(event.size()){
-			h_event_weight->Fill(0.,(double)event.at(0)->Weight);
-		}
-		else{
-			h_event_weight->Fill(0.,1);
-		}
+		if(event.size()<1)continue;
 
+		h_event_weight->Fill(0.,(double)event.at(0)->Weight);
 
-		//skimming
 
 		std::vector<Photon*>selectedphotons;
 		for(size_t i=0;i<photon.size();i++){
-			if(photon.at(i)->PT<20)continue;
+			if(photon.at(i)->PT<10)continue;
 			if(photon.at(i)->IsolationVarRhoCorr / photon.at(i)->E > 0.25)
 				continue;
 			selectedphotons.push_back(photon.at(i));
 		}
-		if(selectedphotons.size()<1)continue;
+
 		std::vector<Electron*>selectedelectrons;
 		for(size_t i=0;i<elecs.size();i++){
-			if(elecs.at(i)->PT<15)continue;
+			if(elecs.at(i)->PT<10)continue;
 			selectedelectrons.push_back(elecs.at(i));
 		}
-		if(muontight.size()+selectedelectrons.size()<1)continue;
+
+
 		std::vector<Jet*>selectedjets;
 		for(size_t i=0;i<jet.size();i++){
-			if(jet.at(i)->PT<20)continue;
+			if(jet.at(i)->PT<10)continue;
 			selectedjets.push_back(jet.at(i));
 		}
-		if(selectedjets.size()<1)continue;
 
 
-		//filling
-		if(event.size()){
-			ev_.event = event.at(0)->Number;
-			ev_.g_nw = 1;
-			ev_.g_w[0] = event.at(0)->Weight;
-		}
-		else{
-			ev_.event = 0;
-			ev_.g_nw = 1;
-			ev_.g_w[0] = 1;
-		}
+		ev_.event = event.at(0)->Number;
+		ev_.g_nw = 1;
+		ev_.g_w[0] = event.at(0)->Weight;
+
 
 		ev_.ntp=0;
 		for(size_t i=0;i<selectedphotons.size();i++){
@@ -147,6 +135,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 			ev_.ntp++;
 		}
 
+
 		ev_.ntm=0;
 		for(size_t i=0;i<muontight.size();i++){
 			if(ev_.ntm>=MiniEvent_t::maxpart)break;
@@ -158,6 +147,8 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 			ev_.tm_sf[ev_.ntm]=tightmuonsf.getSF(muontight.at(i)->Eta,muontight.at(i)->PT);
 			ev_.ntm++;
 		}
+
+
 		ev_.nte=0;
 		ev_.nme=0;
 		for(size_t i=0;i<selectedelectrons.size();i++){
@@ -181,6 +172,8 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 
 
 		}
+
+
 		ev_.nj=0;
 		for(size_t i=0;i<selectedjets.size();i++){
 			if(ev_.nj>=MiniEvent_t::maxjets)break;
@@ -207,9 +200,10 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 			ev_.met_eta[ev_.nmet]=met.at(i)->Eta ;
 			ev_.met_pt [ev_.nmet]=met.at(i)->MET ;
 			ev_.met_phi[ev_.nmet]=met.at(i)->Phi ;
-			ev_.met_sf[ev_.nmet]=metsf.getSF(0,selectedjets.at(i)->PT);
+			ev_.met_sf[ev_.nmet]=metsf.getSF(0,met.at(i)->MET);
 			ev_.nmet++;
 		}
+
 
 
 		t_event_->Fill();
