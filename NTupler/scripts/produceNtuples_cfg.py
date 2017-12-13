@@ -143,7 +143,7 @@ if (options.inputFormat.lower() == "reco"):
     muonLabel = "muons"
     if options.updateJEC:
         if options.noPU:
-            jetLabel = "ak4JetsL1FastL2L3"
+            jetLabel = "ak4JetsL2L3"
         else:
             jetLabel = "ak4PUPPIJetsL1FastL2L3"
     else:
@@ -234,7 +234,7 @@ if (options.inputFormat.lower() == "reco"):
         # In this case the collection will be called ak4PUPPIJetsL1FastL2L3
         process.load('PhaseTwoAnalysis.Jets.JetCorrection_cff')
         if options.noPU:
-            process.ntuple.jets = "ak4PFJetsL1FastL2L3"
+            process.ntuple.jets = "ak4PFJetsL2L3"
         else:
             process.ntuple.jets = "ak4PUPPIJetsL1FastL2L3"
     else:
@@ -283,7 +283,7 @@ if options.skim:
     if (options.inputFormat.lower() == "reco"):
         if options.updateJEC:
             if options.noPU:
-                process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.puSequence * process.ak4PFL1FastL2L3CorrectorChain * process.ak4PFJetsL1FastL2L3 * process.preYieldFilter * process.ntuple)
+                process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.puSequence * process.ak4PFL2L3CorrectorChain * process.ak4PFJetsL2L3 * process.preYieldFilter * process.ntuple)
             else:
                 process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.preYieldFilter * process.ntuple)
 
@@ -301,7 +301,7 @@ else:
     if (options.inputFormat.lower() == "reco"):
         if options.updateJEC:
             if options.noPU:
-                process.p = cms.Path(process.weightCounter * process.puSequence * process.ak4PFL1FastL2L3CorrectorChain * process.ak4JetsL1FastL2L3 * process.phase2Egamma * process.ntuple)
+                process.p = cms.Path(process.weightCounter * process.puSequence * process.ak4PFL2L3CorrectorChain * process.ak4JetsL2L3 * process.phase2Egamma * process.ntuple)
             else:
                 process.p = cms.Path(process.weightCounter * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.phase2Egamma * process.ntuple)
 
