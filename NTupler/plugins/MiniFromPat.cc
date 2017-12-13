@@ -221,8 +221,10 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
   t_tightElecs_ = fs_->make<TTree>("ElectronTight","ElectronTight");
   t_looseMuons_ = fs_->make<TTree>("MuonLoose","MuonLoose");
   t_tightMuons_ = fs_->make<TTree>("MuonTight","MuonTight");
-  t_puppiJets_  = fs_->make<TTree>("JetPUPPI","JetPUPPI");
-  t_puppiMET_   = fs_->make<TTree>("PuppiMissingET","PuppiMissingET");
+  if (pileup_!=0)  t_puppiJets_  = fs_->make<TTree>("JetPUPPI","JetPUPPI");
+  else   t_puppiJets_  = fs_->make<TTree>("Jet","Jet");
+  if (pileup_!=0)  t_puppiMET_   = fs_->make<TTree>("PuppiMissingET","PuppiMissingET");
+  else   t_puppiMET_   = fs_->make<TTree>("MissingET","MissingET");
   t_loosePhotons_ = fs_->make<TTree>("PhotonLoose","PhotonLoose");
   t_tightPhotons_ = fs_->make<TTree>("PhotonTight","PhotonTight");
   createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_genPhotons_, t_looseElecs_,
@@ -287,9 +289,9 @@ MiniFromPat::genAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetup
   ev_.ngl = 0;
   for (size_t i = 0; i < genParts->size(); i++) {
 	if (ev_.ngl>=MiniEvent_t::maxpart) break;
-    if (abs(genParts->at(i).pdgId()) != 11 && abs(genParts->at(i).pdgId()) != 13) continue;
+	if (abs(genParts->at(i).pdgId()) != 11 && abs(genParts->at(i).pdgId()) != 13) continue;
     if (genParts->at(i).pt() < 10.) continue;
-    if (fabs(genParts->at(i).eta()) > 3.) continue;
+    if (fabs(genParts->at(i).eta()) > 5.) continue;
     double genIso = 0.;
     for (size_t j = 0; j < jGenJets.size(); j++) {
       if (ROOT::Math::VectorUtil::DeltaR(genParts->at(i).p4(),genJets->at(jGenJets[j]).p4()) > 0.7) continue; 

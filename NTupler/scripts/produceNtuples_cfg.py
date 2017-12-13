@@ -246,6 +246,14 @@ if (options.inputFormat.lower() == "reco"):
             process.ntuple.jets = "ak4PUPPIJets"
 
 else:
+    if options.noPU:
+        process.ntuple.pileup = 0
+        process.ntuple.jets = "slimmedJets"
+        process.ntuple.mets = "slimmedMETs"
+    else:
+        process.ntuple.pileup = 200
+        process.ntuple.jets = "slimmedJetsPuppi"
+        process.ntuple.mets = "slimmedMETsPuppi"
     if options.updateJEC:
         # The updateJetCollection function will uncorred the jets from MiniAOD and then recorrect them using the current
         #  set of JEC in the event setup
