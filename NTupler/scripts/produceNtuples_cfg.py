@@ -31,7 +31,7 @@ options.register('noPU', False,
 options.parseArguments()
 
 if len(options.updateJEC)==0:
-    standardjec='PhaseTwoAnalysis/NTupler/data/PhaseIIFall17_V3_MC.db'
+    standardjec='/afs/cern.ch/work/v/vmilosev/HGCal/20171214/CMSSW_9_3_2/src/PhaseTwoAnalysis/NTupler/data/PhaseIIFall17_V3_MC.db'
     standardjec_tag='PhaseIIFall17_V3_MC'
     options.updateJEC=[standardjec,standardjec_tag]
     
