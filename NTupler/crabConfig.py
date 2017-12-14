@@ -10,7 +10,7 @@ config.section_("JobType")
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'scripts/produceNtuples_cfg.py'
 #noPU
-config.JobType.pyCfgParams= ['skim=False','inputFormat=PAT','outFileName=MiniEvents.root','noPU=True']
+config.JobType.pyCfgParams= ['skim=False','outFilename=MiniEvents.root','inputFormat=PAT','noPU=True'] 
 #PU
 #config.JobType.pyCfgParams= ['skim=False','inputFormat=PAT','outFileName=MiniEvents.root']
 # Uncomment the following line when running on PAT events
@@ -26,7 +26,7 @@ config.Data.splitting = 'FileBased'
 config.Data.unitsPerJob = 1
 # Uncomment to run on a fraction of the dataset
 #config.Data.totalUnits = 5
-config.Data.outLFNDirBase = '/store/user/amagnan/'  
+config.Data.outLFNDirBase = '/store/user/vmilosev/'  
 config.Data.publication = False
 
 config.Data.useParent = True # need to run on GEN-SIM-RECO to apply photon ID
