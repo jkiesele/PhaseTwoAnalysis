@@ -224,11 +224,11 @@ process.ntuple = cms.EDAnalyzer(moduleName)
 process.load("PhaseTwoAnalysis.NTupler."+moduleName+"_cfi")
 if (options.inputFormat.lower() == "reco"):
     if options.noPU:
-        process.ntuple.pfCandsNoLep = "puppiNoLep"
-        process.ntuple.met = "puppiMet"
-    else:
         process.ntuple.pfCandsNoLep = "pfNoLep"
         process.ntuple.met = "pfMet"
+    else:
+        process.ntuple.pfCandsNoLep = "puppiNoLep"
+        process.ntuple.met = "puppiMet"
 
     if options.updateJEC:
         # This will load several ESProducers and EDProducers which make the corrected jet collections
@@ -264,7 +264,7 @@ else:
             updateJetCollection(process,
                                 jetSource = cms.InputTag('slimmedJets'),
                                 postfix = 'UpdatedJECAK4PF',
-                                jetCorrections = ('AK4PF', ['L1FastJet','L2Relative','L3Absolute'], 'None')
+                                jetCorrections = ('AK4PF', ['L2Relative','L3Absolute'], 'None')
                                 )
             process.ntuple.jets = "updatedPatJetsUpdatedJECAK4PF"
         else:

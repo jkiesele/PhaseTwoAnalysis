@@ -21,6 +21,7 @@
 #include "TLine.h"
 #include "TLorentzVector.h"
 #include "TMath.h"
+#include "TLatex.h"
 
 bool checkEventSize(TTree* tree, const unsigned nEvts){
   if (tree->GetEntries()!=nEvts) 
@@ -66,15 +67,15 @@ void plotJES(TCanvas *myc, TH1F *hist,
 	     double & sigma, double & sigmaerr){
 
   myc->cd();
-  gStyle->SetOptStat("eMRuo");
-  gStyle->SetOptFit(1111);
+  gStyle->SetOptStat(0);//"eMRuo");
+  gStyle->SetOptFit(0);//1111);
   hist->Sumw2();
   hist->Scale(scale);
   hist->SetLineColor(1);
   hist->SetMarkerColor(1);
   hist->SetMarkerStyle(2);
   hist->Draw("PE");
-  hist->Fit("gaus");
+  hist->Fit("gaus","","",hist->GetMean()-2*hist->GetRMS(),hist->GetMean()+2*hist->GetRMS());
   TF1 *fit = (TF1*)hist->GetFunction("gaus");
   if (!fit) {
     mean = hist->GetMean();
@@ -88,7 +89,7 @@ void plotJES(TCanvas *myc, TH1F *hist,
     sigmaerr = fit->GetParError(2);
   }
   myc->Update();
-  myc->Print((plotDir+label+"_"+file+".pdf").c_str());
+  //myc->Print((plotDir+label+"_"+file+".pdf").c_str());
   
 
 }
@@ -166,7 +167,8 @@ int simplePlots(){//main
   TH1F *hJet_JESall[nF][nPU];
   TH1F *hJet_JES[nF][nPU][neta][npt];
 
-
+  TLatex lat;
+  char buf[200];
   for (unsigned iF(0); iF<nF; ++iF){
     std::cout << " .. Processing file " << filename[iF] << std::endl;
     int nEvtsRef = 0;
@@ -273,7 +275,7 @@ int simplePlots(){//main
 	  for (unsigned ipt(0); ipt<npt; ++ipt){
 	    hLabel.str("");
 	    hLabel << "hJet_JES_" << filename[iF] << "_" << pu[iP] << "_" << ieta << "_" << ipt;
-	    hJet_JES[iF][iP][ieta][ipt] = new TH1F(hLabel.str().c_str(),";p_{T}^{reco}/p_{T}^{gen}; Events",150,0,3);
+	    hJet_JES[iF][iP][ieta][ipt] = new TH1F(hLabel.str().c_str(),";p_{T}^{reco}/p_{T}^{gen}; Events",300,0,6);
 	    hJet_JES[iF][iP][ieta][ipt]->SetStats(1);
 	  }
 	}
@@ -304,7 +306,7 @@ int simplePlots(){//main
       TTree* ElectronTight = (TTree*)gDirectory->Get("ElectronTight");
       TTree* MuonLoose = (TTree*)gDirectory->Get("MuonLoose");
       TTree* MuonTight = (TTree*)gDirectory->Get("MuonTight");
-      TTree* JetPUPPI = (TTree*)gDirectory->Get("JetPUPPI");
+      TTree* Jets = (TTree*)gDirectory->Get(iP==0?"Jet":"JetPUPPI");
 
       int nJets = 0;
       float jet_pt[100];
@@ -315,22 +317,22 @@ int simplePlots(){//main
       int jet_genidx[100];
       int jet_parton[100];
       int jet_DeepCSV[100];
-      JetPUPPI->SetBranchAddress("JetPUPPI_size",&nJets);
-      JetPUPPI->SetBranchAddress("PT",&jet_pt);
-      JetPUPPI->SetBranchAddress("Eta",&jet_eta);
-      JetPUPPI->SetBranchAddress("Phi",&jet_phi);
-      JetPUPPI->SetBranchAddress("Mass",&jet_mass);
-      JetPUPPI->SetBranchAddress("ID",&jet_ID);
-      JetPUPPI->SetBranchAddress("GenJet",&jet_genidx);
-      JetPUPPI->SetBranchAddress("DeepCSV",&jet_DeepCSV);
-      JetPUPPI->SetBranchAddress("PartonFlavor",&jet_parton);
+      Jets->SetBranchAddress("JetPUPPI_size",&nJets);
+      Jets->SetBranchAddress("PT",&jet_pt);
+      Jets->SetBranchAddress("Eta",&jet_eta);
+      Jets->SetBranchAddress("Phi",&jet_phi);
+      Jets->SetBranchAddress("Mass",&jet_mass);
+      Jets->SetBranchAddress("ID",&jet_ID);
+      Jets->SetBranchAddress("GenJet",&jet_genidx);
+      Jets->SetBranchAddress("DeepCSV",&jet_DeepCSV);
+      Jets->SetBranchAddress("PartonFlavor",&jet_parton);
 
-      TTree* PuppiMissingET = (TTree*)gDirectory->Get("PuppiMissingET");
+      TTree* MissingET = (TTree*)gDirectory->Get(iP==0?"MissingET":"PuppiMissingET");
 
       float met = 0;
       float metphi = 0;
-      PuppiMissingET->SetBranchAddress("MET",&met);
-      PuppiMissingET->SetBranchAddress("Phi",&metphi);
+      MissingET->SetBranchAddress("MET",&met);
+      MissingET->SetBranchAddress("Phi",&metphi);
 
       TTree* PhotonLoose = (TTree*)gDirectory->Get("PhotonLoose");
       TTree* PhotonTight = (TTree*)gDirectory->Get("PhotonTight");
@@ -347,16 +349,18 @@ int simplePlots(){//main
       if (!checkEventSize(MuonTight,nEvts)) return 1;
       if (!checkEventSize(PhotonLoose,nEvts)) return 1;
       if (!checkEventSize(PhotonTight,nEvts)) return 1;
-      if (!checkEventSize(JetPUPPI,nEvts)) return 1;
-      if (!checkEventSize(PuppiMissingET,nEvts)) return 1;
+      if (!checkEventSize(Jets,nEvts)) return 1;
+      if (!checkEventSize(MissingET,nEvts)) return 1;
+
+      unsigned nDiffIdx = 0;
 
       //event loop
       for (int ievt(0); ievt<nEvts; ++ievt){
 	if (ievt%1000==0) std::cout << ".... Processing entry " << ievt << std::endl;
 	Event->GetEntry(ievt);
 	GenJet->GetEntry(ievt);
-	JetPUPPI->GetEntry(ievt);
-	PuppiMissingET->GetEntry(ievt);
+	Jets->GetEntry(ievt);
+	MissingET->GetEntry(ievt);
 
 	//no selection for JES
 	if (doJES){
@@ -376,8 +380,9 @@ int simplePlots(){//main
 		newGenIdx = igj;
 	      }
 	    }
-	    if (newGenIdx!=saveGenIdx){
-	      std::cout << " *** Found different index ! jet " << ij << " original index " << saveGenIdx << " new index " << newGenIdx << std::endl;
+	    if (newGenIdx!=saveGenIdx && saveGenIdx>=0){
+	      //std::cout << " *** Found different index ! nGenJets=" << nGenJets << " nJets=" << nJets << " jet " << ij << " original index " << saveGenIdx << " new index " << newGenIdx << std::endl;
+	      nDiffIdx++;
 	      jet_genidx[ij] = newGenIdx;
 	    }
 	    if (jet_genidx[ij]<0) continue;
@@ -386,15 +391,11 @@ int simplePlots(){//main
 	    if (mindr>0.4) continue;
 	    hJet_JESall[iF][iP]->Fill(jet_pt[ij]/genjet_pt[genidx]);
 	    for (unsigned ieta(0); ieta<neta; ++ieta){
-	      if (fabs(jet_eta[ij])<etamin+ieta*deta || 
-		  fabs(jet_eta[ij])>=etamin+(ieta+1)*deta) continue;
+	      if (fabs(genjet_eta[genidx])<etamin+ieta*deta || 
+		  fabs(genjet_eta[genidx])>=etamin+(ieta+1)*deta) continue;
 	      for (unsigned ipt(0); ipt<npt; ++ipt){
-		if (jet_pt[ij]<ptval[ipt] ||
-		    jet_pt[ij]>=ptval[ipt+1]) continue;
-		if (genjet_pt[genidx]==0) {
-		  std::cout << " WARNING! 0 pT for genjet, jet " << ij << " genjet " << jet_genidx << " dR=" << mindr << " ptgen=" << genjet_pt[genidx] << std::endl;
-		  continue;
-		}
+		if (genjet_pt[genidx]<ptval[ipt] ||
+		    genjet_pt[genidx]>=ptval[ipt+1]) continue;
 		hJet_JES[iF][iP][ieta][ipt]->Fill(jet_pt[ij]/genjet_pt[genidx]);
 	      }
 	    }
@@ -479,6 +480,10 @@ int simplePlots(){//main
 
       }//event loop
 
+      std::cout << " ** Number of jets with different gen index: " << nDiffIdx
+		<< std::endl;
+
+
       double scale = 1.*nEvtsRef/nEvts;
 
       plotVar(myc[0],hGenJet1_pt[iF][iP],scale,iP==0,"GenJet1_pt",filename[iF],plotDir);
@@ -529,6 +534,13 @@ int simplePlots(){//main
 	  etaerr[ieta] = deta/2.;
 	  for (unsigned ipt(0); ipt<npt; ++ipt){
 	    plotJES(myc[25+2*iP],hJet_JES[iF][iP][ieta][ipt],1,"JES",(filename[iF]+pu[iP]).c_str(),plotDir,mean[ipt][ieta],meanerr[ipt][ieta],sigma[ipt][ieta],sigmaerr[ipt][ieta]);
+	    myc[25+2*iP]->cd();
+	    sprintf(buf,"%3.1f < |#eta| < %3.1f",etaval[ieta]-etaerr[ieta],etaval[ieta]+etaerr[ieta]);
+	    lat.DrawLatexNDC(0.2,0.85,buf);
+	    sprintf(buf,"%3.0f < p_{T} < %3.0f GeV",ptval[ipt],ptval[ipt+1]);
+	    lat.DrawLatexNDC(0.2,0.8,buf);
+	    myc[25+2*iP]->Update();
+	    myc[25+2*iP]->Print((plotDir+"JES_"+filename[iF]+pu[iP]+".pdf").c_str());
 	    res[ipt][ieta] = sigma[ipt][ieta]/mean[ipt][ieta];
 	    reserr[ipt][ieta] = sigmaerr[ipt][ieta]/mean[ipt][ieta];
 
