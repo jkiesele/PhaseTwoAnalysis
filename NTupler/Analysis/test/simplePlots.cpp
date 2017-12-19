@@ -151,13 +151,12 @@ void plotJES(TCanvas *myc, TH1F *hist,
 }
 
 
-int makePlots(const std::string & aProcess, 
+int makePlots(const std::string & plotDir,
+	      const std::string & aProcess, 
 	      const bool doJES=false){//main
 
 
   const unsigned nPU = 2;
-
-  std::string plotDir = "PLOTS_looseVBFsel/";
 
   std::string baseDir = "filelists";
 
@@ -654,18 +653,19 @@ int makePlots(const std::string & aProcess,
 
 int main(int argc, char** argv){//main
 
-  if (argc!=2) {
+  if (argc!=3) {
     std::cout << " Usage: "
-	      << argv[0] << " <process short name> "
+	      << argv[0] << " <outputDirName> <process short name> "
 	      << " (optional: <doJES>, default is false)"
 	      << std::endl;
     return 1;
   }
-  std::string lProcess = argv[1];
+  std::string lPlotDir = argv[1];
+  std::string lProcess = argv[2];
   bool doJES = false;
-  if (argc>2) std::istringstream(argv[2])>>doJES;
+  if (argc>3) std::istringstream(argv[3])>>doJES;
 
-  makePlots(lProcess,doJES);
+  makePlots(lPlotDir,lProcess,doJES);
 
   return 0;
 
