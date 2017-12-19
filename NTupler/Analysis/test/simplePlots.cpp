@@ -153,6 +153,7 @@ void plotJES(TCanvas *myc, TH1F *hist,
 
 int makePlots(const std::string & plotDir,
 	      const std::string & aProcess, 
+	      const unsigned selec,
 	      const bool doJES=false){//main
 
 
@@ -350,6 +351,17 @@ int makePlots(const std::string & plotDir,
 		     Jets,MissingET,
 		     PhotonLoose,PhotonTight)!=0) return 1;
 
+    int nLooseEle = 0;
+    int nTightEle = 0;
+    int nLooseMu = 0;
+    int nTightMu = 0;
+    int nLoosePhotons = 0;
+    ElectronLoose->SetBranchAddress("ElectronLoose_size",&nLooseEle);
+    ElectronTight->SetBranchAddress("ElectronTight_size",&nTightEle);
+    MuonLoose->SetBranchAddress("MuonLoose_size",&nLooseMu);
+    MuonTight->SetBranchAddress("MuonTight_size",&nTightMu);
+    PhotonLoose->SetBranchAddress("PhotonLoose_size",&nLoosePhotons);
+
     int nGenJets = 0;
     float genjet_pt[100];
     float genjet_eta[100];
@@ -409,7 +421,11 @@ int makePlots(const std::string & plotDir,
       GenJet->GetEntry(ievt);
       Jets->GetEntry(ievt);
       MissingET->GetEntry(ievt);
-
+      ElectronLoose->GetEntry(ievt);
+      ElectronTight->GetEntry(ievt);
+      MuonLoose->GetEntry(ievt);
+      MuonTight->GetEntry(ievt);
+      PhotonLoose->GetEntry(ievt);
       //no selection for JES
       if (doJES){
 	for (unsigned ij(0); ij<abs(nJets);++ij){
@@ -451,6 +467,7 @@ int makePlots(const std::string & plotDir,
       }
       //apply some selection
       if (nGenJets <2) continue;
+      if (nLoosePhotons>0) continue;
       if (genjet_pt[0]<30 || genjet_pt[1]<30 || fabs(genjet_eta[0])>5.0 || fabs(genjet_eta[1])>5.0) continue;
 
       TLorentzVector gen1;
@@ -463,9 +480,38 @@ int makePlots(const std::string & plotDir,
       double dphijj = fabs(gen1.DeltaPhi(gen2));
 
       //apply loose VBF sel, gen level...
-      if (genPair.M()<500 || detajj<1 || dphijj>2) continue;
+      //if (genPair.M()<500 || detajj<1 || dphijj>2) continue;
       //apply tight VBF sel, gen level...
-      //if (genPair.M()<1300 || detajj<4 || dphijj>2) continue;
+      if (genPair.M()<1300 || detajj<4 || dphijj>1.5) continue;
+
+      //reco jets info
+      if (nJets<2) continue;
+      if (jet_pt[0]<80 || jet_pt[1]<40 || fabs(jet_eta[0])>4.7 || fabs(jet_eta[1])>4.7) continue;
+
+      if (selec==0 && !(nLooseEle==0 && nLooseMu==0)) continue;
+      if (selec==1 && !(nLooseEle==1 && nLooseMu==0)) continue;
+      if (selec==2 && !(nLooseEle==0 && nLooseMu==1)) continue;
+      if (selec==3 && !(nLooseEle==2 && nTightEle>0 && nLooseMu==0)) continue;
+      if (selec==4 && !(nLooseMu==2 && nTightMu>0 && nLooseEle==0)) continue;
+      TLorentzVector metvec;
+      metvec.SetPtEtaPhiE(met,0,metphi,met);
+      double mindphi=10;
+      unsigned njets30 = 0;
+      for (unsigned ij(0); ij<abs(nJets);++ij){
+	//std::cout << ij << " pt " << jet_pt[ij] << std::endl;
+	if (jet_pt[ij]<30) continue;
+	njets30++;
+	if (ij>4) continue;
+
+	TLorentzVector recij;
+	recij.SetPtEtaPhiM(jet_pt[ij],jet_eta[ij],jet_phi[ij],jet_mass[ij]);
+	double dphi = fabs(recij.DeltaPhi(metvec));
+	if (dphi<mindphi) mindphi = dphi;
+      }
+
+      //QCD rejection and MET selection
+      if (mindphi<0.5) continue;
+      if (met<250) continue;
 
       //gen jets info
       hGenJet1_pt[iP]->Fill(genjet_pt[0]);
@@ -476,11 +522,6 @@ int makePlots(const std::string & plotDir,
       hGen_Mjj[iP]->Fill(genPair.M());
       hGen_detajj[iP]->Fill(detajj);
       hGen_dphijj[iP]->Fill(dphijj);
-
-      //reco jets info
-      if (nJets<2) continue;
-      if (jet_pt[0]<40 || jet_pt[1]<40 || fabs(jet_eta[0])>4.7 || fabs(jet_eta[1])>4.7) continue;
-
 
       hJet1_pt[iP]->Fill(jet_pt[0]);
       hJet1_eta[iP]->Fill(jet_eta[0]);
@@ -507,22 +548,7 @@ int makePlots(const std::string & plotDir,
 
       //MET info
       hmet[iP]->Fill(met);
-      TLorentzVector metvec;
-      metvec.SetPtEtaPhiE(met,0,metphi,met);
-      double mindphi=10;
-      unsigned njets30 = 0;
-      for (unsigned ij(0); ij<abs(nJets);++ij){
-	//std::cout << ij << " pt " << jet_pt[ij] << std::endl;
-	if (jet_pt[ij]<30) continue;
-	njets30++;
-	if (ij>4) continue;
 
-	TLorentzVector recij;
-	recij.SetPtEtaPhiM(jet_pt[ij],jet_eta[ij],jet_phi[ij],jet_mass[ij]);
-	double dphi = fabs(recij.DeltaPhi(metvec));
-	if (dphi<mindphi) mindphi = dphi;
-      }
-	
       hnJets[iP]->Fill(njets30);
       hjetmetmindphi[iP]->Fill(mindphi);
       
@@ -640,6 +666,7 @@ int makePlots(const std::string & plotDir,
       myc[26+2*iP]->Print((plotDir+label.str()+".pdf").c_str());
 
     }//doJES
+    //outFile->Write();
   }//PU loop
 
 
@@ -653,19 +680,21 @@ int makePlots(const std::string & plotDir,
 
 int main(int argc, char** argv){//main
 
-  if (argc!=3) {
+  if (argc!=4) {
     std::cout << " Usage: "
-	      << argv[0] << " <outputDirName> <process short name> "
+	      << argv[0] << " <outputDirName> <process short name> <selection: 0 = no leptons, 1=e, 2=mu, 3=ee, 4=mumu> "
 	      << " (optional: <doJES>, default is false)"
 	      << std::endl;
     return 1;
   }
   std::string lPlotDir = argv[1];
   std::string lProcess = argv[2];
+  unsigned selec = 0;
+  std::istringstream(argv[3])>>selec;
   bool doJES = false;
-  if (argc>3) std::istringstream(argv[3])>>doJES;
+  if (argc>4) std::istringstream(argv[4])>>doJES;
 
-  makePlots(lPlotDir,lProcess,doJES);
+  makePlots(lPlotDir,lProcess,selec,doJES);
 
   return 0;
 
