@@ -160,7 +160,7 @@ int makePlots(const std::string & plotDir,
 
   std::string baseDir = "filelists";
 
-  std::string pu[nPU] = {"noPU","200PU"};
+  std::string pu[nPU] = {"noPU","PU200"};
 
   TFile *outFile = TFile::Open((plotDir+"HistosFile_"+aProcess+".root").c_str(),"RECREATE");
 
