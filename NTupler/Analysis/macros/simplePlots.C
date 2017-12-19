@@ -5,9 +5,11 @@
 #include <vector>
 #include <cmath>
 #include <map>
+#include <algorithm>
 
 #include "TROOT.h"
 #include "TFile.h"
+#include "TChain.h"
 #include "TTree.h"
 #include "TStyle.h"
 #include "TLegend.h"
@@ -23,7 +25,61 @@
 #include "TMath.h"
 #include "TLatex.h"
 
-bool checkEventSize(TTree* tree, const unsigned nEvts){
+bool testInputFile(std::string input, TFile* & file){
+  file = TFile::Open(input.c_str());
+  
+  if (!file) {
+    std::cout << " -- Error, input file " << input.c_str() << " cannot be opened. Skipping..." << std::endl;
+    return false;
+  }
+  else std::cout << " -- input file " << file->GetName() << " successfully opened." << std::endl;
+  return true;
+};
+
+unsigned readFileList(const std::string & datFile,
+		      TChain* GenJet,TChain* Event,
+		      TChain* Particle,TChain* GenPhoton,TChain* Vertex,
+		      TChain* ElectronLoose,TChain* ElectronTight,
+		      TChain* MuonLoose,TChain* MuonTight,
+		      TChain* Jets,TChain* MissingET,
+		      TChain* PhotonLoose,TChain* PhotonTight){
+  std::ifstream inputdat;
+  inputdat.open(datFile);
+  if (!inputdat.is_open()) {
+    std::cout << " ** ERROR, cannot open dat file " << datFile << std::endl;
+    return 1;
+  }
+  //check number of files to read
+  unsigned nFiles = 0;
+  std::string lBuf;
+  while (std::getline(inputdat, lBuf,'\n'))
+    {
+      if (lBuf.empty()) continue;
+      nFiles++;
+      
+      TFile * inFile = 0;
+      lBuf = "root://gfe02.grid.hep.ph.ic.ac.uk:1097/"+lBuf;
+      if (!testInputFile(lBuf,inFile)) return 2;
+      GenJet->AddFile(lBuf.c_str());
+      Event->AddFile(lBuf.c_str());
+      Particle->AddFile(lBuf.c_str());
+      GenPhoton->AddFile(lBuf.c_str());
+      Vertex->AddFile(lBuf.c_str());
+      ElectronLoose->AddFile(lBuf.c_str());
+      ElectronTight->AddFile(lBuf.c_str());
+      MuonLoose->AddFile(lBuf.c_str());
+      MuonTight->AddFile(lBuf.c_str());
+      Jets->AddFile(lBuf.c_str());
+      MissingET->AddFile(lBuf.c_str());
+      PhotonLoose->AddFile(lBuf.c_str());
+      PhotonTight->AddFile(lBuf.c_str());
+    }
+  std::cout << " -- Read " << nFiles << " input files. " << std::endl;
+  inputdat.close();
+  return 0;
+};
+
+bool checkEventSize(TChain* tree, const unsigned nEvts){
   if (tree->GetEntries()!=nEvts) 
     {
       std::cout << " -- Problem with tree " << tree->GetName() 
@@ -103,11 +159,9 @@ int makePlots(const std::string & aProcess,
 
   std::string plotDir = "PLOTS_looseVBFsel/";
 
-  std::string baseDir = "rootfiles";
+  std::string baseDir = "filelists/";
 
   std::string pu[nPU] = {"noPU","200PU"};
-
-  TFile *inFile[nPU];
 
   TFile *outFile = TFile::Open((plotDir+"HistosFile_"+aProcess+".root").c_str(),"RECREATE");
 
@@ -275,10 +329,27 @@ int makePlots(const std::string & aProcess,
     }
 
     std::ostringstream filePath;
-    filePath << baseDir << "/" << aProcess << "_" << pu[iP] << ".root";
-    inFile[iP] = TFile::Open(filePath.str().c_str());
-    inFile[iP]->cd("ntuple");
-    TTree* GenJet = (TTree*)gDirectory->Get("GenJet");
+    filePath << baseDir << "/" << aProcess << "_" << pu[iP] << ".dat";
+    TChain* GenJet = new TChain("ntuple/GenJet");
+    TChain* Event = new TChain("ntuple/Event");
+    TChain* Particle = new TChain("ntuple/Particle");
+    TChain* GenPhoton = new TChain("ntuple/GenPhoton");
+    TChain* Vertex = new TChain("ntuple/Vertex");
+    TChain* ElectronLoose = new TChain("ntuple/ElectronLoose");
+    TChain* ElectronTight = new TChain("ntuple/ElectronTight");
+    TChain* MuonLoose = new TChain("ntuple/MuonLoose");
+    TChain* MuonTight = new TChain("ntuple/MuonTight");
+    TChain* Jets = new TChain(iP==0?"ntuple/Jet":"ntuple/JetPUPPI");
+    TChain* MissingET = new TChain(iP==0?"ntuple/MissingET":"ntuple/PuppiMissingET");
+    TChain* PhotonLoose = new TChain("ntuple/PhotonLoose");
+    TChain* PhotonTight = new TChain("ntuple/PhotonTight");
+
+    if (readFileList(filePath.str(),GenJet,
+		     Event,Particle,GenPhoton,
+		     Vertex,ElectronLoose,ElectronTight,
+		     MuonLoose,MuonTight,
+		     Jets,MissingET,
+		     PhotonLoose,PhotonTight)!=0) return 1;
 
     int nGenJets = 0;
     float genjet_pt[100];
@@ -290,16 +361,6 @@ int makePlots(const std::string & aProcess,
     GenJet->SetBranchAddress("Eta",&genjet_eta);
     GenJet->SetBranchAddress("Phi",&genjet_phi);
     GenJet->SetBranchAddress("Mass",&genjet_mass);
-
-    TTree* Event = (TTree*)gDirectory->Get("Event");
-    TTree* Particle = (TTree*)gDirectory->Get("Particle");
-    TTree* GenPhoton = (TTree*)gDirectory->Get("GenPhoton");
-    TTree* Vertex = (TTree*)gDirectory->Get("Vertex");
-    TTree* ElectronLoose = (TTree*)gDirectory->Get("ElectronLoose");
-    TTree* ElectronTight = (TTree*)gDirectory->Get("ElectronTight");
-    TTree* MuonLoose = (TTree*)gDirectory->Get("MuonLoose");
-    TTree* MuonTight = (TTree*)gDirectory->Get("MuonTight");
-    TTree* Jets = (TTree*)gDirectory->Get(iP==0?"Jet":"JetPUPPI");
 
     int nJets = 0;
     float jet_pt[100];
@@ -320,17 +381,12 @@ int makePlots(const std::string & aProcess,
     Jets->SetBranchAddress("DeepCSV",&jet_DeepCSV);
     Jets->SetBranchAddress("PartonFlavor",&jet_parton);
 
-    TTree* MissingET = (TTree*)gDirectory->Get(iP==0?"MissingET":"PuppiMissingET");
-
     float met = 0;
     float metphi = 0;
     MissingET->SetBranchAddress("MET",&met);
     MissingET->SetBranchAddress("Phi",&metphi);
 
-    TTree* PhotonLoose = (TTree*)gDirectory->Get("PhotonLoose");
-    TTree* PhotonTight = (TTree*)gDirectory->Get("PhotonTight");
-
-    int nEvts = Event->GetEntries();
+    int nEvts = GenJet->GetEntries();
     if (iP==0) nEvtsRef = nEvts;
     if (!checkEventSize(GenJet,nEvts)) return 1;
     if (!checkEventSize(Particle,nEvts)) return 1;
@@ -470,7 +526,7 @@ int makePlots(const std::string & aProcess,
 	
       hnJets[iP]->Fill(njets30);
       hjetmetmindphi[iP]->Fill(mindphi);
-
+      
     }//event loop
 
     std::cout << " ** Number of jets with different gen index: " << nDiffIdx
