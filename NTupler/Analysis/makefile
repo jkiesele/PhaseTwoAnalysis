@@ -52,13 +52,16 @@ EXES=$(wildcard $(BASEDIR)/test/*.cpp)
 #OBJS=$(subst $(SRCDIR), $(OBJDIR),$(subst cc,$(OBJ_EXT),$(SRCS)))
 #BINS=$(subst $(TESTDIR), $(EXEDIR),$(subst .$(TEST_EXT),,$(EXES)))
 
-BINS=$(EXEDIR)/simplePlots
+BINS=$(EXEDIR)/simplePlots $(EXEDIR)/simpleTree
 
 .PHONY: all
 #all: lib $(BINS)
 all: $(BINS)
 
 $(EXEDIR)/simplePlots:  $(TESTDIR)/simplePlots.cpp
+	$(CXX) -o $@ $(CXXFLAGS) $< $(LIBS)
+
+$(EXEDIR)/simpleTree:  $(TESTDIR)/simpleTree.cpp
 	$(CXX) -o $@ $(CXXFLAGS) $< $(LIBS)
 
 #$(LIBDIR)/lib$(LIBNAME).so:  $(OBJS) $(LIBDEPENDS) 
