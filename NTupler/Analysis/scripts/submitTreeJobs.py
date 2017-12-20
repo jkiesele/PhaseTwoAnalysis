@@ -18,7 +18,7 @@ parser.add_option('-S', '--no-submit',action="store_true",  dest='nosubmit', hel
 
 #workdir='/afs/cern.ch/work/a/amagnan/UPSGAna/'
 
-processList=['DYToLL-M-50_0J','DYToLL-M-50_1J','DYToLL-M-50_2J','DYToLL-M-50_3J','EWKWMinus2Jets_WToLNu_M-50','EWKWPlus2Jets_WToLNu_M-50','EWKZ2Jets_ZToLL_M-50','EWKZ2Jets_ZToNuNu','QCD_Mdijet-1000toInf','ST_tW_DR_14TeV_top_ext1','ST_tW_DR_14TeV_top','ST_tW_DR','ST_tch_14TeV_antitop','ST_tch_14TeV_top_ext1','ST_tch_14TeV_top','TT_TuneCUETP8M2T4','VBFH','WToLNu_0J','WToLNu_1J','WToLNu_2J','WToLNu_3J','ZJetsToNuNu_HT-100To200','ZJetsToNuNu_HT-1200To2500','ZJetsToNuNu_HT-200To400','ZJetsToNuNu_HT-400To600','ZJetsToNuNu_HT-600To800']
+processList=['DYToLL-M-50_0J','DYToLL-M-50_1J','DYToLL-M-50_2J','DYToLL-M-50_3J','EWKWMinus2Jets_WToLNu_M-50','EWKWPlus2Jets_WToLNu_M-50','EWKZ2Jets_ZToLL_M-50','EWKZ2Jets_ZToNuNu','QCD_Mdijet-1000toInf','ST_tW_DR_14TeV_top','ST_tW_DR_14TeV_antitop','ST_tch_14TeV_antitop','ST_tch_14TeV_top','TT_TuneCUETP8M2T4','VBFH','WToLNu_0J','WToLNu_1J','WToLNu_2J','WToLNu_3J','ZJetsToNuNu_HT-100To200','ZJetsToNuNu_HT-1200To2500','ZJetsToNuNu_HT-200To400','ZJetsToNuNu_HT-400To600','ZJetsToNuNu_HT-600To800','ZJetsToNuNu_HT-800To1200']
 
 if len(opt.process)>0:
     processList=[opt.process]
