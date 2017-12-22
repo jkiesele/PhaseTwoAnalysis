@@ -25,7 +25,7 @@
 #include "TMath.h"
 #include "TLatex.h"
 
-double isoCut(const unsigned id, const double & eta){
+double isoCutnoPU(const unsigned id, const double & eta){
   //0,1,2 are loose, medium, tight electrons
   //3,4 are loose, tight muons
   bool isEB = false;
@@ -34,19 +34,49 @@ double isoCut(const unsigned id, const double & eta){
     //95% signal eff wrt ID
     if (id==0) return 0.34;
     else if (id==1) return 0.28;
-    else if (id==2) return 0.22;
+    else if (id==2) return 0.23;
     else if (id==3) return 0.6;
     else if (id==4) return 0.6;
   }
   else {
     //70% bkg rej wrt ID.
     if (id==0) return 0.13;
-    else if (id==1) return 0.09;
+    else if (id==1) return 0.11;
     else if (id==2) return 0.09;
     else if (id==3) return 0.35;
     else if (id==4) return 0.35;
   }
   return 0;
+};
+
+double isoCutPU200(const unsigned id, const double & eta){
+  //0,1,2 are loose, medium, tight electrons
+  //3,4 are loose, tight muons
+  bool isEB = false;
+  if (fabs(eta)<1.5) isEB = true;
+  if (isEB){
+    //95% signal eff wrt ID
+    if (id==0) return 0.12;
+    else if (id==1) return 0.18;
+    else if (id==2) return 0.11;
+    else if (id==3) return 0.26;
+    else if (id==4) return 0.49;
+  }
+  else {
+    //70% bkg rej wrt ID.
+    if (id==0) return 0.46;
+    else if (id==1) return 0.42;
+    else if (id==2) return 0.36;
+    else if (id==3) return 0.35;
+    else if (id==4) return 0.28;
+  }
+  return 0;
+};
+
+double isoCut(const unsigned id, const double & eta,
+	      const bool pu200){
+  if (!pu200) return isoCutnoPU(id,eta);
+  else return isoCutPU200(id,eta);
 };
 
 bool testInputFile(std::string input, TFile* & file){
@@ -120,7 +150,9 @@ int makeTree(const std::string & plotDir,
 	     const std::string & aProcess,
 	     const std::string & pu){//main
   
-  std::string baseDir = "filelists";
+  bool isPU = pu.find("no")==pu.npos;
+
+  std::string baseDir = "filelists_20171221/";
   
   std::string outname = plotDir+"/HistosFile_"+aProcess+"_"+pu+".root";
   TFile *outFile = TFile::Open(outname.c_str(),"RECREATE");
@@ -435,7 +467,7 @@ int makeTree(const std::string & plotDir,
     double pySum = 0;
     nlooseEle = 0;
     for (unsigned il(0); il<abs(nLooseEle);++il){
-      if (looseEle_iso[il] >= isoCut(0,looseEle_eta[il])) continue;
+      if (looseEle_iso[il] >= isoCut(0,looseEle_eta[il],isPU)) continue;
       if (looseEle_pt[il]<10 || fabs(looseEle_eta[il])>2.8) continue;
       if (fabs(looseEle_eta[il])>1.444 && fabs(looseEle_eta[il])<1.566) continue;
       double px = looseEle_pt[il]*cos(looseEle_phi[il]);
@@ -446,7 +478,7 @@ int makeTree(const std::string & plotDir,
     }
     nlooseMu = 0;
     for (unsigned il(0); il<abs(nLooseMu);++il){
-      if (looseMu_iso[il] >= isoCut(3,looseMu_eta[il])) continue;
+      if (looseMu_iso[il] >= isoCut(3,looseMu_eta[il],isPU)) continue;
       if (looseMu_pt[il]<10 || fabs(looseMu_eta[il])>3.0) continue;
       double px = looseMu_pt[il]*cos(looseMu_phi[il]);
       double py = looseMu_pt[il]*sin(looseMu_phi[il]);
@@ -457,21 +489,21 @@ int makeTree(const std::string & plotDir,
     //apply tight selections on tight leptons
     nmediumEle = 0;
     for (unsigned il(0); il<abs(nMediumEle);++il){
-      if (mediumEle_iso[il] >= isoCut(1,mediumEle_eta[il])) continue;
+      if (mediumEle_iso[il] >= isoCut(1,mediumEle_eta[il],isPU)) continue;
       if (mediumEle_pt[il]<10 || fabs(mediumEle_eta[il])>2.8) continue;
       if (fabs(mediumEle_eta[il])>1.444 && fabs(mediumEle_eta[il])<1.566) continue;
       nmediumEle++;
     }
     ntightEle = 0;
     for (unsigned il(0); il<abs(nTightEle);++il){
-      if (tightEle_iso[il] >= isoCut(2,tightEle_eta[il])) continue;
+      if (tightEle_iso[il] >= isoCut(2,tightEle_eta[il],isPU)) continue;
       if (tightEle_pt[il]<20 || fabs(tightEle_eta[il])>2.8) continue;
       if (fabs(tightEle_eta[il])>1.444 && fabs(tightEle_eta[il])<1.566) continue;
       ntightEle++;
     }
     ntightMu = 0;
     for (unsigned il(0); il<abs(nTightMu);++il){
-      if (tightMu_iso[il] >= isoCut(4,tightMu_eta[il])) continue;
+      if (tightMu_iso[il] >= isoCut(4,tightMu_eta[il],isPU)) continue;
       if (tightMu_pt[il]<20 || fabs(tightMu_eta[il])>3.0) continue;
       double px = tightMu_pt[il]*cos(tightMu_phi[il]);
       double py = tightMu_pt[il]*sin(tightMu_phi[il]);
@@ -608,18 +640,17 @@ int makeTree(const std::string & plotDir,
 
 int main(int argc, char** argv){//main
 
-  if (argc!=3) {
+  if (argc!=4) {
     std::cout << " Usage: "
-	      << argv[0] << " <outputDirName> <process short name> "
+	      << argv[0] << " <outputDirName> <process short name> <pu: noPU or PU200>"
 	      << std::endl;
     return 1;
   }
   std::string lPlotDir = argv[1];
   std::string lProcess = argv[2];
+  std::string lPu = argv[3];
 
-  makeTree(lPlotDir,lProcess,"noPU");
-  makeTree(lPlotDir,lProcess,"PU200");
-
+  makeTree(lPlotDir,lProcess,lPu);
 
   return 0;
 
