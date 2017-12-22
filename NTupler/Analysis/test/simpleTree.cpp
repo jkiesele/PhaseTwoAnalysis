@@ -465,14 +465,14 @@ int makeTree(const std::string & plotDir,
     ntightEle = 0;
     for (unsigned il(0); il<abs(nTightEle);++il){
       if (tightEle_iso[il] >= isoCut(2,tightEle_eta[il])) continue;
-      if (tightEle_pt[il]<10 || fabs(tightEle_eta[il])>2.8) continue;
+      if (tightEle_pt[il]<20 || fabs(tightEle_eta[il])>2.8) continue;
       if (fabs(tightEle_eta[il])>1.444 && fabs(tightEle_eta[il])<1.566) continue;
       ntightEle++;
     }
     ntightMu = 0;
     for (unsigned il(0); il<abs(nTightMu);++il){
       if (tightMu_iso[il] >= isoCut(4,tightMu_eta[il])) continue;
-      if (tightMu_pt[il]<10 || fabs(tightMu_eta[il])>3.0) continue;
+      if (tightMu_pt[il]<20 || fabs(tightMu_eta[il])>3.0) continue;
       double px = tightMu_pt[il]*cos(tightMu_phi[il]);
       double py = tightMu_pt[il]*sin(tightMu_phi[il]);
       pxSum += px;
