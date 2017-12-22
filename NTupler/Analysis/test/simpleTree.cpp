@@ -25,6 +25,30 @@
 #include "TMath.h"
 #include "TLatex.h"
 
+double isoCut(const unsigned id, const double & eta){
+  //0,1,2 are loose, medium, tight electrons
+  //3,4 are loose, tight muons
+  bool isEB = false;
+  if (fabs(eta)<1.5) isEB = true;
+  if (isEB){
+    //95% signal eff wrt ID
+    if (id==0) return 0.34;
+    else if (id==1) return 0.28;
+    else if (id==2) return 0.22;
+    else if (id==3) return 0.6;
+    else if (id==4) return 0.6;
+  }
+  else {
+    //70% bkg rej wrt ID.
+    if (id==0) return 0.13;
+    else if (id==1) return 0.09;
+    else if (id==2) return 0.09;
+    else if (id==3) return 0.35;
+    else if (id==4) return 0.35;
+  }
+  return 0;
+};
+
 bool testInputFile(std::string input, TFile* & file){
   file = TFile::Open(input.c_str());
   
@@ -39,7 +63,7 @@ bool testInputFile(std::string input, TFile* & file){
 unsigned readFileList(const std::string & datFile,
 		      TChain* GenJet,TChain* Event,
 		      TChain* Particle,TChain* GenPhoton,TChain* Vertex,
-		      TChain* ElectronLoose,TChain* ElectronTight,
+		      TChain* ElectronLoose,TChain* ElectronMedium,TChain* ElectronTight,
 		      TChain* MuonLoose,TChain* MuonTight,
 		      TChain* Jets,TChain* MissingET,
 		      TChain* PhotonLoose,TChain* PhotonTight){
@@ -66,6 +90,7 @@ unsigned readFileList(const std::string & datFile,
       GenPhoton->AddFile(lBuf.c_str());
       Vertex->AddFile(lBuf.c_str());
       ElectronLoose->AddFile(lBuf.c_str());
+      ElectronMedium->AddFile(lBuf.c_str());
       ElectronTight->AddFile(lBuf.c_str());
       MuonLoose->AddFile(lBuf.c_str());
       MuonTight->AddFile(lBuf.c_str());
@@ -118,12 +143,16 @@ int makeTree(const std::string & plotDir,
   double Gen_detajj = 0;
   double Gen_dphijj = 0;
 
-  unsigned njets = 0;
+  unsigned njets30 = 0;
+  double ht30 = 0;
+
   unsigned nlooseEle = 0;
+  unsigned nmediumEle = 0;
   unsigned ntightEle = 0;
   unsigned nlooseMu = 0;
   unsigned ntightMu = 0;
   unsigned nlooseGamma = 0;
+  unsigned ntightGamma = 0;
 
   double Jet1_pt = 0;
   double Jet2_pt = 0;
@@ -146,7 +175,10 @@ int makeTree(const std::string & plotDir,
   double dphijj = 0;
 
   double met = 0;
+  double metnolep = 0;
+  double metphi = 0;
   double jetmetmindphi = 0;
+  double jetmetnolepmindphi = 0;
 
   outtree->Branch("GenJet1_pt",&GenJet1_pt);
   outtree->Branch("GenJet2_pt",&GenJet2_pt);
@@ -156,12 +188,16 @@ int makeTree(const std::string & plotDir,
   outtree->Branch("Gen_detajj",&Gen_detajj);
   outtree->Branch("Gen_dphijj",&Gen_dphijj);
 
-  outtree->Branch("njets",&njets);
+  outtree->Branch("njets30",&njets30);
+  outtree->Branch("ht30",&ht30);
+
   outtree->Branch("nlooseEle",&nlooseEle);
+  outtree->Branch("nmediumEle",&nmediumEle);
   outtree->Branch("ntightEle",&ntightEle);
   outtree->Branch("nlooseMu",&nlooseMu);
   outtree->Branch("ntightMu",&ntightMu);
   outtree->Branch("nlooseGamma",&nlooseGamma);
+  outtree->Branch("ntightGamma",&ntightGamma);
 
   outtree->Branch("Jet1_pt",&Jet1_pt);
   outtree->Branch("Jet2_pt",&Jet2_pt);
@@ -184,7 +220,10 @@ int makeTree(const std::string & plotDir,
   outtree->Branch("dphijj",&dphijj);
 
   outtree->Branch("met",&met);
+  outtree->Branch("metnolep",&metnolep);
+  outtree->Branch("metphi",&metphi);
   outtree->Branch("jetmetmindphi",&jetmetmindphi);
+  outtree->Branch("jetmetnolepmindphi",&jetmetnolepmindphi);
 
   std::cout << " .. Processing file " << aProcess << std::endl;
   std::cout << " ... Processing " <<  pu << std::endl;
@@ -197,6 +236,7 @@ int makeTree(const std::string & plotDir,
   TChain* GenPhoton = new TChain("ntuple/GenPhoton");
   TChain* Vertex = new TChain("ntuple/Vertex");
   TChain* ElectronLoose = new TChain("ntuple/ElectronLoose");
+  TChain* ElectronMedium = new TChain("ntuple/ElectronMedium");
   TChain* ElectronTight = new TChain("ntuple/ElectronTight");
   TChain* MuonLoose = new TChain("ntuple/MuonLoose");
   TChain* MuonTight = new TChain("ntuple/MuonTight");
@@ -207,22 +247,103 @@ int makeTree(const std::string & plotDir,
 
   if (readFileList(filePath.str(),GenJet,
 		   Event,Particle,GenPhoton,
-		   Vertex,ElectronLoose,ElectronTight,
+		   Vertex,ElectronLoose,ElectronMedium,ElectronTight,
 		   MuonLoose,MuonTight,
 		   Jets,MissingET,
 		   PhotonLoose,PhotonTight)!=0) return 1;
   
   int nLooseEle = 0;
+  int nMediumEle = 0;
   int nTightEle = 0;
   int nLooseMu = 0;
   int nTightMu = 0;
   int nLoosePhotons = 0;
+  int nTightPhotons = 0;
+
+  float looseEle_pt[100];
+  float mediumEle_pt[100];
+  float tightEle_pt[100];
+  float looseEle_eta[100];
+  float mediumEle_eta[100];
+  float tightEle_eta[100];
+  float looseEle_phi[100];
+  float mediumEle_phi[100];
+  float tightEle_phi[100];
+  float looseEle_iso[100];
+  float mediumEle_iso[100];
+  float tightEle_iso[100];
+  float looseEle_mass[100];
+  float mediumEle_mass[100];
+  float tightEle_mass[100];
+
+  float looseMu_pt[100];
+  float tightMu_pt[100];
+  float looseMu_eta[100];
+  float tightMu_eta[100];
+  float looseMu_phi[100];
+  float tightMu_phi[100];
+  float looseMu_iso[100];
+  float tightMu_iso[100];
+  float looseMu_mass[100];
+  float tightMu_mass[100];
+
+  float loosePhoton_pt[100];
+  float loosePhoton_pt_multi[100];
+  float loosePhoton_eta[100];
+  float loosePhoton_eta_multi[100];
+  float loosePhoton_phi[100];
+  float loosePhoton_iso[100];
+  float loosePhoton_mass[100];
+  int   loosePhoton_isEB[100];
+
+  float tightPhoton_pt[100];
+
   ElectronLoose->SetBranchAddress("ElectronLoose_size",&nLooseEle);
+  ElectronMedium->SetBranchAddress("ElectronMedium_size",&nMediumEle);
   ElectronTight->SetBranchAddress("ElectronTight_size",&nTightEle);
+  ElectronLoose->SetBranchAddress("PT",&looseEle_pt);
+  ElectronLoose->SetBranchAddress("Eta",&looseEle_eta);
+  ElectronLoose->SetBranchAddress("Phi",&looseEle_phi);
+  ElectronLoose->SetBranchAddress("Mass",&looseEle_mass);
+  ElectronLoose->SetBranchAddress("IsolationVar",&looseEle_iso);
+  ElectronMedium->SetBranchAddress("PT",&mediumEle_pt);
+  ElectronMedium->SetBranchAddress("Eta",&mediumEle_eta);
+  ElectronMedium->SetBranchAddress("Phi",&mediumEle_phi);
+  ElectronMedium->SetBranchAddress("Mass",&mediumEle_mass);
+  ElectronMedium->SetBranchAddress("IsolationVar",&mediumEle_iso);
+  ElectronTight->SetBranchAddress("PT",&tightEle_pt);
+  ElectronTight->SetBranchAddress("Eta",&tightEle_eta);
+  ElectronTight->SetBranchAddress("Phi",&tightEle_phi);
+  ElectronTight->SetBranchAddress("Mass",&tightEle_mass);
+  ElectronTight->SetBranchAddress("IsolationVar",&tightEle_iso);
+
   MuonLoose->SetBranchAddress("MuonLoose_size",&nLooseMu);
+  MuonLoose->SetBranchAddress("PT",&looseMu_pt);
+  MuonLoose->SetBranchAddress("Eta",&looseMu_eta);
+  MuonLoose->SetBranchAddress("Phi",&looseMu_phi);
+  MuonLoose->SetBranchAddress("Mass",&looseMu_mass);
+  MuonLoose->SetBranchAddress("IsolationVar",&looseMu_iso);
+
   MuonTight->SetBranchAddress("MuonTight_size",&nTightMu);
+  MuonTight->SetBranchAddress("PT",&tightMu_pt);
+  MuonTight->SetBranchAddress("Eta",&tightMu_eta);
+  MuonTight->SetBranchAddress("Phi",&tightMu_phi);
+  MuonTight->SetBranchAddress("Mass",&tightMu_mass);
+  MuonTight->SetBranchAddress("IsolationVar",&tightMu_iso);
+
   PhotonLoose->SetBranchAddress("PhotonLoose_size",&nLoosePhotons);
-  
+  PhotonLoose->SetBranchAddress("PT",&loosePhoton_pt);
+  PhotonLoose->SetBranchAddress("PT_multi",&loosePhoton_pt_multi);
+  PhotonLoose->SetBranchAddress("Eta",&loosePhoton_eta);
+  PhotonLoose->SetBranchAddress("Eta_multi",&loosePhoton_eta_multi);
+  PhotonLoose->SetBranchAddress("Phi",&loosePhoton_phi);
+  PhotonLoose->SetBranchAddress("Mass",&loosePhoton_mass);
+  PhotonLoose->SetBranchAddress("IsolationVar",&loosePhoton_iso);
+  PhotonLoose->SetBranchAddress("IsEB",&loosePhoton_isEB);
+
+  PhotonTight->SetBranchAddress("PhotonTight_size",&nTightPhotons);
+  PhotonTight->SetBranchAddress("PT",&tightPhoton_pt);
+
   int nGenJets = 0;
   float genjet_pt[100];
   float genjet_eta[100];
@@ -254,9 +375,9 @@ int makeTree(const std::string & plotDir,
   Jets->SetBranchAddress("PartonFlavor",&jet_parton);
   
   float metpf = 0;
-  float metphi = 0;
+  float metphipf = 0;
   MissingET->SetBranchAddress("MET",&metpf);
-  MissingET->SetBranchAddress("Phi",&metphi);
+  MissingET->SetBranchAddress("Phi",&metphipf);
   
   int nEvts = GenJet->GetEntries();
   if (!checkEventSize(GenJet,nEvts)) return 1;
@@ -264,6 +385,7 @@ int makeTree(const std::string & plotDir,
   if (!checkEventSize(GenPhoton,nEvts)) return 1;
   if (!checkEventSize(Vertex,nEvts)) return 1;
   if (!checkEventSize(ElectronLoose,nEvts)) return 1;
+  if (!checkEventSize(ElectronMedium,nEvts)) return 1;
   if (!checkEventSize(ElectronTight,nEvts)) return 1;
   if (!checkEventSize(MuonLoose,nEvts)) return 1;
   if (!checkEventSize(MuonTight,nEvts)) return 1;
@@ -291,6 +413,7 @@ int makeTree(const std::string & plotDir,
     TLorentzVector recPair = rec1 + rec2;
     Mjj = recPair.M();
     detajj = fabs(jet_eta[0]-jet_eta[1]);
+    dphijj = fabs(rec1.DeltaPhi(rec2));
 
     if (Mjj<500 || detajj<1) continue;
 
@@ -298,17 +421,95 @@ int makeTree(const std::string & plotDir,
     GenJet->GetEntry(ievt);
     MissingET->GetEntry(ievt);
     ElectronLoose->GetEntry(ievt);
+    ElectronMedium->GetEntry(ievt);
     ElectronTight->GetEntry(ievt);
     MuonLoose->GetEntry(ievt);
     MuonTight->GetEntry(ievt);
     PhotonLoose->GetEntry(ievt);
+    PhotonTight->GetEntry(ievt);
 
-    dphijj = fabs(rec1.DeltaPhi(rec2));
     
+    //loose leptons, get px and py component to add to the met
+    //apply loose selections on them
+    double pxSum = 0;
+    double pySum = 0;
+    nlooseEle = 0;
+    for (unsigned il(0); il<abs(nLooseEle);++il){
+      if (looseEle_iso[il] >= isoCut(0,looseEle_eta[il])) continue;
+      if (looseEle_pt[il]<10 || fabs(looseEle_eta[il])>2.8) continue;
+      if (fabs(looseEle_eta[il])>1.444 && fabs(looseEle_eta[il])<1.566) continue;
+      double px = looseEle_pt[il]*cos(looseEle_phi[il]);
+      double py = looseEle_pt[il]*sin(looseEle_phi[il]);
+      pxSum += px;
+      pySum += py;
+      nlooseEle++;
+    }
+    nlooseMu = 0;
+    for (unsigned il(0); il<abs(nLooseMu);++il){
+      if (looseMu_iso[il] >= isoCut(3,looseMu_eta[il])) continue;
+      if (looseMu_pt[il]<10 || fabs(looseMu_eta[il])>3.0) continue;
+      double px = looseMu_pt[il]*cos(looseMu_phi[il]);
+      double py = looseMu_pt[il]*sin(looseMu_phi[il]);
+      pxSum += px;
+      pySum += py;
+      nlooseMu++;
+    }
+    //apply tight selections on tight leptons
+    nmediumEle = 0;
+    for (unsigned il(0); il<abs(nMediumEle);++il){
+      if (mediumEle_iso[il] >= isoCut(1,mediumEle_eta[il])) continue;
+      if (mediumEle_pt[il]<10 || fabs(mediumEle_eta[il])>2.8) continue;
+      if (fabs(mediumEle_eta[il])>1.444 && fabs(mediumEle_eta[il])<1.566) continue;
+      nmediumEle++;
+    }
+    ntightEle = 0;
+    for (unsigned il(0); il<abs(nTightEle);++il){
+      if (tightEle_iso[il] >= isoCut(2,tightEle_eta[il])) continue;
+      if (tightEle_pt[il]<10 || fabs(tightEle_eta[il])>2.8) continue;
+      if (fabs(tightEle_eta[il])>1.444 && fabs(tightEle_eta[il])<1.566) continue;
+      ntightEle++;
+    }
+    ntightMu = 0;
+    for (unsigned il(0); il<abs(nTightMu);++il){
+      if (tightMu_iso[il] >= isoCut(4,tightMu_eta[il])) continue;
+      if (tightMu_pt[il]<10 || fabs(tightMu_eta[il])>3.0) continue;
+      double px = tightMu_pt[il]*cos(tightMu_phi[il]);
+      double py = tightMu_pt[il]*sin(tightMu_phi[il]);
+      pxSum += px;
+      pySum += py;
+      ntightMu++;
+    }
+
+    //photons 
+    nlooseGamma = 0;
+    for (unsigned il(0); il<abs(nLoosePhotons);++il){
+      //if (loosePhoton_iso[il] >= isoCut(4,loosePhoton_eta[il])) continue;
+      if (loosePhoton_pt[il]<15) continue;
+      nlooseGamma++;
+    }
+    ntightGamma = 0;
+    for (unsigned il(0); il<abs(nTightPhotons);++il){
+      //if (tightPhoton_iso[il] >= isoCut(4,tightPhoton_eta[il])) continue;
+      if (tightPhoton_pt[il]<15) continue;
+      ntightGamma++;
+    }
+
+    //met and jets
     TLorentzVector metvec;
-    metvec.SetPtEtaPhiE(metpf,0,metphi,metpf);
-    double mindphi=10;
-    unsigned njets30 = 0;
+    metvec.SetPtEtaPhiE(metpf,0,metphipf,metpf);
+
+    //calculate met no lepton
+    TLorentzVector metnolepvec;
+    pxSum += metpf*cos(metphipf);
+    pySum += metpf*sin(metphipf);
+    metnolep = sqrt(pxSum*pxSum+pySum*pySum);
+    double metnolepphi = acos(pxSum/metnolep);
+    metnolepvec.SetPtEtaPhiE(metnolep,0,metnolepphi,metnolep);
+
+    jetmetmindphi=10;
+    jetmetnolepmindphi=10;
+    njets30 = 0;
+    ht30 = 0;
     for (unsigned ij(0); ij<abs(nJets);++ij){
       //redo jet-genjet matching
       TLorentzVector rec;
@@ -343,11 +544,14 @@ int makeTree(const std::string & plotDir,
       
       if (jet_pt[ij]<30) continue;
       njets30++;
+      ht30 += jet_pt[ij];
       if (ij>4) continue;
       
       double dphi = fabs(rec.DeltaPhi(metvec));
-      if (dphi<mindphi) mindphi = dphi;
-      
+      if (dphi<jetmetmindphi) jetmetmindphi = dphi;
+      double dphinolep = fabs(rec.DeltaPhi(metnolepvec));
+      if (dphinolep<jetmetnolepmindphi) jetmetnolepmindphi = dphinolep;
+    
     }//loop on jets
 
     TLorentzVector gen1;
@@ -383,14 +587,7 @@ int makeTree(const std::string & plotDir,
     
     //MET info
     met = metpf;
-    
-    njets = njets30;
-    nlooseEle = nLooseEle;
-    nlooseMu = nLooseMu;
-    nlooseGamma = nLoosePhotons;
-    ntightEle = nTightEle;
-    ntightMu = nTightMu;
-    jetmetmindphi = mindphi;
+    metphi = metphipf;
     
     outtree->Fill();   
   }//event loop
