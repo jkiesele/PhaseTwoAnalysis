@@ -37,7 +37,7 @@ for pu in pulist :
         scriptFile.write('cd %s/../../../\n'%(os.getcwd()))
         scriptFile.write('cmsenv\n')
         scriptFile.write('cd -\n')
-        scriptFile.write('cp -r %s/filelists .\n'%(os.getcwd()))
+        scriptFile.write('cp -r %s/filelists* .\n'%(os.getcwd()))
     #os.system('./bin/simpleTree %s %s'%(outDir,myproc))
         scriptFile.write('%s/bin/simpleTree %s %s %s | tee %s/runJob.log\n'%(os.getcwd(),outDir,myproc,pu,outDir))
         scriptFile.write('echo "All done"\n')
