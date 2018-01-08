@@ -79,6 +79,55 @@ double isoCut(const unsigned id, const double & eta,
   else return isoCutPU200(id,eta);
 };
 
+
+
+bool checkEventSize(TTree* tree, const unsigned nEvts){
+  if (tree->GetEntries()!=nEvts) 
+    {
+      std::cout << " ---- Problem with tree " << tree->GetName() 
+		<< " entries " <<tree->GetEntries() 
+		<< " nevts = " << nEvts 
+		<< ". Skipping..."
+		<< std::endl;
+      return false;
+    }
+  return true;
+};
+
+bool checkEventSize(TFile* file, const std::string & pu){
+  file->cd("ntuple");
+  TTree* myGenJet = (TTree*)gDirectory->Get("GenJet");
+  TTree* myEvent = (TTree*)gDirectory->Get("Event");
+  TTree* myParticle = (TTree*)gDirectory->Get("Particle");
+  TTree* myGenPhoton = (TTree*)gDirectory->Get("GenPhoton");
+  TTree* myVertex = (TTree*)gDirectory->Get("Vertex");
+  TTree* myElectronLoose = (TTree*)gDirectory->Get("ElectronLoose");
+  TTree* myElectronMedium = (TTree*)gDirectory->Get("ElectronMedium");
+  TTree* myElectronTight = (TTree*)gDirectory->Get("ElectronTight");
+  TTree* myMuonLoose = (TTree*)gDirectory->Get("MuonLoose");
+  TTree* myMuonTight = (TTree*)gDirectory->Get("MuonTight");
+  TTree* myJets = (TTree*)gDirectory->Get((pu.find("noPU")!=pu.npos)?"Jet":"JetPUPPI");
+  TTree* myMissingET = (TTree*)gDirectory->Get((pu.find("noPU")!=pu.npos)?"MissingET":"PuppiMissingET");
+  TTree* myPhotonLoose = (TTree*)gDirectory->Get("PhotonLoose");
+  TTree* myPhotonTight = (TTree*)gDirectory->Get("PhotonTight");
+
+  int nEvts = myEvent->GetEntries();
+  if (!checkEventSize(myGenJet,nEvts)) return false;
+  if (!checkEventSize(myParticle,nEvts)) return false;
+  if (!checkEventSize(myGenPhoton,nEvts)) return false;
+  if (!checkEventSize(myVertex,nEvts)) return false;
+  if (!checkEventSize(myElectronLoose,nEvts)) return false;
+  if (!checkEventSize(myElectronMedium,nEvts)) return false;
+  if (!checkEventSize(myElectronTight,nEvts)) return false;
+  if (!checkEventSize(myMuonLoose,nEvts)) return false;
+  if (!checkEventSize(myMuonTight,nEvts)) return false;
+  if (!checkEventSize(myPhotonLoose,nEvts)) return false;
+  if (!checkEventSize(myPhotonTight,nEvts)) return false;
+  if (!checkEventSize(myJets,nEvts)) return false;
+  if (!checkEventSize(myMissingET,nEvts)) return false;
+  return true;
+}
+
 bool testInputFile(std::string input, TFile* & file){
   file = TFile::Open(input.c_str());
   
@@ -86,7 +135,10 @@ bool testInputFile(std::string input, TFile* & file){
     std::cout << " -- Error, input file " << input.c_str() << " cannot be opened. Skipping..." << std::endl;
     return false;
   }
-  else std::cout << " -- input file " << file->GetName() << " successfully opened." << std::endl;
+  else {
+    std::cout << " -- input file " << file->GetName() << " successfully opened." << std::endl;
+    if (!checkEventSize(file,input)) return false;
+  }
   return true;
 };
 
@@ -105,15 +157,18 @@ unsigned readFileList(const std::string & datFile,
   }
   //check number of files to read
   unsigned nFiles = 0;
+  unsigned nFail = 0;
   std::string lBuf;
   while (std::getline(inputdat, lBuf,'\n'))
     {
       if (lBuf.empty()) continue;
-      nFiles++;
       
       TFile * inFile = 0;
       lBuf = "root://gfe02.grid.hep.ph.ic.ac.uk:1097/"+lBuf;
-      if (!testInputFile(lBuf,inFile)) return 2;
+      if (!testInputFile(lBuf,inFile)) {
+	nFail++;
+	continue;
+      }
       GenJet->AddFile(lBuf.c_str());
       Event->AddFile(lBuf.c_str());
       Particle->AddFile(lBuf.c_str());
@@ -128,8 +183,9 @@ unsigned readFileList(const std::string & datFile,
       MissingET->AddFile(lBuf.c_str());
       PhotonLoose->AddFile(lBuf.c_str());
       PhotonTight->AddFile(lBuf.c_str());
+      nFiles++;
     }
-  std::cout << " -- Read " << nFiles << " input files. " << std::endl;
+  std::cout << " -- Read " << nFiles << " input files. Failed: " << nFail << std::endl;
   inputdat.close();
   return 0;
 };
@@ -137,14 +193,15 @@ unsigned readFileList(const std::string & datFile,
 bool checkEventSize(TChain* tree, const unsigned nEvts){
   if (tree->GetEntries()!=nEvts) 
     {
-      std::cout << " -- Problem with tree " << tree->GetName() 
+      std::cout << " ---- Problem with tree " << tree->GetName() 
 		<< " entries " <<tree->GetEntries() 
 		<< " nevts = " << nEvts 
+		<< ". Skipping..."
 		<< std::endl;
       return false;
     }
   return true;
-}
+};
 
 int makeTree(const std::string & plotDir,
 	     const std::string & aProcess,
