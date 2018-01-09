@@ -82,7 +82,7 @@ double isoCut(const unsigned id, const double & eta,
 
 
 bool checkEventSize(TTree* tree, const unsigned nEvts){
-  if (tree->GetEntries()!=nEvts) 
+  if (tree->GetEntries()!=nEvts || tree->GetEntries()==0) 
     {
       std::cout << " ---- Problem with tree " << tree->GetName() 
 		<< " entries " <<tree->GetEntries() 
@@ -95,7 +95,7 @@ bool checkEventSize(TTree* tree, const unsigned nEvts){
 };
 
 bool checkEventSize(TFile* file, const std::string & pu){
-  file->cd("ntuple");
+  if (!file->cd("ntuple")) return false;
   TTree* myGenJet = (TTree*)gDirectory->Get("GenJet");
   TTree* myEvent = (TTree*)gDirectory->Get("Event");
   TTree* myParticle = (TTree*)gDirectory->Get("Particle");
@@ -203,6 +203,7 @@ bool checkEventSize(TChain* tree, const unsigned nEvts){
   return true;
 };
 
+
 int makeTree(const std::string & plotDir,
 	     const std::string & aProcess,
 	     const std::string & pu){//main
@@ -242,6 +243,11 @@ int makeTree(const std::string & plotDir,
   unsigned ntightMu = 0;
   unsigned nlooseGamma = 0;
   unsigned ntightGamma = 0;
+
+  double ele_mt = 0;
+  double mu_mt = 0;
+  double Mee = 0;
+  double Mmumu = 0;
 
   double Jet1_pt = 0;
   double Jet2_pt = 0;
@@ -287,6 +293,11 @@ int makeTree(const std::string & plotDir,
   outtree->Branch("ntightMu",&ntightMu);
   outtree->Branch("nlooseGamma",&nlooseGamma);
   outtree->Branch("ntightGamma",&ntightGamma);
+
+  outtree->Branch("ele_mt",&ele_mt);
+  outtree->Branch("mu_mt",&mu_mt);
+  outtree->Branch("Mee",&Mee);
+  outtree->Branch("Mmumu",&Mmumu);
 
   outtree->Branch("Jet1_pt",&Jet1_pt);
   outtree->Branch("Jet2_pt",&Jet2_pt);
@@ -485,9 +496,61 @@ int makeTree(const std::string & plotDir,
   
   unsigned nDiffIdx = 0;
   
+  std::cout << " -- Processing " << nEvts << " events." << std::endl;
   //event loop
   for (int ievt(0); ievt<nEvts; ++ievt){
     if (ievt%1000==0) std::cout << ".... Processing entry " << ievt << std::endl;
+
+    GenJet1_pt = 0;
+    GenJet2_pt = 0;
+    GenJet1_eta = 0;
+    GenJet2_eta = 0;
+    Gen_Mjj = 0;
+    Gen_detajj = 0;
+    Gen_dphijj = 0;
+    
+    njets30 = 0;
+    ht30 = 0;
+    
+    nlooseEle = 0;
+    nmediumEle = 0;
+    ntightEle = 0;
+    nlooseMu = 0;
+    ntightMu = 0;
+    nlooseGamma = 0;
+    ntightGamma = 0;
+    
+    ele_mt = 0;
+    mu_mt = 0;
+    Mee = 0;
+    Mmumu = 0;
+    
+    Jet1_pt = 0;
+    Jet2_pt = 0;
+    Jet1_eta = 0;
+    Jet2_eta = 0;
+    Jet1_ID = 0;
+    Jet2_ID = 0;
+    Jet1_genidx = 0;
+    Jet2_genidx = 0;
+    Jet1_genjetDR = 0;
+    Jet1_JES = 0;
+    Jet2_genjetDR = 0;
+    Jet2_JES = 0;
+    Jet1_parton = 0;
+    Jet2_parton = 0;
+    Jet1_deepcsv = 0;
+    Jet2_deepcsv = 0;
+    Mjj = 0;
+    detajj = 0;
+    dphijj = 0;
+    
+    met = 0;
+    metnolep = 0;
+    metphi = 0;
+    jetmetmindphi = 0;
+    jetmetnolepmindphi = 0;
+    
     Jets->GetEntry(ievt);
     //reco jets info
     //basic selection
@@ -523,6 +586,10 @@ int makeTree(const std::string & plotDir,
     double pxSum = 0;
     double pySum = 0;
     nlooseEle = 0;
+    bool first = true;
+    bool second = true;
+    unsigned ele1 = 0;
+    unsigned ele2 = 0;
     for (unsigned il(0); il<abs(nLooseEle);++il){
       if (looseEle_iso[il] >= isoCut(0,looseEle_eta[il],isPU)) continue;
       if (looseEle_pt[il]<10 || fabs(looseEle_eta[il])>2.8) continue;
@@ -531,9 +598,21 @@ int makeTree(const std::string & plotDir,
       double py = looseEle_pt[il]*sin(looseEle_phi[il]);
       pxSum += px;
       pySum += py;
+      if (first){
+	ele1 = il;
+	first = false;
+      }
+      else if (second){
+	ele2 = il;
+	second = false;
+      }
       nlooseEle++;
     }
     nlooseMu = 0;
+    first = true;
+    second = true;
+    unsigned mu1 = 0;
+    unsigned mu2 = 0;
     for (unsigned il(0); il<abs(nLooseMu);++il){
       if (looseMu_iso[il] >= isoCut(3,looseMu_eta[il],isPU)) continue;
       if (looseMu_pt[il]<10 || fabs(looseMu_eta[il])>3.0) continue;
@@ -541,6 +620,14 @@ int makeTree(const std::string & plotDir,
       double py = looseMu_pt[il]*sin(looseMu_phi[il]);
       pxSum += px;
       pySum += py;
+      if (first){
+	mu1 = il;
+	first = false;
+      }
+      else if (second){
+	mu2 = il;
+	second = false;
+      }
       nlooseMu++;
     }
     //apply tight selections on tight leptons
@@ -558,6 +645,7 @@ int makeTree(const std::string & plotDir,
       if (fabs(tightEle_eta[il])>1.444 && fabs(tightEle_eta[il])<1.566) continue;
       ntightEle++;
     }
+
     ntightMu = 0;
     for (unsigned il(0); il<abs(nTightMu);++il){
       if (tightMu_iso[il] >= isoCut(4,tightMu_eta[il],isPU)) continue;
@@ -586,6 +674,22 @@ int makeTree(const std::string & plotDir,
     //met and jets
     TLorentzVector metvec;
     metvec.SetPtEtaPhiE(metpf,0,metphipf,metpf);
+    if (nlooseEle==1) ele_mt = sqrt(2*looseEle_pt[ele1]*metpf*(1-cos(looseEle_phi[ele1]-metphipf)));
+    if (nlooseEle==2){
+      TLorentzVector ele1vec ;
+      ele1vec.SetPtEtaPhiM(looseEle_pt[ele1],looseEle_eta[ele1],looseEle_phi[ele1],looseEle_mass[ele1]);
+      TLorentzVector ele2vec ;
+      ele2vec.SetPtEtaPhiM(looseEle_pt[ele2],looseEle_eta[ele2],looseEle_phi[ele2],looseEle_mass[ele2]);
+      Mee = (ele1vec+ele2vec).M();
+    }
+    if (nlooseMu==1) mu_mt = sqrt(2*looseMu_pt[mu1]*metpf*(1-cos(looseMu_phi[mu1]-metphipf)));
+    if (nlooseMu==2){
+      TLorentzVector mu1vec ;
+      mu1vec.SetPtEtaPhiM(looseMu_pt[mu1],looseMu_eta[mu1],looseMu_phi[mu1],looseMu_mass[mu1]);
+      TLorentzVector mu2vec ;
+      mu2vec.SetPtEtaPhiM(looseMu_pt[mu2],looseMu_eta[mu2],looseMu_phi[mu2],looseMu_mass[mu2]);
+      Mmumu = (mu1vec+mu2vec).M();
+    }
 
     //calculate met no lepton
     TLorentzVector metnolepvec;
