@@ -532,6 +532,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
          ev_.le_relIso[ev_.nle] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
        else
          ev_.le_relIso[ev_.nle] = (elecs->at(i).userFloat("hgcElectronID:caloIsoRing1") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing2") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing3") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing4")) / elecs->at(i).energy();
+       ev_.le_relTkIso[ev_.nle] = elecs->at(i).dr03TkSumPt()/elecs->at(i).pt();
        ev_.le_g[ev_.nle] = -1;
        for (int ig = 0; ig < ev_.ngl; ig++) {
          if (abs(ev_.gl_pid[ig]) != 11) continue;
@@ -555,6 +556,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     	else
     		ev_.me_relIso[ev_.nme] = (elecs->at(i).userFloat("hgcElectronID:caloIsoRing1") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing2") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing3") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing4")) / elecs->at(i).energy();
     	ev_.me_g[ev_.nme] = -1;
+    	ev_.me_relTkIso[ev_.nme] = elecs->at(i).dr03TkSumPt()/elecs->at(i).pt();
     	for (int ig = 0; ig < ev_.ngl; ig++) {
     		if (abs(ev_.gl_pid[ig]) != 11) continue;
     		if (reco::deltaR(ev_.gl_eta[ig],ev_.gl_phi[ig],ev_.me_eta[ev_.nme],ev_.me_phi[ev_.nme]) > 0.4) continue;
@@ -576,6 +578,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     else
       ev_.te_relIso[ev_.nte] = (elecs->at(i).userFloat("hgcElectronID:caloIsoRing1") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing2") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing3") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing4")) / elecs->at(i).energy();
     ev_.te_g[ev_.nte] = -1;
+	ev_.te_relTkIso[ev_.nte] = elecs->at(i).dr03TkSumPt()/elecs->at(i).pt();
     for (int ig = 0; ig < ev_.ngl; ig++) {
       if (abs(ev_.gl_pid[ig]) != 11) continue;
       if (reco::deltaR(ev_.gl_eta[ig],ev_.gl_phi[ig],ev_.te_eta[ev_.nte],ev_.te_phi[ev_.nte]) > 0.4) continue;

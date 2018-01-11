@@ -51,11 +51,11 @@ struct MiniEvent_t
   Float_t v_pt2[maxjets];
   Int_t nle, nme, nte, nlm, ntm, nj, nmet, nlp, ntp;
   Int_t le_ch[maxpart], le_g[maxpart];
-  Float_t le_pt[maxpart], le_eta[maxpart], le_phi[maxpart], le_mass[maxpart], le_relIso[maxpart], le_bdt[maxpart], le_sf[maxpart];
+  Float_t le_pt[maxpart], le_eta[maxpart], le_phi[maxpart], le_mass[maxpart], le_relIso[maxpart],le_relTkIso[maxpart], le_bdt[maxpart], le_sf[maxpart];
   Int_t me_ch[maxpart], me_g[maxpart];
-  Float_t me_pt[maxpart], me_eta[maxpart], me_phi[maxpart], me_mass[maxpart], me_relIso[maxpart], me_bdt[maxpart], me_sf[maxpart];
+  Float_t me_pt[maxpart], me_eta[maxpart], me_phi[maxpart], me_mass[maxpart], me_relIso[maxpart],me_relTkIso[maxpart], me_bdt[maxpart], me_sf[maxpart];
   Int_t te_ch[maxpart], te_g[maxpart];
-  Float_t te_pt[maxpart], te_eta[maxpart], te_phi[maxpart], te_mass[maxpart], te_relIso[maxpart], te_bdt[maxpart], te_sf[maxpart];
+  Float_t te_pt[maxpart], te_eta[maxpart], te_phi[maxpart], te_mass[maxpart], te_relIso[maxpart],te_relTkIso[maxpart], te_bdt[maxpart], te_sf[maxpart];
   Int_t lm_ch[maxpart], lm_g[maxpart];
   Float_t lm_pt[maxpart], lm_eta[maxpart], lm_phi[maxpart], lm_mass[maxpart], lm_relIso[maxpart], lm_sf[maxpart];
   Int_t tm_ch[maxpart], tm_g[maxpart];
