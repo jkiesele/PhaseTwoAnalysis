@@ -15,7 +15,9 @@ PhaseTwoAnalysis/delphesInterface/ntupler
 the executable is run using a configuration script. A documented example can be found in:
 PhaseTwoAnalysis/delphesInterface/ntupler/configs/testConfig.txt
 
-Please make sure the 'Outputdir' points to a directory with sufficient space. 
+Please make sure the 'Outputdir' points to a directory with sufficient space. Also
+notice that in the testConfig.txt, the test mode is enabled (running on just a few events).
+This needs to be set to false.
 
 A batch script is not included. The converter is very fast, and it is likely it can be
 run interactively. It will utilise up to 6 CPU cores. This number can be adjusted in 
