@@ -435,6 +435,8 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     bool isTight = (fabs(muons->at(i).eta()) < 2.4 && vertices->size() > 0 && muon::isTightMuon(muons->at(i),vertices->at(prVtx)))
     		|| (fabs(muons->at(i).eta()) > 2.4 && isME0MuonSelNew(muons->at(i), 0.048, dPhiCut, dPhiBendCut,iSetup) && ipxy && ipz && validPxlHit && highPurity);
 
+    float trackIso03=muons->at(i).trackIso()/muons->at(i).pt();
+
     if (!isLoose) continue;
     if (ev_.nlm<MiniEvent_t::maxpart){
 
@@ -443,7 +445,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
        ev_.lm_phi[ev_.nlm]    = muons->at(i).phi();
        ev_.lm_eta[ev_.nlm]    = muons->at(i).eta();
        ev_.lm_mass[ev_.nlm]   = muons->at(i).mass();
-       ev_.lm_relIso[ev_.nlm] = (muons->at(i).puppiNoLeptonsChargedHadronIso() + muons->at(i).puppiNoLeptonsNeutralHadronIso() + muons->at(i).puppiNoLeptonsPhotonIso()) / muons->at(i).pt();
+       ev_.lm_relIso[ev_.nlm] = trackIso03;//(muons->at(i).puppiNoLeptonsChargedHadronIso() + muons->at(i).puppiNoLeptonsNeutralHadronIso() + muons->at(i).puppiNoLeptonsPhotonIso()) / muons->at(i).pt();
        ev_.lm_g[ev_.nlm] = -1;
        for (int ig = 0; ig < ev_.ngl; ig++) {
          if (abs(ev_.gl_pid[ig]) != 13) continue;
@@ -462,7 +464,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.tm_phi[ev_.ntm]    = muons->at(i).phi();
     ev_.tm_eta[ev_.ntm]    = muons->at(i).eta();
     ev_.tm_mass[ev_.ntm]   = muons->at(i).mass();
-    ev_.tm_relIso[ev_.ntm] = (muons->at(i).puppiNoLeptonsChargedHadronIso() + muons->at(i).puppiNoLeptonsNeutralHadronIso() + muons->at(i).puppiNoLeptonsPhotonIso()) / muons->at(i).pt();
+    ev_.tm_relIso[ev_.ntm] = trackIso03;//(muons->at(i).puppiNoLeptonsChargedHadronIso() + muons->at(i).puppiNoLeptonsNeutralHadronIso() + muons->at(i).puppiNoLeptonsPhotonIso()) / muons->at(i).pt();
     ev_.tm_g[ev_.ntm] = -1;
     for (int ig = 0; ig < ev_.ngl; ig++) {
       if (abs(ev_.gl_pid[ig]) != 13) continue;
