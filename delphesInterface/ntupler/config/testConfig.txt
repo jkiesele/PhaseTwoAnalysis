@@ -30,7 +30,7 @@ $ If the testmode is activated, only a fraction of the events will be processed.
 $ This mode is meant to test histogram ranges etc. The scaling does not necessarily
 $ correspond to the relative cross sections of the processes
     
-    Testmode   = false
+    Testmode   = true
 
 $ Maximum number of child processes that are spawned simultaneously, each running on a
 $ different input file.
@@ -39,7 +39,7 @@ $ different input file.
 
 $ This Samplesdir can be a local directory or refer to off-site locations via xrootd 
     
-    Samplesdir = /afs/cern.ch/user/j/jkiesele/public/testsamples
+    Samplesdir = /afs/cern.ch/user/j/jkiesele/eos_upgrade/delphes_output/LHEGEN_SMbackgrounds/Delphes342pre07_hadd/
  
 $ The analyser will have a postProcess() function. This function should be used to
 $ extract parameters from the filled histograms, do additional calculations, etc.
@@ -72,13 +72,15 @@ $    (see last line)
 $ 7) Optional signal indicator. In case the signal has to be treated differently in the event loop
 $    this can be indicated here and later checked in the loop.
 $ 8) Optional other options (not used for now)
+$
+$ Most of these options are not important when converting delphes to Phase2 NTuples. Just pick any values:
+$ e.g. : <insample>, <legendname=outfilename>,  <color: does not matter>, <xsec: does not matter>, <nevents: does not matter>, <legend order: does not matter>,
 
+$ This will process all root files in this directory:
+TOP-PhaseIISummer17wmLHEGENOnly-00027_200PU/  , TGJets,   1, 56, auto, 2 
 
-delphes_testsample.root  , signal,       630, 23, auto, 1, true
-delphes_testsample.root  , background,   420, 56, auto, 2
-delphes_testsample.root  , background2,  432, 65, auto, 3
-/  ,                       background3,  431, 12, auto, 5
 
 $ The last entry is an example for running over all input files in a directory
 
 [inputfiles-end]
+

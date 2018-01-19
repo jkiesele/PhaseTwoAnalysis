@@ -56,6 +56,7 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_looseElecs_->Branch("Phi",          ev.le_phi,      "Phi[ElectronLoose_size]/F");
   t_looseElecs_->Branch("Mass",         ev.le_mass,     "Mass[ElectronLoose_size]/F");
   t_looseElecs_->Branch("IsolationVar", ev.le_relIso,   "IsolationVar[ElectronLoose_size]/F");
+  t_looseElecs_->Branch("TrackIso",     ev.le_relTkIso, "TrackIso[ElectronLoose_size]/F");
   t_looseElecs_->Branch("BDTScore",     ev.le_bdt,      "BDTScore[ElectronLoose_size]/F");
   t_looseElecs_->Branch("SF",           ev.le_sf,       "SF[ElectronLoose_size]/F");
 
@@ -68,6 +69,7 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_mediumElecs_->Branch("Phi",                  ev.me_phi,      "Phi[ElectronMedium_size]/F");
   t_mediumElecs_->Branch("Mass",                 ev.me_mass,     "Mass[ElectronMedium_size]/F");
   t_mediumElecs_->Branch("IsolationVar",         ev.me_relIso,   "IsolationVar[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("TrackIso",     ev.me_relTkIso, "TrackIso[ElectronMedium_size]/F");
   t_mediumElecs_->Branch("BDTScore",     ev.me_bdt,      "BDTScore[ElectronMedium_size]/F");
   t_mediumElecs_->Branch("SF",           ev.me_sf,       "SF[ElectronMedium_size]/F");
 
@@ -79,6 +81,7 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_tightElecs_->Branch("Phi",          ev.te_phi,      "Phi[ElectronTight_size]/F");
   t_tightElecs_->Branch("Mass",         ev.te_mass,     "Mass[ElectronTight_size]/F");
   t_tightElecs_->Branch("IsolationVar", ev.te_relIso,   "IsolationVar[ElectronTight_size]/F");
+  t_tightElecs_->Branch("TrackIso",     ev.te_relTkIso, "TrackIso[ElectronTight_size]/F");
   t_tightElecs_->Branch("BDTScore",     ev.te_bdt,      "BDTScore[ElectronTight_size]/F");
   t_tightElecs_->Branch("SF",           ev.te_sf,       "SF[ElectronTight_size]/F");
 
