@@ -2,7 +2,7 @@ from WMCore.Configuration import Configuration
 config = Configuration()
 
 config.section_("General")
-config.General.requestName = 'VBFHToInvisiblenoPUsplitfix'
+config.General.requestName = 'QCD_Flat_Pt-15to7000_noPUsplitfix'
 #config.General.requestName = 'VBFHToInvisible200PUsplit'
 config.General.workArea = 'crab_tasks/'
 
@@ -14,13 +14,13 @@ config.JobType.inputFiles  = ['data/PhaseIIFall17_V3_MC.db']
 config.JobType.pyCfgParams= ['skim=False','outFilename=MiniEvents.root','inputFormat=PAT', 'updateJEC=PhaseIIFall17_V3_MC.db', 'updateJEC=PhaseIIFall17_V3_MC', 'noPU=True'] 
 #PU
 #config.JobType.pyCfgParams= ['skim=False','outFilename=MiniEvents.root','inputFormat=PAT', 'updateJEC=PhaseIIFall17_V3_MC.db', 'updateJEC=PhaseIIFall17_V3_MC', 'noPU=False']
-#config.JobType.maxMemoryMB = 4000
+config.JobType.maxMemoryMB = 4000
 # Uncomment the following line when running on PAT events
 config.JobType.outputFiles = ['MiniEvents.root']
 
 config.section_("Data")
 #noPU
-config.Data.inputDataset = '/VBF_HToInvisible_M125_14TeV_powheg_pythia8/PhaseIITDRFall17MiniAOD-noPU_93X_upgrade2023_realistic_v2-v1/MINIAODSIM'
+config.Data.inputDataset = '/QCD_Flat_Pt-15to7000_TuneCUETP8M1_14TeV_pythia8/PhaseIITDRFall17MiniAOD-noPU_93X_upgrade2023_realistic_v2-v1/MINIAODSIM'
 #PU
 #config.Data.inputDataset = '/VBF_HToInvisible_M125_14TeV_powheg_pythia8/PhaseIITDRFall17MiniAOD-PU200_93X_upgrade2023_realistic_v2-v2/MINIAODSIM'
 config.Data.inputDBS = 'global'

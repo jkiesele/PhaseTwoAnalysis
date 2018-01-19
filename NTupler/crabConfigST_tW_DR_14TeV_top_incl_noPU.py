@@ -2,7 +2,7 @@ from WMCore.Configuration import Configuration
 config = Configuration()
 
 config.section_("General")
-config.General.requestName = 'VBFHToInvisiblenoPUsplitfix'
+config.General.requestName = 'ST_tW_DR_14TeV_top_incl_noPUsplitfix'
 #config.General.requestName = 'VBFHToInvisible200PUsplit'
 config.General.workArea = 'crab_tasks/'
 
@@ -20,7 +20,7 @@ config.JobType.outputFiles = ['MiniEvents.root']
 
 config.section_("Data")
 #noPU
-config.Data.inputDataset = '/VBF_HToInvisible_M125_14TeV_powheg_pythia8/PhaseIITDRFall17MiniAOD-noPU_93X_upgrade2023_realistic_v2-v1/MINIAODSIM'
+config.Data.inputDataset = '/ST_tW_DR_14TeV_top_incl-powheg-pythia8/PhaseIITDRFall17MiniAOD-noPU_93X_upgrade2023_realistic_v2-v1/MINIAODSIM'
 #PU
 #config.Data.inputDataset = '/VBF_HToInvisible_M125_14TeV_powheg_pythia8/PhaseIITDRFall17MiniAOD-PU200_93X_upgrade2023_realistic_v2-v2/MINIAODSIM'
 config.Data.inputDBS = 'global'

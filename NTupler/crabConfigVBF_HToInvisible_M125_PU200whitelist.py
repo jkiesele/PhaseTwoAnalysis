@@ -2,7 +2,7 @@ from WMCore.Configuration import Configuration
 config = Configuration()
 
 config.section_("General")
-config.General.requestName = 'VBFHToInvisiblenoPUsplitfix'
+config.General.requestName = 'VBF_HToInvisible_M125_PU200splitfixMoreRAMv1whitelist'
 #config.General.requestName = 'VBFHToInvisible200PUsplit'
 config.General.workArea = 'crab_tasks/'
 
@@ -11,16 +11,16 @@ config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'scripts/produceNtuples_cfg.py'
 config.JobType.inputFiles  = ['data/PhaseIIFall17_V3_MC.db']
 #noPU
-config.JobType.pyCfgParams= ['skim=False','outFilename=MiniEvents.root','inputFormat=PAT', 'updateJEC=PhaseIIFall17_V3_MC.db', 'updateJEC=PhaseIIFall17_V3_MC', 'noPU=True'] 
+config.JobType.pyCfgParams= ['skim=False','outFilename=MiniEvents.root','inputFormat=PAT', 'updateJEC=PhaseIIFall17_V3_MC.db', 'updateJEC=PhaseIIFall17_V3_MC', 'noPU=False'] 
 #PU
 #config.JobType.pyCfgParams= ['skim=False','outFilename=MiniEvents.root','inputFormat=PAT', 'updateJEC=PhaseIIFall17_V3_MC.db', 'updateJEC=PhaseIIFall17_V3_MC', 'noPU=False']
-#config.JobType.maxMemoryMB = 4000
+config.JobType.maxMemoryMB = 4000
 # Uncomment the following line when running on PAT events
 config.JobType.outputFiles = ['MiniEvents.root']
 
 config.section_("Data")
 #noPU
-config.Data.inputDataset = '/VBF_HToInvisible_M125_14TeV_powheg_pythia8/PhaseIITDRFall17MiniAOD-noPU_93X_upgrade2023_realistic_v2-v1/MINIAODSIM'
+config.Data.inputDataset = '/VBF_HToInvisible_M125_14TeV_powheg_pythia8/PhaseIITDRFall17MiniAOD-PU200_93X_upgrade2023_realistic_v2-v2/MINIAODSIM'
 #PU
 #config.Data.inputDataset = '/VBF_HToInvisible_M125_14TeV_powheg_pythia8/PhaseIITDRFall17MiniAOD-PU200_93X_upgrade2023_realistic_v2-v2/MINIAODSIM'
 config.Data.inputDBS = 'global'
@@ -39,4 +39,4 @@ config.Data.useParent = True # need to run on GEN-SIM-RECO to apply photon ID
 config.section_("Site")
 config.Site.storageSite = 'T2_UK_London_IC'
 #config.Site.ignoreGlobalBlacklist = False
-config.Site.blacklist = ['T2_ES_CIEMAT']
+config.Site.whitelist = ['T2_US_Wisconsin','T2_IT_Pisa','T2_FR_GRIF_IRFU','T2_US_Vanderbilt']
