@@ -131,7 +131,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 			ev_.tp_pt [ev_.ntp]=selectedphotons.at(i)->PT;
 			ev_.tp_phi[ev_.ntp]=selectedphotons.at(i)->Phi;
 			ev_.tp_nrj[ev_.ntp]=selectedphotons.at(i)->E;
-			ev_.tp_sf[ev_.ntp]=tightphotonsf.getSF(selectedphotons.at(i)->Eta,selectedphotons.at(i)->PT);
+			ev_.tp_sf[ev_.ntp]=tightphotonsf.getSF(fabs(selectedphotons.at(i)->Eta),selectedphotons.at(i)->PT);
 			ev_.ntp++;
 		}
 
@@ -144,7 +144,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 			ev_.tm_phi   [ev_.ntm]=muontight.at(i)->Phi;
 			ev_.tm_mass  [ev_.ntm]=0.105;
 			ev_.tm_relIso[ev_.ntm]=muontight.at(i)->IsolationVarRhoCorr/muontight.at(i)->PT;
-			ev_.tm_sf[ev_.ntm]=tightmuonsf.getSF(muontight.at(i)->Eta,muontight.at(i)->PT);
+			ev_.tm_sf[ev_.ntm]=tightmuonsf.getSF(fabs(muontight.at(i)->Eta),muontight.at(i)->PT);
 			ev_.ntm++;
 		}
 
@@ -159,7 +159,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 			ev_.me_phi   [ev_.nme]=selectedelectrons.at(i)->Phi;
 			ev_.me_mass  [ev_.nme]=0.00051;
 			ev_.me_relIso[ev_.nme]=selectedelectrons.at(i)->IsolationVarRhoCorr /selectedelectrons.at(i)->PT ;
-			ev_.me_sf[ev_.nme]=medelecsf.getSF(selectedelectrons.at(i)->Eta,selectedelectrons.at(i)->PT);
+			ev_.me_sf[ev_.nme]=medelecsf.getSF(fabs(selectedelectrons.at(i)->Eta),selectedelectrons.at(i)->PT);
 			ev_.nme++;
 
 			ev_.te_pt    [ev_.nte] =selectedelectrons.at(i)->PT;
@@ -167,7 +167,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 			ev_.te_phi   [ev_.nte]=selectedelectrons.at(i)->Phi;
 			ev_.te_mass  [ev_.nte]=0.00051;
 			ev_.te_relIso[ev_.nte]=selectedelectrons.at(i)->IsolationVarRhoCorr /selectedelectrons.at(i)->PT ;
-			ev_.te_sf[ev_.nte]=tightelecsf.getSF(selectedelectrons.at(i)->Eta,selectedelectrons.at(i)->PT);
+			ev_.te_sf[ev_.nte]=tightelecsf.getSF(fabs(selectedelectrons.at(i)->Eta),selectedelectrons.at(i)->PT);
 			ev_.nte++;
 
 
@@ -190,7 +190,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 				ev_.j_deepcsv[ev_.nj]=0b00000111;
 				ev_.j_mvav2[ev_.nj]=0b00000111;
 			}
-			ev_.j_sf[ev_.nj]=jetsf.getSF(selectedjets.at(i)->Eta,selectedjets.at(i)->PT);
+			ev_.j_sf[ev_.nj]=jetsf.getSF(fabs(selectedjets.at(i)->Eta),selectedjets.at(i)->PT);
 			ev_.nj++;
 		}
 
