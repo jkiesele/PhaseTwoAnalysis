@@ -41,9 +41,7 @@ void scaleFactors::loadTH2D(const TString& filepath,const TString& histname){
 	ymin=h->GetYaxis()->GetXmin()+FLT_EPSILON;
 	ymax=h->GetYaxis()->GetXmax()-FLT_EPSILON;
 
-	std::cout << filepath<< " "<<": " << xmin<<"-"<<xmax<<", "<<ymin<<"-"<<ymax<<std::endl;
 	sourcepath=filepath;
-	//exit(1);
 }
 
 
@@ -57,12 +55,6 @@ const float scaleFactors::getSF( float eta_in,  float pt_in)const{
 	int biny=sfs_.GetYaxis()->FindFixBin(pt);
 
 	float SF=sfs_.GetBinContent(binx,biny);
-	if(SF<0.001 && pt_in>30){
-		std::cout  << binx << " " << biny << " " << eta << " " << pt << " : " <<
-				" "<<pt_in << " " << eta_in<<" : " << SF <<  std::endl;
-		std::cout << xmin << "-" << xmax<<", "<<ymin<< "-"<< ymax<<std::endl;
-		std::cout << sourcepath << std::endl;
-	}
 
 	return (float)sfs_.GetBinContent(binx,biny);
 }
