@@ -35,7 +35,7 @@ $ correspond to the relative cross sections of the processes
 $ Maximum number of child processes that are spawned simultaneously, each running on a
 $ different input file.
     
-    Maxchilds  = 6
+    Maxchilds  = 8
 
 $ This Samplesdir can be a local directory or refer to off-site locations via xrootd 
     
