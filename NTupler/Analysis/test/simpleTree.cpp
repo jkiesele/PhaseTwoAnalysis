@@ -372,6 +372,9 @@ int makeTree(const std::string & plotDir,
   float looseEle_iso[100];
   float mediumEle_iso[100];
   float tightEle_iso[100];
+  float looseEle_tkiso[100];
+  float mediumEle_tkiso[100];
+  float tightEle_tkiso[100];
   float looseEle_mass[100];
   float mediumEle_mass[100];
   float tightEle_mass[100];
@@ -406,16 +409,19 @@ int makeTree(const std::string & plotDir,
   ElectronLoose->SetBranchAddress("Phi",&looseEle_phi);
   ElectronLoose->SetBranchAddress("Mass",&looseEle_mass);
   ElectronLoose->SetBranchAddress("IsolationVar",&looseEle_iso);
+  ElectronLoose->SetBranchAddress("TrackIso",&looseEle_tkiso);
   ElectronMedium->SetBranchAddress("PT",&mediumEle_pt);
   ElectronMedium->SetBranchAddress("Eta",&mediumEle_eta);
   ElectronMedium->SetBranchAddress("Phi",&mediumEle_phi);
   ElectronMedium->SetBranchAddress("Mass",&mediumEle_mass);
   ElectronMedium->SetBranchAddress("IsolationVar",&mediumEle_iso);
+  ElectronMedium->SetBranchAddress("TrackIso",&mediumEle_tkiso);
   ElectronTight->SetBranchAddress("PT",&tightEle_pt);
   ElectronTight->SetBranchAddress("Eta",&tightEle_eta);
   ElectronTight->SetBranchAddress("Phi",&tightEle_phi);
   ElectronTight->SetBranchAddress("Mass",&tightEle_mass);
   ElectronTight->SetBranchAddress("IsolationVar",&tightEle_iso);
+  ElectronTight->SetBranchAddress("TrackIso",&tightEle_tkiso);
 
   MuonLoose->SetBranchAddress("MuonLoose_size",&nLooseMu);
   MuonLoose->SetBranchAddress("PT",&looseMu_pt);
