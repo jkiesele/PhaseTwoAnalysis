@@ -210,6 +210,7 @@ if (options.inputFormat.lower() == "reco"):
         process.ntuple.jets = "ak4PUPPIJets"
 else:
     if options.updateJEC:
+        print('updating JEC')
         # The updateJetCollection function will uncorred the jets from MiniAOD and then recorrect them using the current
         #  set of JEC in the event setup
         # The new name of the updated jet collection becomes updatedPatJetsUpdatedJECAK4PFPuppi
@@ -226,13 +227,29 @@ else:
         runMetCorAndUncFromMiniAOD(process,
                            isData=False,
                            metType="Puppi",
-                           postfix="Puppi"
+                           postfix="PuppiCorr"
                            )
         
-        puppiMetSource=cms.InputTag("slimmedMETsPuppi","","MiniAnalysis")
+        puppiMetSource=cms.InputTag("slimmedMETsPuppiCorr","","MiniAnalysis")
         
 
-process.ntuple.met = puppiMetSource
+from PhysicsTools.PatAlgos.slimming.puppiForMET_cff import makePuppiesFromMiniAOD
+makePuppiesFromMiniAOD( process, True )
+
+process.ntuple.mets = puppiMetSource
+
+process.jetmetsequence = cms.Sequence()
+
+if options.updateJEC:
+    process.jetmetsequence = cms.Sequence(process.patJetCorrFactorsUpdatedJECAK4PFPuppi * 
+                                          process.updatedPatJetsUpdatedJECAK4PFPuppi * 
+                                          #process.puppiMETSequence *
+                                          process.fullPatMetSequencePuppiCorr 
+                                          )
+    
+    #process.selectedPatJetsForMetT1T2CorrPuppi.src=cms.InputTag("basicJetsForMetPuppi")
+    process.patCaloMet = cms.Sequence()
+    
 
 # output
 process.TFileService = cms.Service("TFileService",
@@ -240,28 +257,24 @@ process.TFileService = cms.Service("TFileService",
                                    )
 
 # run
-if (options.inputFormat.lower() == "reco"):
-    process.puSequence = cms.Sequence(process.primaryVertexAssociation * process.pfNoLepPUPPI * process.puppi * process.particleFlowNoLep * process.puppiNoLep * process.offlineSlimmedPrimaryVertices * process.packedPFCandidates * process.muonIsolationPUPPI * process.muonIsolationPUPPINoLep * process.ak4PUPPIJets * process.puppiMet)
-
 if options.skim:
-    if (options.inputFormat.lower() == "reco"):
-        if options.updateJEC:
-            process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.preYieldFilter * process.ntuple)
-        else:
-            process.p = cms.Path(process.weightCounter * process.phase2Egamma * process.puSequence * process.preYieldFilter * process.ntuple)
-    else:
-        if options.updateJEC:
-            process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi *process.preYieldFilter* process.ntuple)
-        else:
-            process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.preYieldFilter*process.ntuple)
-else:
-    if (options.inputFormat.lower() == "reco"):
-        if options.updateJEC:
-            process.p = cms.Path(process.weightCounter * process.puSequence * process.ak4PFPuppiL1FastL2L3CorrectorChain * process.ak4PUPPIJetsL1FastL2L3 * process.phase2Egamma * process.ntuple)
-        else:
-            process.p = cms.Path(process.weightCounter * process.puSequence * process.phase2Egamma * process.ntuple)
-    else:
-        if options.updateJEC:
-            process.p = cms.Path(process.weightCounter*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.phase2Egamma * process.ntuple)
-	else:    
-            process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.ntuple)
+    process.p = cms.Path(process.weightCounter*
+                         process.phase2Egamma*
+                         process.jetmetsequence *
+                         process.preYieldFilter* 
+                         process.ntuple)
+else:    
+    process.p = cms.Path(process.weightCounter*
+                         process.phase2Egamma*
+                         process.jetmetsequence *
+                         process.ntuple)
+    
+    
+    
+    
+from FWCore.ParameterSet.Utilities import convertToUnscheduled 
+#convertToUnscheduled(process)
+    
+    
+
+        
