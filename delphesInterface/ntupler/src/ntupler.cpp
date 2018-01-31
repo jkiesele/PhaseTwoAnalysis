@@ -22,7 +22,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 	d_ana::dBranchHandler<Jet>         jet(tree(),"JetPUPPI");
 	d_ana::dBranchHandler<Muon>        muontight(tree(),"MuonTight");
 	d_ana::dBranchHandler<Photon>      photon(tree(),"Photon");
-	d_ana::dBranchHandler<MissingET>   met(tree(),"MissingET");
+	d_ana::dBranchHandler<MissingET>   met(tree(),"PuppiMissingET");
 	size_t nevents=tree()->entries();
 	if(isTestMode())
 		nevents/=100;
