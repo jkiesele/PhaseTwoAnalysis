@@ -127,7 +127,8 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_puppiJets_->Branch("PartonFlavor",  ev.j_flav,      "PartonFlavor[JetPUPPI_size]/I");
   t_puppiJets_->Branch("HadronFlavor",  ev.j_hadflav,   "HadronFlavor[JetPUPPI_size]/I");
   t_puppiJets_->Branch("GenPartonPID",  ev.j_pid,       "GenPartonPID[JetPUPPI_size]/I");
-  t_puppiJets_->Branch("SF",            ev.j_sf,       "SF[JetPUPPI_size]/F");
+  t_puppiJets_->Branch("SF",            ev.j_sf,        "SF[JetPUPPI_size]/F");
+  t_puppiJets_->Branch("JECSF",         ev.j_jecf,      "JECSF[JetPUPPI_size]/F");
 
   t_puppiMET_->Branch("PuppiMissingET_size", &ev.nmet,  "PuppiMissingET_size/I");
   t_puppiMET_->Branch("MET",            ev.met_pt,      "MET[PuppiMissingET_size]/F");

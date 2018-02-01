@@ -29,7 +29,7 @@ struct MiniEvent_t
     	tp_sf[i]=1;
     }
     for(int i=0;i<maxjets;i++)
-    	j_sf[i]=1;
+    	{j_sf[i]=1;j_jecf[i]=1;}
   }
   static constexpr int maxpart=50;
   static constexpr int maxjets=200;
@@ -60,7 +60,7 @@ struct MiniEvent_t
   Float_t lm_pt[maxpart], lm_eta[maxpart], lm_phi[maxpart], lm_mass[maxpart], lm_relIso[maxpart], lm_dz[maxpart], lm_dxy[maxpart], lm_sf[maxpart];
   Int_t tm_ch[maxpart], tm_g[maxpart];
   Float_t tm_pt[maxpart], tm_eta[maxpart], tm_phi[maxpart], tm_mass[maxpart], tm_relIso[maxpart], tm_dz[maxpart], tm_dxy[maxpart], tm_sf[maxpart];
-  Int_t j_id[maxjets], j_g[maxjets], j_mvav2[maxjets], j_deepcsv[maxjets], j_flav[maxjets], j_hadflav[maxjets], j_pid[maxjets], j_sf[maxjets];
+  Int_t j_id[maxjets], j_g[maxjets], j_mvav2[maxjets], j_deepcsv[maxjets], j_flav[maxjets], j_hadflav[maxjets], j_pid[maxjets], j_sf[maxjets], j_jecf[maxjets];
   Float_t j_pt[maxjets], j_eta[maxjets], j_phi[maxjets], j_mass[maxjets];
   Float_t met_pt[maxpart], met_eta[maxpart], met_phi[maxpart], met_sf[maxpart];
   Int_t lp_g[maxpart], tp_g[maxpart], lp_isEB[maxpart], tp_isEB[maxpart];

@@ -227,7 +227,10 @@ else:
         runMetCorAndUncFromMiniAOD(process,
                            isData=False,
                            metType="Puppi",
-                           postfix="PuppiCorr"
+                           postfix="PuppiCorr",
+                           pfCandColl=cms.InputTag("puppiForMET"),
+                           recoMetFromPFCs=True,
+                           jetFlavor="AK4PFPuppi",
                            )
         
         puppiMetSource=cms.InputTag("slimmedMETsPuppiCorr","","MiniAnalysis")
@@ -243,11 +246,11 @@ process.jetmetsequence = cms.Sequence()
 if options.updateJEC:
     process.jetmetsequence = cms.Sequence(process.patJetCorrFactorsUpdatedJECAK4PFPuppi * 
                                           process.updatedPatJetsUpdatedJECAK4PFPuppi * 
-                                          #process.puppiMETSequence *
+                                          process.puppiMETSequence *
                                           process.fullPatMetSequencePuppiCorr 
                                           )
     
-    #process.selectedPatJetsForMetT1T2CorrPuppi.src=cms.InputTag("basicJetsForMetPuppi")
+    process.selectedPatJetsForMetT1T2CorrPuppiCorr.src=cms.InputTag("patJetsPuppiCorr")
     process.patCaloMet = cms.Sequence()
     
 
