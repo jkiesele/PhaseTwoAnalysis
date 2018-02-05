@@ -1,7 +1,7 @@
 #include "PhaseTwoAnalysis/NTupler/interface/MiniEvent.h"
 
 void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_,
-		TTree *t_looseElecs_, TTree *t_mediumElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev)
+		TTree *t_looseElecs_, TTree *t_mediumElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_allTaus_,TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev)
 {
   //event header
   t_event_->Branch("Run",               &ev.run,        "Run/I");
@@ -115,6 +115,17 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_tightMuons_->Branch("Dxy",          ev.tm_dxy,      "Dxy[MuonTight_size]/F");
   t_tightMuons_->Branch("SF",           ev.tm_sf,       "SF[MuonTight_size]/F");
 
+  t_allTaus_->Branch("TauAll_size",  &ev.ntau,        "TauAll_size/I");
+  t_allTaus_->Branch("Charge",       ev.tau_ch,       "Charge[TauAll_size]/I");
+  t_allTaus_->Branch("Particle",     ev.tau_g,        "Particle[TauAll_size]/I");
+  t_allTaus_->Branch("PT",           ev.tau_pt,       "PT[TauAll_size]/F");
+  t_allTaus_->Branch("Eta",          ev.tau_eta,      "Eta[TauAll_size]/F");
+  t_allTaus_->Branch("Phi",          ev.tau_phi,      "Phi[TauAll_size]/F");
+  t_allTaus_->Branch("Mass",         ev.tau_mass,     "Mass[TauAll_size]/F");
+  t_allTaus_->Branch("DM",           ev.tau_dm,     "DM[TauAll_size]/F");
+  t_allTaus_->Branch("IsolationVar", ev.tau_chargedIso,   "IsolationVar[TauAll_size]/F");
+  t_allTaus_->Branch("SF",           ev.tau_sf,       "SF[TauAll_size]/F");
+
   t_puppiJets_->Branch("JetPUPPI_size", &ev.nj,         "JetPUPPI_size/I");
   t_puppiJets_->Branch("ID",            ev.j_id,        "ID[JetPUPPI_size]/I");
   t_puppiJets_->Branch("GenJet",        ev.j_g,         "GenJet[JetPUPPI_size]/I");
@@ -165,7 +176,7 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_tightPhotons_->Branch("SF",            ev.tp_sf,       "SF[PhotonTight_size]/F");
 }
 
-void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_mediumElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev)
+void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_mediumElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_allTaus_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev)
 {
   //event header
   t_event_->SetBranchAddress("Run",               &ev.run);
@@ -261,6 +272,17 @@ void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertice
   t_tightMuons_->SetBranchAddress("Mass",         ev.tm_mass);
   t_tightMuons_->SetBranchAddress("IsolationVar", ev.tm_relIso);
   t_tightMuons_->SetBranchAddress("SF",           ev.tm_sf);
+
+  t_allTaus_->SetBranchAddress("TauAll_size", &ev.ntau);
+  t_allTaus_->SetBranchAddress("Charge",       ev.tau_ch);
+  t_allTaus_->SetBranchAddress("Particle",     ev.tau_g);
+  t_allTaus_->SetBranchAddress("PT",           ev.tau_pt);
+  t_allTaus_->SetBranchAddress("Eta",          ev.tau_eta);
+  t_allTaus_->SetBranchAddress("Phi",          ev.tau_phi);
+  t_allTaus_->SetBranchAddress("Mass",         ev.tau_mass);
+  t_allTaus_->SetBranchAddress("DM",         ev.tau_dm);
+  t_allTaus_->SetBranchAddress("IsolationVar", ev.tau_chargedIso);
+  t_allTaus_->SetBranchAddress("SF",           ev.tau_sf);
 
   t_puppiJets_->SetBranchAddress("JetPUPPI_size", &ev.nj);
   t_puppiJets_->SetBranchAddress("ID",            ev.j_id);
