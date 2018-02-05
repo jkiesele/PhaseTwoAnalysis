@@ -30,7 +30,7 @@ struct MiniEvent_t
     	tp_sf[i]=1;
     }
     for(int i=0;i<maxjets;i++)
-    	j_sf[i]=1;
+    	{j_sf[i]=1;j_jecf[i]=1;}
   }
   static constexpr int maxpart=50;
   static constexpr int maxjets=200;
@@ -52,18 +52,18 @@ struct MiniEvent_t
   Float_t v_pt2[maxjets];
   Int_t nle, nme, nte, nlm, ntm, nj, nmet, nlp, ntp, ntau;
   Int_t le_ch[maxpart], le_g[maxpart];
-  Float_t le_pt[maxpart], le_eta[maxpart], le_phi[maxpart], le_mass[maxpart], le_relIso[maxpart],le_relTkIso[maxpart], le_bdt[maxpart], le_sf[maxpart];
+  Float_t le_pt[maxpart], le_eta[maxpart], le_phi[maxpart], le_mass[maxpart], le_relIso[maxpart],le_relTkIso[maxpart], le_bdt[maxpart], le_dz[maxpart], le_dxy[maxpart], le_sf[maxpart];
   Int_t me_ch[maxpart], me_g[maxpart];
-  Float_t me_pt[maxpart], me_eta[maxpart], me_phi[maxpart], me_mass[maxpart], me_relIso[maxpart],me_relTkIso[maxpart], me_bdt[maxpart], me_sf[maxpart];
+  Float_t me_pt[maxpart], me_eta[maxpart], me_phi[maxpart], me_mass[maxpart], me_relIso[maxpart],me_relTkIso[maxpart], me_bdt[maxpart], me_dz[maxpart], me_dxy[maxpart], me_sf[maxpart];
   Int_t te_ch[maxpart], te_g[maxpart];
-  Float_t te_pt[maxpart], te_eta[maxpart], te_phi[maxpart], te_mass[maxpart], te_relIso[maxpart],te_relTkIso[maxpart], te_bdt[maxpart], te_sf[maxpart];
+  Float_t te_pt[maxpart], te_eta[maxpart], te_phi[maxpart], te_mass[maxpart], te_relIso[maxpart],te_relTkIso[maxpart], te_bdt[maxpart], te_dz[maxpart], te_dxy[maxpart], te_sf[maxpart];
   Int_t lm_ch[maxpart], lm_g[maxpart];
-  Float_t lm_pt[maxpart], lm_eta[maxpart], lm_phi[maxpart], lm_mass[maxpart], lm_relIso[maxpart], lm_sf[maxpart];
+  Float_t lm_pt[maxpart], lm_eta[maxpart], lm_phi[maxpart], lm_mass[maxpart], lm_relIso[maxpart], lm_dz[maxpart], lm_dxy[maxpart], lm_sf[maxpart];
   Int_t tm_ch[maxpart], tm_g[maxpart];
-  Float_t tm_pt[maxpart], tm_eta[maxpart], tm_phi[maxpart], tm_mass[maxpart], tm_relIso[maxpart], tm_sf[maxpart];
+  Float_t tm_pt[maxpart], tm_eta[maxpart], tm_phi[maxpart], tm_mass[maxpart], tm_relIso[maxpart], tm_dz[maxpart], tm_dxy[maxpart], tm_sf[maxpart];
   Int_t tau_ch[maxpart], tau_g[maxpart];
   Float_t tau_pt[maxpart], tau_eta[maxpart], tau_phi[maxpart], tau_mass[maxpart], tau_dm[maxpart], tau_chargedIso[maxpart], tau_sf[maxpart];
-  Int_t j_id[maxjets], j_g[maxjets], j_mvav2[maxjets], j_deepcsv[maxjets], j_flav[maxjets], j_hadflav[maxjets], j_pid[maxjets], j_sf[maxjets];
+  Int_t j_id[maxjets], j_g[maxjets], j_mvav2[maxjets], j_deepcsv[maxjets], j_flav[maxjets], j_hadflav[maxjets], j_pid[maxjets], j_sf[maxjets], j_jecf[maxjets];
   Float_t j_pt[maxjets], j_eta[maxjets], j_phi[maxjets], j_mass[maxjets];
   Float_t met_pt[maxpart], met_eta[maxpart], met_phi[maxpart], met_sf[maxpart];
   Int_t lp_g[maxpart], tp_g[maxpart], lp_isEB[maxpart], tp_isEB[maxpart];

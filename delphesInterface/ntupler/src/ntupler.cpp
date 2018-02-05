@@ -10,6 +10,7 @@
 //dirty hack
 #include "../../../NTupler/src/MiniEvent.cc"
 #include "TDirectory.h"
+
 #include "TH1F.h"
 
 void ntupler::analyze(size_t childid /* this info can be used for printouts */){
@@ -22,8 +23,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
       d_ana::dBranchHandler<Jet>         taujet(tree(),"Jet");
 	d_ana::dBranchHandler<Muon>        muontight(tree(),"MuonTight");
 	d_ana::dBranchHandler<Photon>      photon(tree(),"Photon");
-	d_ana::dBranchHandler<MissingET>   met(tree(),"MissingET");
-
+	d_ana::dBranchHandler<MissingET>   met(tree(),"PuppiMissingET");
 	size_t nevents=tree()->entries();
 	if(isTestMode())
 		nevents/=100;
@@ -73,16 +73,16 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 	TString basepath=getenv("CMSSW_BASE");
 	basepath+="/src/PhaseTwoAnalysis/delphesInterface/ntupler/data/";
 
-	tightelecsf.loadTH2D  (basepath+"ElectronTight_PTEta.root","FullSimOverDelphes");
-	medelecsf.loadTH2D    (basepath+"ElectronMedium_PTEta.root","FullSimOverDelphes");
+	tightelecsf.loadTH2D  (basepath+"ElectronTight_PTabsEta.root","FullSimOverDelphes");
+	medelecsf.loadTH2D    (basepath+"ElectronMedium_PTabsEta.root","FullSimOverDelphes");
 	//looseelecsf.loadTH2D  (cmsswbase+"bla.root","histo");
     //
-	tightmuonsf.loadTH2D  (basepath+"MuonTight_PTEta.root","FullSimOverDelphes");
+	tightmuonsf.loadTH2D  (basepath+"MuonTight_PTabsEta.root","FullSimOverDelphes");
 	//loosemuonsf.loadTH2D  (cmsswbase+"bla.root","histo");
     //
 	//jetsf.loadTH2D        (cmsswbase+"bla.root","histo");
     //
-	tightphotonsf.loadTH2D(basepath+"PhotonTight_PTEta.root","FullSimOverDelphes");
+	tightphotonsf.loadTH2D(basepath+"PhotonTight_PTabsEta.root","FullSimOverDelphes");
 	//loosephotonsf.loadTH2D(cmsswbase+"bla.root","histo");
     //
 	//metsf.loadTH2D        (cmsswbase+"bla.root","histo");
@@ -319,6 +319,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 		t_vertices_->Fill();
 		t_genJets_->Fill();
 		t_looseElecs_->Fill();
+		t_mediumElecs_->Fill();
 		t_tightElecs_->Fill();
 		t_looseMuons_->Fill();
 		t_tightMuons_->Fill();

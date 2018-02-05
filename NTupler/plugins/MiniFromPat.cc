@@ -89,6 +89,33 @@ Implementation:
 #include "TLorentzVector.h"
 #include "Math/GenVector/VectorUtil.h"
 
+
+static inline float matchClosestDr(
+		float* geneta,float* genphi,float* genpt,
+		int ngen,
+		float* recoeta,float* recophi,float* recopt,
+		int recoidx,
+		int& matched,
+		float maxDr,
+		float maxDeltaRelPt=0.5,
+		int * genpdgid=0,
+		int reqabspdgid=-1){
+
+	matched=-1;
+	float mindr=maxDr;
+	for (int ig = 0; ig < ngen; ig++) {
+		if(genpdgid){
+			if(std::abs(genpdgid[ig])!=reqabspdgid)continue;
+		}
+		float thisdr=reco::deltaR(geneta[ig],genphi[ig],recoeta[recoidx],recophi[recoidx]);
+		if (thisdr > mindr) continue;
+		if(fabs(genpt[ig]-recopt[recoidx]) / genpt[ig] > maxDeltaRelPt)continue;
+		mindr=thisdr;
+		matched     = ig;
+	}
+	return mindr;
+}
+
 //
 // class declaration
 //
@@ -411,6 +438,7 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.nvtx++;
   }
   if (prVtx < 0) return;
+  auto primaryVertex=vertices->at(prVtx);
 
   // Taus 
   ev_.ntau=0;
@@ -456,9 +484,12 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
     // Medium ID -- needs to be updated
     bool ipxy = false, ipz = false, validPxlHit = false, highPurity = false;
+    float dz=0, dxy=0;
     if (muons->at(i).innerTrack().isNonnull()){
-    	ipxy = std::abs(muons->at(i).muonBestTrack()->dxy(vertices->at(prVtx).position())) < 0.2;
-    	ipz = std::abs(muons->at(i).muonBestTrack()->dz(vertices->at(prVtx).position())) < 0.5;
+    	dxy=std::abs(muons->at(i).muonBestTrack()->dxy(vertices->at(prVtx).position()));
+    	dz= std::abs(muons->at(i).muonBestTrack()->dz(vertices->at(prVtx).position()));
+    	ipxy = dxy < 0.2;
+    	ipz = dz < 0.5;
     	validPxlHit = muons->at(i).innerTrack()->hitPattern().numberOfValidPixelHits() > 0;
     	highPurity = muons->at(i).innerTrack()->quality(reco::Track::highPurity);
     }    
@@ -480,13 +511,22 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
        ev_.lm_phi[ev_.nlm]    = muons->at(i).phi();
        ev_.lm_eta[ev_.nlm]    = muons->at(i).eta();
        ev_.lm_mass[ev_.nlm]   = muons->at(i).mass();
+       ev_.lm_dxy[ev_.nlm]   = dxy;
+       ev_.lm_dz[ev_.nlm]   = dz;
        ev_.lm_relIso[ev_.nlm] = trackIso03;//(muons->at(i).puppiNoLeptonsChargedHadronIso() + muons->at(i).puppiNoLeptonsNeutralHadronIso() + muons->at(i).puppiNoLeptonsPhotonIso()) / muons->at(i).pt();
        ev_.lm_g[ev_.nlm] = -1;
-       for (int ig = 0; ig < ev_.ngl; ig++) {
-         if (abs(ev_.gl_pid[ig]) != 13) continue;
-         if (reco::deltaR(ev_.gl_eta[ig],ev_.gl_phi[ig],ev_.lm_eta[ev_.nlm],ev_.lm_phi[ev_.nlm]) > 0.4) continue;
-         ev_.lm_g[ev_.nlm]    = ig;
-       }
+       matchClosestDr(ev_.gl_eta,
+           		ev_.gl_phi,
+       			ev_.gl_pt,
+       			ev_.ngl,
+       			ev_.lm_eta,
+       			ev_.lm_phi,
+       			ev_.lm_pt,
+       			ev_.nlm,
+       			ev_.lm_g[ev_.nlm],
+       			0.1,
+       			1, ev_.gl_pid, 13);
+
        ev_.nlm++;
     }
 
@@ -499,13 +539,21 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.tm_phi[ev_.ntm]    = muons->at(i).phi();
     ev_.tm_eta[ev_.ntm]    = muons->at(i).eta();
     ev_.tm_mass[ev_.ntm]   = muons->at(i).mass();
+    ev_.tm_dxy[ev_.ntm]   = dxy;
+    ev_.tm_dz[ev_.ntm]   = dz;
     ev_.tm_relIso[ev_.ntm] = trackIso03;//(muons->at(i).puppiNoLeptonsChargedHadronIso() + muons->at(i).puppiNoLeptonsNeutralHadronIso() + muons->at(i).puppiNoLeptonsPhotonIso()) / muons->at(i).pt();
     ev_.tm_g[ev_.ntm] = -1;
-    for (int ig = 0; ig < ev_.ngl; ig++) {
-      if (abs(ev_.gl_pid[ig]) != 13) continue;
-      if (reco::deltaR(ev_.gl_eta[ig],ev_.gl_phi[ig],ev_.tm_eta[ev_.ntm],ev_.tm_phi[ev_.ntm]) > 0.4) continue;
-      ev_.tm_g[ev_.ntm]    = ig;
-    }
+    matchClosestDr(ev_.gl_eta,
+        		ev_.gl_phi,
+    			ev_.gl_pt,
+    			ev_.ngl,
+    			ev_.tm_eta,
+    			ev_.tm_phi,
+    			ev_.tm_pt,
+    			ev_.ntm,
+    			ev_.tm_g[ev_.ntm],
+    			0.1,
+    			1, ev_.gl_pid, 13);
     ev_.ntm++;
   }
 
@@ -555,6 +603,12 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
         isTight = (mvaValue > 0.983);
       }
     }
+    float dxy=0;
+    float dz=0;
+    if(elecs->at(i).gsfTrack().isNonnull()){
+    	dxy=std::abs(elecs->at(i).gsfTrack()->dxy(primaryVertex.position()));
+    	dz=std::abs(elecs->at(i).gsfTrack()->dz(primaryVertex.position()));
+    }
 
     if (!isLoose) continue;
 
@@ -565,17 +619,25 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
        ev_.le_eta[ev_.nle]    = elecs->at(i).eta();
        ev_.le_mass[ev_.nle]   = elecs->at(i).mass();
        ev_.le_bdt[ev_.nle]   = mvaValue;
+       ev_.le_dz[ev_.nle]    = dz;
+       ev_.le_dxy[ev_.nle]   = dxy;
        if( isEB )
          ev_.le_relIso[ev_.nle] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
        else
          ev_.le_relIso[ev_.nle] = (elecs->at(i).userFloat("hgcElectronID:caloIsoRing1") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing2") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing3") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing4")) / elecs->at(i).energy();
        ev_.le_relTkIso[ev_.nle] = elecs->at(i).dr03TkSumPt()/elecs->at(i).pt();
-       ev_.le_g[ev_.nle] = -1;
-       for (int ig = 0; ig < ev_.ngl; ig++) {
-         if (abs(ev_.gl_pid[ig]) != 11) continue;
-         if (reco::deltaR(ev_.gl_eta[ig],ev_.gl_phi[ig],ev_.le_eta[ev_.nle],ev_.le_phi[ev_.nle]) > 0.4) continue;
-         ev_.le_g[ev_.nle]    = ig;
-       }
+
+       matchClosestDr(ev_.gl_eta,
+           		ev_.gl_phi,
+       			ev_.gl_pt,
+       			ev_.ngl,
+       			ev_.le_eta,
+       			ev_.le_phi,
+       			ev_.le_pt,
+       			ev_.nle,
+       			ev_.le_g[ev_.nle],
+       			0.1,
+       			1, ev_.gl_pid, 11);
        ev_.nle++;
     }
 
@@ -588,17 +650,25 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     	ev_.me_eta[ev_.nme]    = elecs->at(i).eta();
     	ev_.me_mass[ev_.nme]   = elecs->at(i).mass();
         ev_.me_bdt[ev_.nme]   = mvaValue;
+        ev_.me_dz[ev_.nme]    = dz;
+        ev_.me_dxy[ev_.nme]   = dxy;
     	if( isEB )
     		ev_.me_relIso[ev_.nme] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
     	else
     		ev_.me_relIso[ev_.nme] = (elecs->at(i).userFloat("hgcElectronID:caloIsoRing1") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing2") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing3") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing4")) / elecs->at(i).energy();
     	ev_.me_g[ev_.nme] = -1;
     	ev_.me_relTkIso[ev_.nme] = elecs->at(i).dr03TkSumPt()/elecs->at(i).pt();
-    	for (int ig = 0; ig < ev_.ngl; ig++) {
-    		if (abs(ev_.gl_pid[ig]) != 11) continue;
-    		if (reco::deltaR(ev_.gl_eta[ig],ev_.gl_phi[ig],ev_.me_eta[ev_.nme],ev_.me_phi[ev_.nme]) > 0.4) continue;
-    		ev_.me_g[ev_.nme]    = ig;
-    	}
+    	matchClosestDr(ev_.gl_eta,
+    	           		ev_.gl_phi,
+    	       			ev_.gl_pt,
+    	       			ev_.ngl,
+    	       			ev_.me_eta,
+    	       			ev_.me_phi,
+    	       			ev_.me_pt,
+    	       			ev_.nme,
+    	       			ev_.me_g[ev_.nme],
+    	       			0.1,
+    	       			1, ev_.gl_pid, 11);
     	ev_.nme++;
     }
     if (!isTight) continue;
@@ -610,17 +680,25 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.te_eta[ev_.nte]    = elecs->at(i).eta();
     ev_.te_mass[ev_.nte]   = elecs->at(i).mass();
     ev_.te_bdt[ev_.nte]   = mvaValue;
+    ev_.te_dz[ev_.nte]    = dz;
+    ev_.te_dxy[ev_.nte]   = dxy;
     if( isEB )
       ev_.te_relIso[ev_.nte] = (elecs->at(i).puppiNoLeptonsChargedHadronIso() + elecs->at(i).puppiNoLeptonsNeutralHadronIso() + elecs->at(i).puppiNoLeptonsPhotonIso()) / elecs->at(i).pt();
     else
       ev_.te_relIso[ev_.nte] = (elecs->at(i).userFloat("hgcElectronID:caloIsoRing1") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing2") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing3") + elecs->at(i).userFloat("hgcElectronID:caloIsoRing4")) / elecs->at(i).energy();
     ev_.te_g[ev_.nte] = -1;
-	ev_.te_relTkIso[ev_.nte] = elecs->at(i).dr03TkSumPt()/elecs->at(i).pt();
-    for (int ig = 0; ig < ev_.ngl; ig++) {
-      if (abs(ev_.gl_pid[ig]) != 11) continue;
-      if (reco::deltaR(ev_.gl_eta[ig],ev_.gl_phi[ig],ev_.te_eta[ev_.nte],ev_.te_phi[ev_.nte]) > 0.4) continue;
-      ev_.te_g[ev_.nte]    = ig;
-    }
+    ev_.te_relTkIso[ev_.nte] = elecs->at(i).dr03TkSumPt()/elecs->at(i).pt();
+    matchClosestDr(ev_.gl_eta,
+    		ev_.gl_phi,
+			ev_.gl_pt,
+			ev_.ngl,
+			ev_.te_eta,
+			ev_.te_phi,
+			ev_.te_pt,
+			ev_.nte,
+			ev_.te_g[ev_.nte],
+			0.1,
+			1, ev_.gl_pid, 11);
     ev_.nte++;
   }
 
@@ -669,17 +747,25 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.j_phi[ev_.nj]     = jets->at(i).phi();
     ev_.j_eta[ev_.nj]     = jets->at(i).eta();
     ev_.j_mass[ev_.nj]    = jets->at(i).mass();
+    ev_.j_jecf[ev_.nj]    = jets->at(i).pt()/jets->at(i).correctedJet("Uncorrected").pt();
     ev_.j_mvav2[ev_.nj]   = (isTightMVAv2 | (isMediumMVAv2<<1) | (isLooseMVAv2<<2)); 
     ev_.j_deepcsv[ev_.nj] = (isTightDeepCSV | (isMediumDeepCSV<<1) | (isLooseDeepCSV<<2));
     ev_.j_flav[ev_.nj]    = jets->at(i).partonFlavour();
     ev_.j_hadflav[ev_.nj] = jets->at(i).hadronFlavour();
     ev_.j_pid[ev_.nj]     = (jets->at(i).genParton() ? jets->at(i).genParton()->pdgId() : 0);
     ev_.j_g[ev_.nj] = -1;
-    for (int ig = 0; ig < ev_.ngj; ig++) {
-      if (reco::deltaR(ev_.gj_eta[ig],ev_.gj_phi[ig],ev_.j_eta[ev_.nj],ev_.j_phi[ev_.nj]) > 0.4) continue;
-      ev_.j_g[ev_.nj]     = ig;
-      break;
-    }	
+
+    matchClosestDr(ev_.gj_eta,
+    		ev_.gj_phi,
+			ev_.gj_pt,
+			ev_.ngj,
+			ev_.j_eta,
+			ev_.j_phi,
+			ev_.j_pt,
+			ev_.nj,
+			ev_.j_g[ev_.nj],
+			0.2,
+			1);
     ev_.nj++;
 
   }
@@ -743,10 +829,17 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
          ev_.lp_eta_multi[ev_.nlp]    = photons->at(i).superCluster()->seed()->eta();
          ev_.lp_nrj_multi[ev_.nlp]    = photons->at(i).superCluster()->seed()->energy();
        }
-       for (int ig = 0; ig < ev_.ngp; ig++) {
-         if (reco::deltaR(ev_.gp_eta[ig],ev_.gp_phi[ig],ev_.lp_eta[ev_.nlp],ev_.lp_phi[ev_.nlp]) > 0.4) continue;
-         ev_.lp_g[ev_.nlp]    = ig;
-       }
+       matchClosestDr(ev_.gp_eta,
+           		ev_.gp_phi,
+       			ev_.gp_pt,
+       			ev_.ngp,
+       			ev_.lp_eta,
+       			ev_.lp_phi,
+       			ev_.lp_pt,
+       			ev_.nlp,
+       			ev_.lp_g[ev_.nlp],
+       			0.1,
+       			1);
        ev_.nlp++;
     }
 
@@ -774,10 +867,19 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
       ev_.tp_eta_multi[ev_.ntp]    = photons->at(i).superCluster()->seed()->eta();
       ev_.tp_nrj_multi[ev_.ntp]    = photons->at(i).superCluster()->seed()->energy();
     }
-    for (int ig = 0; ig < ev_.ngp; ig++) {
-      if (reco::deltaR(ev_.gp_eta[ig],ev_.gp_phi[ig],ev_.tp_eta[ev_.ntp],ev_.tp_phi[ev_.ntp]) > 0.4) continue;
-      ev_.tp_g[ev_.ntp]    = ig;
-    }
+
+    matchClosestDr(ev_.gp_eta,
+        		ev_.gp_phi,
+    			ev_.gp_pt,
+    			ev_.ngp,
+    			ev_.tp_eta,
+    			ev_.tp_phi,
+    			ev_.tp_pt,
+    			ev_.ntp,
+    			ev_.tp_g[ev_.nlp],
+    			0.1,
+    			1);
+
     ev_.ntp++;
   }
    

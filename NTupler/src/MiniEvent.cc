@@ -58,6 +58,8 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_looseElecs_->Branch("IsolationVar", ev.le_relIso,   "IsolationVar[ElectronLoose_size]/F");
   t_looseElecs_->Branch("TrackIso",     ev.le_relTkIso, "TrackIso[ElectronLoose_size]/F");
   t_looseElecs_->Branch("BDTScore",     ev.le_bdt,      "BDTScore[ElectronLoose_size]/F");
+  t_looseElecs_->Branch("Dz",           ev.le_dz,       "Dz[ElectronLoose_size]/F");
+  t_looseElecs_->Branch("Dxy",          ev.le_dxy,      "Dxy[ElectronLoose_size]/F");
   t_looseElecs_->Branch("SF",           ev.le_sf,       "SF[ElectronLoose_size]/F");
 
 
@@ -71,6 +73,8 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_mediumElecs_->Branch("IsolationVar",         ev.me_relIso,   "IsolationVar[ElectronMedium_size]/F");
   t_mediumElecs_->Branch("TrackIso",     ev.me_relTkIso, "TrackIso[ElectronMedium_size]/F");
   t_mediumElecs_->Branch("BDTScore",     ev.me_bdt,      "BDTScore[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("Dz",           ev.me_dz,       "Dz[ElectronMedium_size]/F");
+  t_mediumElecs_->Branch("Dxy",          ev.me_dxy,      "Dxy[ElectronMedium_size]/F");
   t_mediumElecs_->Branch("SF",           ev.me_sf,       "SF[ElectronMedium_size]/F");
 
   t_tightElecs_->Branch("ElectronTight_size", &ev.nte,  "ElectronTight_size/I");
@@ -83,6 +87,8 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_tightElecs_->Branch("IsolationVar", ev.te_relIso,   "IsolationVar[ElectronTight_size]/F");
   t_tightElecs_->Branch("TrackIso",     ev.te_relTkIso, "TrackIso[ElectronTight_size]/F");
   t_tightElecs_->Branch("BDTScore",     ev.te_bdt,      "BDTScore[ElectronTight_size]/F");
+  t_tightElecs_->Branch("Dz",           ev.te_dz,       "Dz[ElectronTight_size]/F");
+  t_tightElecs_->Branch("Dxy",           ev.te_dxy,       "Dxy[ElectronTight_size]/F");
   t_tightElecs_->Branch("SF",           ev.te_sf,       "SF[ElectronTight_size]/F");
 
   t_looseMuons_->Branch("MuonLoose_size", &ev.nlm,      "MuonLoose_size/I");
@@ -93,6 +99,8 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_looseMuons_->Branch("Phi",          ev.lm_phi,      "Phi[MuonLoose_size]/F");
   t_looseMuons_->Branch("Mass",         ev.lm_mass,     "Mass[MuonLoose_size]/F");
   t_looseMuons_->Branch("IsolationVar", ev.lm_relIso,   "IsolationVar[MuonLoose_size]/F");
+  t_looseMuons_->Branch("Dz",           ev.lm_dz,       "Dz[MuonLoose_size]/F");
+  t_looseMuons_->Branch("Dxy",          ev.lm_dxy,      "Dxy[MuonLoose_size]/F");
   t_looseMuons_->Branch("SF",           ev.lm_sf,       "SF[MuonLoose_size]/F");
 
   t_tightMuons_->Branch("MuonTight_size", &ev.ntm,      "MuonTight_size/I");
@@ -103,6 +111,8 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_tightMuons_->Branch("Phi",          ev.tm_phi,      "Phi[MuonTight_size]/F");
   t_tightMuons_->Branch("Mass",         ev.tm_mass,     "Mass[MuonTight_size]/F");
   t_tightMuons_->Branch("IsolationVar", ev.tm_relIso,   "IsolationVar[MuonTight_size]/F");
+  t_tightMuons_->Branch("Dz",           ev.tm_dz,       "Dz[MuonTight_size]/F");
+  t_tightMuons_->Branch("Dxy",          ev.tm_dxy,      "Dxy[MuonTight_size]/F");
   t_tightMuons_->Branch("SF",           ev.tm_sf,       "SF[MuonTight_size]/F");
 
   t_allTaus_->Branch("TauAll_size",  &ev.ntau,        "TauAll_size/I");
@@ -128,7 +138,8 @@ void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_
   t_puppiJets_->Branch("PartonFlavor",  ev.j_flav,      "PartonFlavor[JetPUPPI_size]/I");
   t_puppiJets_->Branch("HadronFlavor",  ev.j_hadflav,   "HadronFlavor[JetPUPPI_size]/I");
   t_puppiJets_->Branch("GenPartonPID",  ev.j_pid,       "GenPartonPID[JetPUPPI_size]/I");
-  t_puppiJets_->Branch("SF",            ev.j_sf,       "SF[JetPUPPI_size]/F");
+  t_puppiJets_->Branch("SF",            ev.j_sf,        "SF[JetPUPPI_size]/F");
+  t_puppiJets_->Branch("JECSF",         ev.j_jecf,      "JECSF[JetPUPPI_size]/F");
 
   t_puppiMET_->Branch("PuppiMissingET_size", &ev.nmet,  "PuppiMissingET_size/I");
   t_puppiMET_->Branch("MET",            ev.met_pt,      "MET[PuppiMissingET_size]/F");
