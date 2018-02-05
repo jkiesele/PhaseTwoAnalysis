@@ -56,6 +56,7 @@ Implementation:
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
+#include "DataFormats/PatCandidates/interface/Tau.h"
 
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
@@ -131,6 +132,7 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
     edm::EDGetTokenT<reco::BeamSpot> bsToken_;
     edm::EDGetTokenT<std::vector<reco::Conversion>> convToken_;
     edm::EDGetTokenT<std::vector<pat::Muon>> muonsToken_;
+    edm::EDGetTokenT<std::vector<pat::Tau>> tausToken_;
     edm::EDGetTokenT<std::vector<pat::Jet>> jetsToken_;
     PFJetIDSelectionFunctor jetIDLoose_;
     PFJetIDSelectionFunctor jetIDTight_;
@@ -144,7 +146,7 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
     double mvaThres_[3];
     double deepThres_[3];
 
-    TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_genPhotons_, *t_looseElecs_, *t_mediumElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_puppiJets_, *t_puppiMET_, *t_loosePhotons_, *t_tightPhotons_;
+    TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_genPhotons_, *t_looseElecs_, *t_mediumElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_allTaus_,*t_puppiJets_, *t_puppiMET_, *t_loosePhotons_, *t_tightPhotons_;
 
     MiniEvent_t ev_;
 };
@@ -167,6 +169,7 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
   bsToken_(consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamspot"))),
   convToken_(consumes<std::vector<reco::Conversion>>(iConfig.getParameter<edm::InputTag>("conversions"))),  
   muonsToken_(consumes<std::vector<pat::Muon>>(iConfig.getParameter<edm::InputTag>("muons"))),
+  tausToken_(consumes<std::vector<pat::Tau>>(iConfig.getParameter<edm::InputTag>("taus"))),
   jetsToken_(consumes<std::vector<pat::Jet>>(iConfig.getParameter<edm::InputTag>("jets"))),
   jetIDLoose_(PFJetIDSelectionFunctor::FIRSTDATA, PFJetIDSelectionFunctor::LOOSE), 
   jetIDTight_(PFJetIDSelectionFunctor::FIRSTDATA, PFJetIDSelectionFunctor::TIGHT), 
@@ -221,12 +224,13 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
   t_tightElecs_ = fs_->make<TTree>("ElectronTight","ElectronTight");
   t_looseMuons_ = fs_->make<TTree>("MuonLoose","MuonLoose");
   t_tightMuons_ = fs_->make<TTree>("MuonTight","MuonTight");
+  t_allTaus_ = fs_->make<TTree>("TauAll","TauAll");
   t_puppiJets_  = fs_->make<TTree>("JetPUPPI","JetPUPPI");
   t_puppiMET_   = fs_->make<TTree>("PuppiMissingET","PuppiMissingET");
   t_loosePhotons_ = fs_->make<TTree>("PhotonLoose","PhotonLoose");
   t_tightPhotons_ = fs_->make<TTree>("PhotonTight","PhotonTight");
   createMiniEventTree(t_event_, t_genParts_, t_vertices_, t_genJets_, t_genPhotons_, t_looseElecs_,
-		  t_mediumElecs_,t_tightElecs_, t_looseMuons_, t_tightMuons_, t_puppiJets_, t_puppiMET_,
+		  t_mediumElecs_,t_tightElecs_, t_looseMuons_, t_tightMuons_, t_allTaus_,t_puppiJets_, t_puppiMET_,
 		  t_loosePhotons_, t_tightPhotons_, ev_);
 
 }
@@ -384,6 +388,9 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
   Handle<std::vector<pat::Muon>> muons;
   iEvent.getByToken(muonsToken_, muons);
 
+  Handle<std::vector<pat::Tau>> taus;
+  iEvent.getByToken(tausToken_, taus);
+
   Handle<std::vector<pat::MET>> mets;
   iEvent.getByToken(metsToken_, mets);
 
@@ -404,6 +411,34 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     ev_.nvtx++;
   }
   if (prVtx < 0) return;
+
+  // Taus 
+  ev_.ntau=0;
+
+  for (size_t i = 0; i < taus->size(); i++) {
+    if (taus->at(i).pt()<15.) continue; 
+    if (fabs(taus->at(i).eta()) > 3.0) continue;
+    if (taus->at(i).tauID("decayModeFinding")<0) continue;     
+ 
+    if (ev_.ntau<MiniEvent_t::maxpart){
+
+       ev_.tau_ch[ev_.ntau]     = taus->at(i).charge();
+       ev_.tau_pt[ev_.ntau]     = taus->at(i).pt();
+       ev_.tau_phi[ev_.ntau]    = taus->at(i).phi();
+       ev_.tau_eta[ev_.ntau]    = taus->at(i).eta();
+       ev_.tau_mass[ev_.ntau]   = taus->at(i).mass();
+       ev_.tau_dm[ev_.ntau]   = taus->at(i).decayMode();
+       ev_.tau_chargedIso[ev_.ntau] = taus->at(i).tauID("chargedIsoPtSum");
+       ev_.tau_g[ev_.ntau] = -1;
+       for (int ig = 0; ig < ev_.ngl; ig++) {
+         // I need to fix it matching to genTau
+         if (abs(ev_.gl_pid[ig]) != 15) continue;
+         if (reco::deltaR(ev_.gl_eta[ig],ev_.gl_phi[ig],ev_.tau_eta[ev_.ntau],ev_.tau_phi[ev_.ntau]) > 0.4) continue;
+         ev_.tau_g[ev_.ntau]    = ig;
+       }
+       ev_.ntau++;
+    }
+  }
 
   // Muons
   ev_.nlm = 0;
@@ -771,6 +806,7 @@ MiniFromPat::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   t_tightElecs_->Fill();
   t_looseMuons_->Fill();
   t_tightMuons_->Fill();
+  t_allTaus_->Fill();
   t_puppiJets_->Fill();
   t_puppiMET_->Fill();
   t_loosePhotons_->Fill();

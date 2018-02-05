@@ -14,7 +14,7 @@ struct MiniEvent_t
   {
     ngl=0; ngj=0; ngp=0;
     g_nw=0;ng=0;
-    nle=0; nme=0; nte = 0; nlm=0; ntm=0; nj=0; nmet=0; nlp=0; ntp=0;
+    nle=0; nme=0; nte = 0; nlm=0; ntm=0; nj=0; nmet=0; nlp=0; ntp=0; ntau=0;
     lumi=0;
     nvtx=0;
     run=0;
@@ -25,6 +25,7 @@ struct MiniEvent_t
     	te_sf[i]=1;
     	lm_sf[i]=1;
     	tm_sf[i]=1;
+      tau_sf[i]=1;
     	lp_sf[i]=1;
     	tp_sf[i]=1;
     }
@@ -49,7 +50,7 @@ struct MiniEvent_t
   //reco level event
   Int_t nvtx;
   Float_t v_pt2[maxjets];
-  Int_t nle, nme, nte, nlm, ntm, nj, nmet, nlp, ntp;
+  Int_t nle, nme, nte, nlm, ntm, nj, nmet, nlp, ntp, ntau;
   Int_t le_ch[maxpart], le_g[maxpart];
   Float_t le_pt[maxpart], le_eta[maxpart], le_phi[maxpart], le_mass[maxpart], le_relIso[maxpart],le_relTkIso[maxpart], le_bdt[maxpart], le_sf[maxpart];
   Int_t me_ch[maxpart], me_g[maxpart];
@@ -60,6 +61,8 @@ struct MiniEvent_t
   Float_t lm_pt[maxpart], lm_eta[maxpart], lm_phi[maxpart], lm_mass[maxpart], lm_relIso[maxpart], lm_sf[maxpart];
   Int_t tm_ch[maxpart], tm_g[maxpart];
   Float_t tm_pt[maxpart], tm_eta[maxpart], tm_phi[maxpart], tm_mass[maxpart], tm_relIso[maxpart], tm_sf[maxpart];
+  Int_t tau_ch[maxpart], tau_g[maxpart];
+  Float_t tau_pt[maxpart], tau_eta[maxpart], tau_phi[maxpart], tau_mass[maxpart], tau_dm[maxpart], tau_chargedIso[maxpart], tau_sf[maxpart];
   Int_t j_id[maxjets], j_g[maxjets], j_mvav2[maxjets], j_deepcsv[maxjets], j_flav[maxjets], j_hadflav[maxjets], j_pid[maxjets], j_sf[maxjets];
   Float_t j_pt[maxjets], j_eta[maxjets], j_phi[maxjets], j_mass[maxjets];
   Float_t met_pt[maxpart], met_eta[maxpart], met_phi[maxpart], met_sf[maxpart];
@@ -69,7 +72,7 @@ struct MiniEvent_t
 
 };
 
-void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_mediumElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev);
-void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_mediumElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev);
+void createMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_mediumElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_allTaus_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev);
+void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertices_, TTree *t_genJets_, TTree *t_genPhotons_, TTree *t_looseElecs_, TTree *t_mediumElecs_, TTree *t_tightElecs_, TTree *t_looseMuons_, TTree *t_tightMuons_, TTree *t_allTaus_, TTree *t_puppiJets_, TTree *t_puppiMET_, TTree *t_loosePhotons_, TTree *t_tightPhotons_, MiniEvent_t &ev);
 
 #endif
