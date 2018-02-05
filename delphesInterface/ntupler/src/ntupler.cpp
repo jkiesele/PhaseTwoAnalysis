@@ -189,57 +189,6 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 			ev_.tm_relIso[ev_.ntm]=selectedMuons.at(i)->IsolationVarRhoCorr/selectedMuons.at(i)->PT;
 			ev_.tm_sf[ev_.ntm]=tightmuonsf.getSF(fabs(selectedMuons.at(i)->Eta),selectedMuons.at(i)->PT);
                   //ev_.tm_g     [ev_.ntm] =selectedMuons.at(i)->Particle.PID;
-                  float DRmin=0.05; int flavor=0; bool thisisatau=false;
-                  for(size_t i=0;i<genpart.size();i++){
-                        if(fabs(genpart.at(i)->PID)==12 || fabs(genpart.at(i)->PID)==14 || fabs(genpart.at(i)->PID)==16 ) continue; // lets remove the neutrinos
-                        if(fabs(genpart.at(i)->Status)!=1 ) continue;
-                        double deta=(genpart.at(i)->Eta-ev_.tm_eta   [ev_.ntm]);
-                        double dphi=(genpart.at(i)->Phi-ev_.tm_phi   [ev_.ntm]);
-                              if (dphi>=TMath::Pi()) dphi-=2*TMath::Pi();
-                              if (dphi<-TMath::Pi()) dphi+=2*TMath::Pi();
-                        double dr=sqrt(deta*deta+dphi*dphi);
-                        if(dr<DRmin){ DRmin=dr; flavor=genpart.at(i)->PID;} 
-
-                        // does this muon come from a tau or a decay, or is it the prompt muon? 
-                        // this needs to be saved in the history of the object...
-                        for(size_t j=0;j<genpart.size();j++){
-                              if(fabs(genpart.at(j)->PID)!=15) continue;
-                              if(fabs(genpart.at(j)->Status)!=2 ) continue;
-                              double deta2=(genpart.at(i)->Eta-genpart.at(j)->Eta);
-                              double dphi2=(genpart.at(i)->Phi-genpart.at(j)->Phi);
-                                    if (dphi2>=TMath::Pi()) dphi2-=2*TMath::Pi(); 
-                                    if (dphi2<-TMath::Pi()) dphi2+=2*TMath::Pi();
-                              double dr2=sqrt(deta2*deta2+dphi2*dphi2);
-                              if(dr2<0.1) thisisatau=true;
-                        }
-                  }
-                  ev_.tm_g     [ev_.ntm] =flavor;
-                        if(thisisatau) ev_.tm_g     [ev_.ntm] =15;
-
-/*
-                  for(size_t j=0;j<jet.size();j++){
-                        double deta=(selectedMuons.at(i)->Eta-jet.at(j)->Eta);
-                        double dphi=(selectedMuons.at(i)->Phi-jet.at(j)->Phi);
-                              if (dphi>=TMath::Pi()) dphi-=2*TMath::Pi();
-                              if (dphi<-TMath::Pi()) dphi+=2*TMath::Pi();
-                        double dr=sqrt(deta*deta+dphi*dphi);
-                        if(dr<0.4){ 
-                              std::cout<<i<<" Check Puppi   "<<jet.at(j)->Flavor<<"   "<<jet.at(j)->TauTag<<std::endl;
-                        }
-                  }
-                  for(size_t j=0;j<taujet.size();j++){
-                        double deta=(selectedMuons.at(i)->Eta-taujet.at(j)->Eta);
-                        double dphi=(selectedMuons.at(i)->Phi-taujet.at(j)->Phi);
-                              if (dphi>=TMath::Pi()) dphi-=2*TMath::Pi();
-                              if (dphi<-TMath::Pi()) dphi+=2*TMath::Pi();
-                        double dr=sqrt(deta*deta+dphi*dphi);
-                        if(dr<0.4){
-                              std::cout<<i<<" Check Normal  "<<taujet.at(j)->Flavor<<"   "<<taujet.at(j)->TauTag<<std::endl;
-                        }
-                  }
-*/
-
-
 			ev_.ntm++;
 		}
 
