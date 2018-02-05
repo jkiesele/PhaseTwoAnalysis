@@ -186,7 +186,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 			ev_.tm_eta   [ev_.ntm]=selectedMuons.at(i)->Eta;
 			ev_.tm_phi   [ev_.ntm]=selectedMuons.at(i)->Phi;
 			ev_.tm_mass  [ev_.ntm]=0.105;
-			ev_.tm_relIso[ev_.ntm]=selectedMuons.at(i)->IsolationVarRhoCorr/selectedMuons.at(i)->PT;
+			ev_.tm_relIso[ev_.ntm]=selectedMuons.at(i)->IsolationVarRhoCorr; // /selectedMuons.at(i)->PT;
 			ev_.tm_sf[ev_.ntm]=tightmuonsf.getSF(fabs(selectedMuons.at(i)->Eta),selectedMuons.at(i)->PT);
                   //ev_.tm_g     [ev_.ntm] =selectedMuons.at(i)->Particle.PID;
 			ev_.ntm++;
@@ -201,7 +201,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 			ev_.me_eta   [ev_.nme]=selectedelectrons.at(i)->Eta;
 			ev_.me_phi   [ev_.nme]=selectedelectrons.at(i)->Phi;
 			ev_.me_mass  [ev_.nme]=0.00051;
-			ev_.me_relIso[ev_.nme]=selectedelectrons.at(i)->IsolationVarRhoCorr /selectedelectrons.at(i)->PT ;
+			ev_.me_relIso[ev_.nme]=selectedelectrons.at(i)->IsolationVarRhoCorr; //  /selectedelectrons.at(i)->PT ;
 			ev_.me_sf[ev_.nme]=medelecsf.getSF(fabs(selectedelectrons.at(i)->Eta),selectedelectrons.at(i)->PT);
 			ev_.nme++;
 
@@ -209,7 +209,7 @@ void ntupler::analyze(size_t childid /* this info can be used for printouts */){
 			ev_.te_eta   [ev_.nte]=selectedelectrons.at(i)->Eta;
 			ev_.te_phi   [ev_.nte]=selectedelectrons.at(i)->Phi;
 			ev_.te_mass  [ev_.nte]=0.00051;
-			ev_.te_relIso[ev_.nte]=selectedelectrons.at(i)->IsolationVarRhoCorr /selectedelectrons.at(i)->PT ;
+			ev_.te_relIso[ev_.nte]=selectedelectrons.at(i)->IsolationVarRhoCorr; //  /selectedelectrons.at(i)->PT ;
 			ev_.te_sf[ev_.nte]=tightelecsf.getSF(fabs(selectedelectrons.at(i)->Eta),selectedelectrons.at(i)->PT);
 			ev_.nte++;
 
