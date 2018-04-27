@@ -299,7 +299,7 @@ MiniFromPat::genAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetup
     bool overlaps = false;
     for (size_t j = 0; j < genParts->size(); j++) {
       if (abs(genParts->at(j).pdgId()) != 11 && abs(genParts->at(j).pdgId()) != 13) continue;
-      if (fabs(genJets->at(i).pt()-genParts->at(j).pt()) < 0.01*genParts->at(j).pt() && ROOT::Math::VectorUtil::DeltaR(genParts->at(j).p4(),genJets->at(i).p4()) < 0.01) {
+      if (ROOT::Math::VectorUtil::DeltaR(genParts->at(j).p4(),genJets->at(i).p4()) < 0.01) {
         overlaps = true;
         break;
       }
@@ -711,14 +711,14 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
     bool overlaps = false;
     for (size_t j = 0; j < elecs->size(); j++) {
-      if (fabs(jets->at(i).pt()-elecs->at(j).pt()) < 0.01*elecs->at(j).pt() && ROOT::Math::VectorUtil::DeltaR(elecs->at(j).p4(),jets->at(i).p4()) < 0.01) {
+      if (ROOT::Math::VectorUtil::DeltaR(elecs->at(j).p4(),jets->at(i).p4()) < 0.01) {
         overlaps = true;
         break;
       }
     }
     if (overlaps) continue;
     for (size_t j = 0; j < muons->size(); j++) {
-      if (fabs(jets->at(i).pt()-muons->at(j).pt()) < 0.01*muons->at(j).pt() && ROOT::Math::VectorUtil::DeltaR(muons->at(j).p4(),jets->at(i).p4()) < 0.01) {
+      if (ROOT::Math::VectorUtil::DeltaR(muons->at(j).p4(),jets->at(i).p4()) < 0.01) {
         overlaps = true;
         break;
       }
