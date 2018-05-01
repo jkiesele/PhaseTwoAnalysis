@@ -23,7 +23,16 @@ options.register('updateJEC', '',
                  VarParsing.varType.string,
                  "Name of the SQLite file (with path and extension) used to update the jet collection to the latest JEC and the era of the new JEC"
                 )
+options.register('pileup', 200,
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.int,
+                 "Specify the pileup in the sample (used for choosing B tag MVA thresholds and endcap photon energy corrections)"
+                )
 options.parseArguments()
+
+if options.pileup not in [0, 200]:
+    print "Warning: photon corrections available for pileup 0 and 200 only, will skip correction"
+
 
 if len(options.updateJEC)==0:
     standardjec='PhaseTwoAnalysis/NTupler/data/PhaseIIFall17_V3_MC.db'
@@ -195,6 +204,7 @@ if (options.inputFormat.lower() == "reco"):
     moduleName = "MiniFromReco"
 process.ntuple = cms.EDAnalyzer(moduleName)
 process.load("PhaseTwoAnalysis.NTupler."+moduleName+"_cfi")
+
 if (options.inputFormat.lower() == "reco"):
     process.ntuple.pfCandsNoLep = "puppiNoLep"
     process.ntuple.met = "puppiMet"
@@ -207,6 +217,12 @@ if (options.inputFormat.lower() == "reco"):
         # This simply switches the default AK4PFJetsCHS collection to the ak4PUPPIJets collection now that it has been produced
         process.ntuple.jets = "ak4PUPPIJets"
 else:
+    process.ntuple.pileup = cms.uint32(options.pileup)
+    if options.pileup == 0:
+        process.ntuple.photonEcorr = cms.FileInPath("PhaseTwoAnalysis/NTupler/data/photonEnergyCorrections_PU0.root")
+    elif options.pileup == 200:
+        process.ntuple.photonEcorr = cms.FileInPath("PhaseTwoAnalysis/NTupler/data/photonEnergyCorrections_PU200.root")
+
     if options.updateJEC:
         # The updateJetCollection function will uncorred the jets from MiniAOD and then recorrect them using the current
         #  set of JEC in the event setup

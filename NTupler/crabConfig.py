@@ -8,7 +8,7 @@ config.General.workArea = 'crab_tasks/'
 config.section_("JobType")
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'scripts/produceNtuples_cfg.py'
-config.JobType.pyCfgParams= ['skim=False','inputFormat=PAT','outFileName=MiniEvents.root']
+config.JobType.pyCfgParams= ['skim=False','inputFormat=PAT','outFileName=MiniEvents.root','pileup=200']
 # Uncomment the following line when running on PAT events
 config.JobType.outputFiles = ['MiniEvents.root']
 
