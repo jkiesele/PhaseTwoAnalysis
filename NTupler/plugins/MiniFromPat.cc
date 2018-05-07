@@ -58,6 +58,8 @@ Implementation:
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/Tau.h"
 
+#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
@@ -169,9 +171,11 @@ class MiniFromPat : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::
     edm::EDGetTokenT<GenEventInfoProduct> generatorToken_;
     edm::EDGetTokenT<LHEEventProduct> generatorlheToken_;
     edm::EDGetTokenT<std::vector<pat::Photon>> photonsToken_;
+    edm::EDGetTokenT<EcalRecHitCollection> ecalRecHitsToken_;
     const ME0Geometry* ME0Geometry_; 
     double mvaThres_[3];
     double deepThres_[3];
+    TH2F * photonEcorr_{nullptr};
 
     TTree *t_event_, *t_genParts_, *t_vertices_, *t_genJets_, *t_genPhotons_, *t_looseElecs_, *t_mediumElecs_, *t_tightElecs_, *t_looseMuons_, *t_tightMuons_, *t_allTaus_,*t_puppiJets_, *t_puppiMET_, *t_loosePhotons_, *t_tightPhotons_;
 
@@ -205,7 +209,8 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
   genPartsToken_(consumes<std::vector<pat::PackedGenParticle>>(iConfig.getParameter<edm::InputTag>("genParts"))),
   generatorToken_(consumes<GenEventInfoProduct>(edm::InputTag("generator"))),
   generatorlheToken_(consumes<LHEEventProduct>(edm::InputTag("externalLHEProducer",""))),
-  photonsToken_(consumes<std::vector<pat::Photon>>(iConfig.getParameter<edm::InputTag>("photons")))
+  photonsToken_(consumes<std::vector<pat::Photon>>(iConfig.getParameter<edm::InputTag>("photons"))),
+  ecalRecHitsToken_(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("ecalRecHits")))
 {
 	ME0Geometry_=0;
   //now do what ever initialization is needed
@@ -238,6 +243,15 @@ MiniFromPat::MiniFromPat(const edm::ParameterSet& iConfig):
     deepThres_[1] = 0.;
     deepThres_[2] = 0.;
   }  
+
+  // Load photon correction
+  if ( iConfig.existsAs<edm::FileInPath>("photonEcorr") ) {
+    auto photonEcorrFile = iConfig.getParameter<edm::FileInPath>("photonEcorr");
+    TFile * photonEcorr = TFile::Open(photonEcorrFile.fullPath().c_str());
+    photonEcorr_ = (TH2F*) photonEcorr->Get("combinedECorrection");
+    photonEcorr_->SetDirectory(0);  // don't delete
+    delete photonEcorr;
+  }
 
   usesResource("TFileService");
 
@@ -426,6 +440,9 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
   Handle<std::vector<pat::Photon>> photons;
   iEvent.getByToken(photonsToken_, photons);
+
+  Handle<EcalRecHitCollection> ecalRecHits;
+  iEvent.getByToken(ecalRecHitsToken_, ecalRecHits);
    
   // Vertices
   int prVtx = -1;
@@ -790,6 +807,60 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
     float mvaValue = photons->at(i).userFloat("mvaValue");
     bool isEB = photons->at(i).isEB();
+
+    float photonEnergy = -1.;
+    // Change this if the default primary vertex choice is not satisfactory
+    float photonEta = photons->at(i).eta();
+    if ( isEB ) {
+      // nMax15 algorithm, see https://indico.cern.ch/event/659834/contributions/2691448/attachments/1508099/2357330/170814_upsg_ledovskoy.pdf
+      // barrel energy algorithm to compensate for high pileup
+      // sort crystals in cluster, then add top 15 to find energy
+
+      auto& pho = photons->at(i);
+
+      // Build map of unique crystals to their total energy used in supercluster
+      std::map<DetId, double> unique_cells;
+      double nCellsEffective{0.};
+      for( auto&& detid_frac : pho.superCluster()->hitsAndFractions() ) {
+        auto hit = ecalRecHits->find(detid_frac.first);
+        if ( hit == ecalRecHits->end() and detid_frac.first.subdetId() == DetId::Ecal ) {
+          std::cout << "uh oh, missing a hit" << std::endl;
+          continue;
+        }
+        else if ( hit == ecalRecHits->end() ) {
+          continue;
+        }
+        double frac = detid_frac.second;
+        unique_cells[detid_frac.first] += hit->energy() * frac;
+        nCellsEffective += frac;
+      }
+
+      // Copy map to vector and sort
+      std::vector<double> cells;
+      for( auto&& det_e : unique_cells ) {
+        cells.push_back(det_e.second);
+      }
+      std::sort(cells.begin(), cells.end());
+
+      // Sum top N crystals
+      double energy_nmax15{0.};
+      size_t nCells{0u};
+      for(auto it=cells.rbegin(); it!=cells.rend(); ++it) {
+        if ( nCells < 15 ) energy_nmax15 += *it;
+        if ( nCells == 15 ) break;
+        nCells++;
+      }
+
+      photonEnergy = energy_nmax15;
+
+    } else { // isEB
+
+      photonEnergy = photons->at(i).superCluster()->seed()->energy();
+      if ( photonEcorr_ != nullptr ) {
+        float eCorr = photonEcorr_->GetBinContent(photonEcorr_->FindBin(std::abs(photons->at(i).eta()), photonEnergy));
+        if ( eCorr != 0. ) photonEnergy *= eCorr;
+      }
+    }
      
     bool isLoose = 0;
     bool isTight = 0;
@@ -809,10 +880,10 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (ev_.nlp<MiniEvent_t::maxpart){
 
        ev_.lp_isEB[ev_.nlp]   = isEB ? 1 : 0;
-       ev_.lp_pt[ev_.nlp]     = photons->at(i).pt();
+       ev_.lp_pt[ev_.nlp]     = photonEnergy / std::cosh(photonEta);
        ev_.lp_phi[ev_.nlp]    = photons->at(i).phi();
-       ev_.lp_eta[ev_.nlp]    = photons->at(i).eta();
-       ev_.lp_nrj[ev_.nlp]    = photons->at(i).energy();
+       ev_.lp_eta[ev_.nlp]    = photonEta;
+       ev_.lp_nrj[ev_.nlp]    = photonEnergy;
        ev_.lp_g[ev_.nlp] = -1;
        ev_.lp_bdt[ev_.nlp] = mvaValue;
        // add multicluster quantities too
@@ -847,10 +918,10 @@ MiniFromPat::recoAnalysis(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (ev_.ntp>=MiniEvent_t::maxpart) break;
 
     ev_.tp_isEB[ev_.ntp]   = isEB ? 1 : 0;
-    ev_.tp_pt[ev_.ntp]     = photons->at(i).pt();
+    ev_.tp_pt[ev_.ntp]     = photonEnergy / std::cosh(photonEta);
     ev_.tp_phi[ev_.ntp]    = photons->at(i).phi();
-    ev_.tp_eta[ev_.ntp]    = photons->at(i).eta();
-    ev_.tp_nrj[ev_.ntp]    = photons->at(i).energy();
+    ev_.tp_eta[ev_.ntp]    = photonEta;
+    ev_.tp_nrj[ev_.ntp]    = photonEnergy;
     ev_.tp_g[ev_.ntp] = -1;
     ev_.tp_bdt[ev_.ntp] = mvaValue;
     // add multicluster quantities too
