@@ -231,6 +231,7 @@ void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertice
   t_looseElecs_->SetBranchAddress("Phi",          ev.le_phi);
   t_looseElecs_->SetBranchAddress("Mass",         ev.le_mass);
   t_looseElecs_->SetBranchAddress("IsolationVar", ev.le_relIso);
+  t_looseElecs_->SetBranchAddress("TrackIso",     ev.le_relTkIso);
   t_looseElecs_->SetBranchAddress("SF", ev.le_sf);
 
   t_tightElecs_->SetBranchAddress("ElectronTight_size", &ev.nte);
@@ -241,6 +242,7 @@ void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertice
   t_tightElecs_->SetBranchAddress("Phi",          ev.te_phi);
   t_tightElecs_->SetBranchAddress("Mass",         ev.te_mass);
   t_tightElecs_->SetBranchAddress("IsolationVar", ev.te_relIso);
+  t_tightElecs_->SetBranchAddress("TrackIso",     ev.te_relTkIso);
   t_tightElecs_->SetBranchAddress("SF",           ev.te_sf);
   
   t_mediumElecs_->SetBranchAddress("ElectronMedium_size", &ev.nme);
@@ -251,6 +253,7 @@ void attachToMiniEventTree(TTree *t_event_, TTree *t_genParts_, TTree *t_vertice
   t_mediumElecs_->SetBranchAddress("Phi",                  ev.me_phi);
   t_mediumElecs_->SetBranchAddress("Mass",                 ev.me_mass);
   t_mediumElecs_->SetBranchAddress("IsolationVar",         ev.me_relIso);
+  t_mediumElecs_->SetBranchAddress("TrackIso",     ev.me_relTkIso);
   t_mediumElecs_->SetBranchAddress("SF",           ev.me_sf);
 
   t_looseMuons_->SetBranchAddress("MuonLoose_size", &ev.nlm);
