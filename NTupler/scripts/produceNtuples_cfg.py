@@ -36,8 +36,7 @@ if options.pileup not in [0, 200]:
 
 
 if len(options.updateJEC)==0:
-    #standardjec='/afs/cern.ch/work/v/vmilosev/HGCal/20171214/CMSSW_9_3_2/src/PhaseTwoAnalysis/NTupler/data/PhaseIIFall17_V3_MC.db'
-    standardjec='data/PhaseIIFall17_V3_MC.db'
+    standardjec='PhaseTwoAnalysis/NTupler/data/PhaseIIFall17_V3_MC.db'
     standardjec_tag='PhaseIIFall17_V3_MC'
     options.updateJEC=[standardjec,standardjec_tag]
     
@@ -67,7 +66,7 @@ process.MessageLogger.cerr.INFO = cms.untracked.PSet(
 )
 
 # Input
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5) ) 
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(200) ) 
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
@@ -78,8 +77,8 @@ process.source = cms.Source("PoolSource",
 
 if (options.inputFormat.lower() == "reco"):
     process.source.fileNames = cms.untracked.vstring(*(
-        'root://cms-xrd-global.cern.ch//store/mc/PhaseIITDRFall17DR/VBF_HToInvisible_M125_14TeV_powheg_pythia8/GEN-SIM-RECO/noPU_93X_upgrade2023_realistic_v2-v1/30000/6079EAF8-09B9-E711-87FA-0242AC110005.root',
-    ))
+         'root://cms-xrd-global.cern.ch//store/mc/PhaseIITDRFall17DR/DiPhotonJetsBox_MGG-80toInf_14TeV-Sherpa/GEN-SIM-RECO/PU200_93X_upgrade2023_realistic_v2-v1/150000/24BB7BB2-A9B4-E711-9DC9-FA163E7FFB3C.root',
+   ))
 
 # HGCAL EGamma ID
 if (options.inputFormat.lower() == "reco"):
@@ -181,7 +180,7 @@ process.allLeps = cms.EDProducer("CandViewMerger",
                                  )
 process.countLeps = cms.EDFilter("CandViewCountFilter",
                                  src = cms.InputTag("allLeps"),
-                                 minNumber = cms.uint32(0)
+                                 minNumber = cms.uint32(1)
                                  )
 process.countPhotons = cms.EDFilter("CandViewCountFilter",
                                  src = cms.InputTag("selectedPhotons"),
