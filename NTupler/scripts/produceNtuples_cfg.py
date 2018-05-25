@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 from FWCore.ParameterSet.VarParsing import VarParsing
+from Configuration.StandardSequences.Eras import eras
 
 options = VarParsing ('python')
 options.register('outFilename', 'MiniEvents.root',
@@ -28,8 +29,17 @@ options.register('pileup', 200,
                  VarParsing.varType.int,
                  "Specify the pileup in the sample (used for choosing B tag MVA thresholds and endcap photon energy corrections)"
                 )
+options.register('rerunBtag', True,
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.bool,
+                 "Rerun the B tagging algorithms"
+                )
 
 options.parseArguments()
+
+## dump arguments on screen. cannot find 
+for key in options._register.keys():
+    print "{:<20} : {}".format(key, getattr(options, key))
 
 if options.pileup not in [0, 200]:
     print "Warning: photon corrections available for pileup 0 and 200 only, will skip correction"
@@ -41,7 +51,7 @@ if len(options.updateJEC)==0:
     options.updateJEC=[standardjec,standardjec_tag]
     
 
-process = cms.Process("MiniAnalysis")
+process = cms.Process("MiniAnalysis", eras.Phase2)
 
 # Geometry, GT, and other standard sequences
 process.load('Configuration.Geometry.GeometryExtended2023D17Reco_cff')
@@ -95,7 +105,7 @@ process.options   = cms.untracked.PSet(
 if options.updateJEC:
     from CondCore.DBCommon.CondDBSetup_cfi import *
     process.jec = cms.ESSource("PoolDBESSource",CondDBSetup,
-                               connect = cms.string('sqlite_file:'+options.updateJEC[0]),
+                               connect = cms.string('sqlite_fip:'+options.updateJEC[0]),
                                toGet =  cms.VPSet(
             cms.PSet(record = cms.string("JetCorrectionsRecord"),
                      tag = cms.string("JetCorrectorParametersCollection_"+options.updateJEC[1]+"_AK4PFPuppi"),
@@ -266,19 +276,39 @@ else:
         # The new name of the updated jet collection becomes updatedPatJetsUpdatedJECAK4PFPuppi
         from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
         if options.pileup==0:
-            updateJetCollection(process,
-                                jetSource = cms.InputTag('slimmedJets'),
-                                postfix = 'UpdatedJECAK4PF',
-                                jetCorrections = ('AK4PF', ['L2Relative','L3Absolute'], 'None')
-                                )
-            process.ntuple.jets = "updatedPatJetsUpdatedJECAK4PF"
+            if options.rerunBtag:
+                updateJetCollection(process,
+                                    jetSource = cms.InputTag('slimmedJets'),
+                                    postfix = 'UpdatedJECAK4PF',
+                                    jetCorrections = ('AK4PF', ['L2Relative','L3Absolute'], 'None'),
+                                    pfCandidates       = cms.InputTag('packedPFCandidates'),
+                                    btagDiscriminators = ['pfDeepCSVJetTags:probb', 'pfDeepCSVJetTags:probbb'],
+                                    )
+                process.ntuple.jets = "selectedUpdatedPatJetsUpdatedJECAK4PF"
+            else:            
+                updateJetCollection(process,
+                                    jetSource = cms.InputTag('slimmedJets'),
+                                    postfix = 'UpdatedJECAK4PF',
+                                    jetCorrections = ('AK4PF', ['L2Relative','L3Absolute'], 'None')
+                                    )
+                process.ntuple.jets = "updatedPatJetsUpdatedJECAK4PF"
         else:
-            updateJetCollection(process,
-                                jetSource = cms.InputTag('slimmedJetsPuppi'),
-                                postfix = 'UpdatedJECAK4PFPuppi',
-                                jetCorrections = ('AK4PFPuppi', ['L1FastJet','L2Relative','L3Absolute'], 'None')
-                                )
-            process.ntuple.jets = "updatedPatJetsUpdatedJECAK4PFPuppi"
+            if options.rerunBtag:
+                updateJetCollection(process,
+                                    jetSource = cms.InputTag('slimmedJetsPuppi'),
+                                    postfix = 'UpdatedJECAK4PFPuppi',
+                                    jetCorrections = ('AK4PFPuppi', ['L1FastJet','L2Relative','L3Absolute'], 'None'),
+                                    pfCandidates       = cms.InputTag('packedPFCandidates'),
+                                    btagDiscriminators = ['pfDeepCSVJetTags:probb', 'pfDeepCSVJetTags:probbb'],
+                                    )
+                process.ntuple.jets = "selectedUpdatedPatJetsUpdatedJECAK4PFPuppi"            
+            else:
+                updateJetCollection(process,
+                                    jetSource = cms.InputTag('slimmedJetsPuppi'),
+                                    postfix = 'UpdatedJECAK4PFPuppi',
+                                    jetCorrections = ('AK4PFPuppi', ['L1FastJet','L2Relative','L3Absolute'], 'None')
+                                    )
+                process.ntuple.jets = "updatedPatJetsUpdatedJECAK4PFPuppi"
 
 
 # output
@@ -286,7 +316,6 @@ process.TFileService = cms.Service("TFileService",
                                    fileName = cms.string(options.outFilename)
                                    )
 
-# run
 if (options.inputFormat.lower() == "reco"):
     if options.pileup==0:
         process.puSequence = cms.Sequence(process.primaryVertexAssociation * process.pfNoLep * process.offlineSlimmedPrimaryVertices * process.packedPFCandidates * process.muonIsolation * process.muonIsolationNoLep * process.ak4Jets * process.pfMet)
@@ -306,9 +335,9 @@ if options.skim:
     else:
         if options.updateJEC:
             if options.pileup==0:
-                process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.patJetCorrFactorsUpdatedJECAK4PF * process.updatedPatJetsUpdatedJECAK4PF *process.preYieldFilter* process.ntuple)
+                process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.patJetCorrFactorsUpdatedJECAK4PF * process.updatedPatJetsUpdatedJECAK4PF *process.preYieldFilter* process.ntuple, process.patAlgosToolsTask)
             else:
-                process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi *process.preYieldFilter* process.ntuple)
+                process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi *process.preYieldFilter* process.ntuple, process.patAlgosToolsTask)
         else:
             process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.preYieldFilter*process.ntuple)
 else:
@@ -324,8 +353,8 @@ else:
     else:
         if options.updateJEC:
             if options.pileup==0:
-                process.p = cms.Path(process.weightCounter*process.patJetCorrFactorsUpdatedJECAK4PF * process.updatedPatJetsUpdatedJECAK4PF * process.phase2Egamma * process.ntuple)
+                process.p = cms.Path(process.weightCounter*process.patJetCorrFactorsUpdatedJECAK4PF * process.updatedPatJetsUpdatedJECAK4PF * process.phase2Egamma * process.ntuple, process.patAlgosToolsTask)
             else:
-                process.p = cms.Path(process.weightCounter*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.phase2Egamma * process.ntuple)
+                process.p = cms.Path(process.weightCounter*process.patJetCorrFactorsUpdatedJECAK4PFPuppi * process.updatedPatJetsUpdatedJECAK4PFPuppi * process.phase2Egamma * process.ntuple, process.patAlgosToolsTask)
 	else:    
             process.p = cms.Path(process.weightCounter*process.phase2Egamma*process.ntuple)
